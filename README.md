@@ -57,6 +57,25 @@ npm run dev
 npm run build
 ```
 
+## Development Workflow
+
+```bash
+# Use the pinned Node.js major version
+nvm use
+
+# Install dependencies and git hooks
+npm install
+
+# Quality checks
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+- Commit messages follow Conventional Commits (validated by commitlint).
+- Pre-commit runs `lint-staged` to format and check staged files with Biome.
+
 ## Usage
 
 1. **Launch Klip** - The app runs in your system tray/menu bar

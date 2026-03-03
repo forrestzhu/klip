@@ -1,88 +1,153 @@
-# Klip 代码规范设计文档
+# Klip 代码规范设计文档 (v2)
 
-> 创建日期: 2026-03-03
+> 创建日期: 2026-03-03  
+> 最近更新: 2026-03-03
 
-本文档定义了 Klip 项目的代码规范，包括项目结构、命名约定、Git 提交规范和工具配置。所有后续开发（包括 AI 辅助开发）都应遵守此规范。
+本文档定义 Klip 项目的统一工程规范。目标是让“人类开发 + AI 开发”在同一套规则下稳定协作，减少歧义、避免回归，并保证每次改动都可验证、可回滚。
 
 ---
 
-## 1. 技术栈
+## 1. 文档目标
 
-- **前端框架**: React + TypeScript
-- **桌面框架**: Tauri (Rust 后端)
+- 作为项目内唯一的代码规范来源（Single Source of Truth）。
+- 规则必须可执行、可检查，避免“原则正确但无法落地”。
+- 默认假设本项目将长期采用 AI 辅助/AI 主导开发。
+
+---
+
+## 2. 技术栈与版本策略
+
+- **前端**: React + TypeScript
+- **桌面端**: Tauri (Rust)
 - **格式化/Lint**: Biome
 - **提交规范**: Conventional Commits + Commitlint
 - **Git Hooks**: Husky + lint-staged
 
+### 2.1 版本锁定要求
+
+- Node.js 使用 **LTS** 版本，并在 `package.json` 的 `engines` 中声明。
+- Rust 使用稳定版，并通过 `rust-toolchain.toml` 锁定工具链。
+- 依赖必须提交 lock 文件（`package-lock.json` / `Cargo.lock`）。
+- CI 与本地开发使用同一主版本运行时，避免“本地能跑、CI 失败”。
+
 ---
 
-## 2. 项目结构
+## 3. 项目结构
 
-```
+```text
 klip/
 ├── src/                    # 前端源码
-│   ├── components/         # React 组件 (PascalCase.tsx)
-│   ├── hooks/              # 自定义 hooks (useXxx.ts)
-│   ├── utils/              # 工具函数 (camelCase.ts)
-│   ├── services/           # 业务服务层 (camelCase.ts)
-│   ├── types/              # TypeScript 类型定义
+│   ├── components/         # 通用 React 组件
+│   ├── hooks/              # 自定义 hooks
+│   ├── features/           # 按业务域组织（推荐）
+│   ├── services/           # API/业务服务层
 │   ├── stores/             # 状态管理
+│   ├── utils/              # 纯工具函数
+│   ├── types/              # 全局类型定义
 │   ├── styles/             # 全局样式
 │   └── main.tsx            # 入口文件
 ├── src-tauri/              # Rust 后端
 │   ├── src/
-│   │   ├── main.rs         # 主入口
-│   │   └── lib.rs          # 库文件
+│   │   ├── main.rs
+│   │   └── lib.rs
 │   ├── Cargo.toml
 │   └── tauri.conf.json
-├── docs/                   # 文档
-│   └── plans/              # 设计文档
-├── biome.json              # Biome 配置
-├── .commitlintrc.json      # Commitlint 配置
+├── tests/                  # 自动化测试（unit/integration/e2e）
+├── docs/
+│   └── plans/
+├── biome.json
+├── .commitlintrc.json
 ├── package.json
 └── README.md
 ```
 
+约束：
+
+- 目录命名统一 `kebab-case`。
+- 新增功能优先放在 `src/features/<feature-name>/`，避免按技术类型无限平铺。
+
 ---
 
-## 3. 命名约定
+## 4. 命名约定
 
-### 3.1 文件命名
+### 4.1 文件命名
 
 | 文件类型 | 命名规则 | 示例 |
 |---------|---------|------|
-| 组件文件 | `PascalCase.tsx` | `ClipboardList.tsx`, `SearchInput.tsx` |
-| Hook 文件 | `useXxx.ts` (camelCase) | `useClipboard.ts`, `useHotkey.ts` |
-| 工具函数 | `camelCase.ts` | `formatDate.ts`, `storage.ts` |
-| 类型文件 | `camelCase.ts` 或 `xxx.types.ts` | `clipboard.types.ts`, `index.ts` |
-| 常量文件 | `camelCase.ts` | `constants.ts`, `hotkeys.ts` |
+| 组件文件 | `PascalCase.tsx` | `ClipboardList.tsx` |
+| Hook 文件 | `useXxx.ts` / `useXxx.tsx` | `useClipboard.ts` |
+| 工具函数 | `camelCase.ts` | `formatDate.ts` |
+| 类型文件 | `*.types.ts`（优先） | `clipboard.types.ts` |
+| 常量文件 | `camelCase.ts` | `constants.ts` |
+| 测试文件 | `*.test.ts` / `*.test.tsx` | `storage.test.ts` |
 
-### 3.2 代码命名
+### 4.2 代码命名
 
 | 类型 | 命名规则 | 示例 |
 |-----|---------|------|
-| 变量 | `camelCase` | `clipboardHistory`, `selectedItem` |
-| 函数 | `camelCase` | `getClipboardContent`, `saveToStorage` |
-| 组件 | `PascalCase` | `ClipboardList`, `SearchInput` |
-| 类 | `PascalCase` | `ClipboardManager`, `StorageService` |
-| 接口/类型 | `PascalCase` | `ClipboardItem`, `AppConfig` |
-| 常量 | `UPPER_SNAKE_CASE` | `MAX_HISTORY_SIZE`, `DEFAULT_TIMEOUT` |
-| 私有成员 | `_camelCase` (可选) | `_privateMethod`, `_internalState` |
+| 变量/函数 | `camelCase` | `saveClipboardItem` |
+| 组件/类/类型 | `PascalCase` | `ClipboardItem` |
+| 常量 | `UPPER_SNAKE_CASE` | `MAX_HISTORY_SIZE` |
+| 私有成员 | `_camelCase`（可选） | `_cacheMap` |
 
-### 3.3 目录命名
+补充约束：
 
-- 一律使用 `kebab-case`
-- 示例: `clipboard-manager/`, `system-tray/`, `search-utils/`
+- 避免单字符变量名（循环索引 `i/j` 除外）。
+- 命名必须表达业务语义，禁止 `data1`, `tempValue` 这类无意义命名。
 
 ---
 
-## 4. Git 提交规范
+## 5. AI 开发流程（核心）
 
-采用 **Conventional Commits** 规范。
+### 5.1 AI 任务输入最小模板
 
-### 4.1 提交格式
+每个任务至少包含：
 
-```
+- **目标**: 要交付什么。
+- **非目标**: 明确本次不做什么。
+- **验收标准（AC）**: 可验证的结果。
+- **约束**: 技术/性能/兼容性/安全约束。
+
+### 5.2 变更粒度要求
+
+- 单次变更只解决一个明确问题（一个用户故事或一个缺陷）。
+- 非必要不跨模块重构。
+- 若必须大改，拆分为多次可回滚提交。
+
+### 5.3 Definition of Done（强制）
+
+满足以下条件才算完成：
+
+1. 代码通过 `lint + typecheck + test`。
+2. 关键路径功能有自动化测试覆盖（新增功能必须有测试）。
+3. 文档同步更新（README 或 `docs/plans`）。
+4. 无新增高风险安全问题（见第 8 节）。
+
+### 5.4 AI 禁止行为
+
+- 修改与任务无关文件。
+- 未经说明直接升级核心依赖主版本。
+- 跳过失败测试并提交“暂时可用”代码。
+- 提交明文密钥、令牌、用户隐私数据。
+- 使用不可回滚的破坏性 git 操作。
+
+### 5.5 AI 输出要求
+
+每次交付需附：
+
+- 修改文件清单。
+- 执行过的验证命令与结果。
+- 已知风险和后续建议。
+
+---
+
+## 6. Git 提交规范
+
+采用 **Conventional Commits**。
+
+### 6.1 提交格式
+
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -90,77 +155,81 @@ klip/
 <footer>
 ```
 
-### 4.2 类型 (Type)
+### 6.2 Type 列表
 
-| 类型 | 说明 | 示例 |
-|-----|------|------|
-| `feat` | 新功能 | `feat(clipboard): add auto-clear feature` |
-| `fix` | Bug 修复 | `fix(tray): resolve icon not showing on macOS` |
-| `docs` | 文档更新 | `docs: update README installation steps` |
-| `style` | 代码格式（不影响逻辑） | `style: fix indentation in utils` |
-| `refactor` | 重构（非新功能/修复） | `refactor(storage): simplify save logic` |
-| `perf` | 性能优化 | `perf(search): improve filter speed by 50%` |
-| `test` | 测试相关 | `test(hooks): add useClipboard unit tests` |
-| `chore` | 构建/工具/依赖 | `chore: update dependencies to latest` |
-| `ci` | CI 配置 | `ci: add GitHub Actions workflow` |
+- `feat`: 新功能
+- `fix`: 缺陷修复
+- `docs`: 文档
+- `style`: 纯格式调整（不改逻辑）
+- `refactor`: 重构
+- `perf`: 性能优化
+- `test`: 测试相关
+- `chore`: 构建/依赖/工具
+- `ci`: CI 配置
 
-### 4.3 范围 (Scope)
+### 6.3 Scope 建议
 
-常用范围（可按需扩展）：
+`clipboard`, `tray`, `ui`, `storage`, `search`, `hotkey`, `tauri`, `build`, `deps`
 
-| Scope | 说明 |
-|-------|------|
-| `clipboard` | 剪贴板核心功能 |
-| `tray` | 系统托盘 |
-| `ui` | 界面相关 |
-| `storage` | 数据存储 |
-| `search` | 搜索功能 |
-| `hotkey` | 快捷键 |
-| `tauri` | Tauri/Rust 后端 |
+### 6.4 强制规则
 
-### 4.4 规则
-
-- **subject**: 必填，首字母小写，结尾不加句号，不超过 72 字符
-- **body**: 可选，说明改动原因和细节，每行不超过 100 字符
-- **footer**: 可选，用于 Breaking Change 或关联 Issue
-
-### 4.5 示例
-
-```bash
-# 简单提交
-feat(clipboard): add support for image clipboard
-
-# 带 body 的提交
-fix(tray): resolve memory leak on Windows
-
-The tray icon was not being properly disposed when the app closes,
-causing a memory leak on Windows systems.
-
-Closes #123
-
-# Breaking Change
-refactor(storage)!: change database schema
-
-BREAKING CHANGE: The storage format has changed. Users need to
-export their data before updating.
-```
+- `subject` 必填，首字母小写，末尾无句号。
+- `header` 最大长度 **72**（与配置保持一致）。
+- 提交信息建议使用英文，减少工具链大小写/词法误判。
+- `BREAKING CHANGE` 必须在 footer 标注。
 
 ---
 
-## 5. 工具配置
+## 7. 测试策略与质量门禁
 
-### 5.1 Biome 配置
+### 7.1 测试分层
+
+- **Unit**: 纯函数、数据处理、hook 逻辑。
+- **Integration**: 前端与状态/服务层协作、Tauri command 调用。
+- **E2E（关键路径）**: 剪贴板采集、搜索、粘贴主流程。
+
+### 7.2 覆盖率要求
+
+- 新增/修改代码行覆盖率建议不低于 **80%**。
+- 无法覆盖的场景需在 PR/提交说明中写明原因与手工验证步骤。
+
+### 7.3 本地与 CI 必过项
+
+本地提交前至少执行：
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+cargo check --manifest-path src-tauri/Cargo.toml
+```
+
+CI 必须包含同等校验；任何一项失败不得合并。
+
+---
+
+## 8. 安全与隐私规范（剪贴板应用）
+
+- 剪贴板内容默认视为敏感数据。
+- 禁止在日志中输出完整剪贴板明文；如需调试，必须脱敏/截断。
+- 本地存储必须支持用户清除历史与敏感项。
+- 云同步功能上线前必须补充：传输加密、服务端加密、访问控制、审计日志。
+- 所有密钥通过环境变量或系统密钥链管理，不得写入仓库。
+
+---
+
+## 9. 工具配置基线
+
+### 9.1 Biome（示例）
 
 ```json
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
-  },
-  "files": {
-    "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
@@ -170,11 +239,6 @@ export their data before updating.
     "enabled": true,
     "rules": {
       "recommended": true
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double"
     }
   },
   "assist": {
@@ -188,7 +252,7 @@ export their data before updating.
 }
 ```
 
-### 5.2 Commitlint 配置
+### 9.2 Commitlint（示例）
 
 ```json
 {
@@ -201,21 +265,35 @@ export their data before updating.
     ],
     "subject-case": [2, "always", "lower-case"],
     "subject-full-stop": [2, "never", "."],
-    "header-max-length": [2, "always", 100]
+    "header-max-length": [2, "always", 72]
   }
 }
 ```
 
-### 5.3 Git Hooks
+### 9.3 Husky Hooks（建议）
 
-**pre-commit**: 运行 Biome 格式化和 lint 检查
-**commit-msg**: 运行 Commitlint 校验提交信息格式
+- `pre-commit`: `lint-staged`
+- `commit-msg`: `commitlint --edit $1`
+
+`lint-staged` 建议：
+
+- `*.{ts,tsx,js,jsx,json,md}`: `biome check --write`
 
 ---
 
-## 6. 参考资料
+## 10. 评审清单（Code Review Checklist）
 
-- [Cap 项目](https://github.com/CapSoftware/Cap) - Tauri + Biome 实践参考
+1. 变更是否只覆盖本次任务目标？
+2. 是否满足第 5.3 节 DoD？
+3. 是否新增或放大了安全/隐私风险？
+4. 是否可回滚、可复现、可验证？
+5. 文档与配置是否同步更新？
+
+---
+
+## 11. 参考资料
+
+- [Cap 项目](https://github.com/CapSoftware/Cap) - Tauri + Biome 实践
 - [Jan 项目](https://github.com/janhq/jan) - Tauri 项目结构参考
-- [Conventional Commits](https://www.conventionalcommits.org/) - 提交规范官方文档
-- [Biome](https://biomejs.dev/) - 代码格式化和 Lint 工具
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Biome](https://biomejs.dev/)
