@@ -1,3 +1,3 @@
 fn main() {
-	println!("{}", klip_tauri_lib::bootstrap_message());
+    println!("{}", klip_tauri_lib::bootstrap_message());
 }
