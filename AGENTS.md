@@ -3,9 +3,26 @@
 ## Project Structure & Module Organization
 - Root configuration files (`package.json`, `biome.json`, `.commitlintrc.json`, `rust-toolchain.toml`) define toolchain and quality gates.
 - Planning and standards live in `docs/plans/`.
+- Session-resume status artifacts live in `docs/status/`:
+	- `current.md` (latest project snapshot, overwritten each iteration)
+	- `progress-log.md` (append-only iteration log)
+	- `prd-tracker.md` (US-level status matrix mapped to PRD)
 - Automation scripts are in `scripts/` (`typecheck.mjs`, `test.mjs`, `test-e2e.mjs`, `test-coverage.mjs`, `build.mjs`, `cargo-check.mjs`).
 - CI and PR policy live in `.github/` (`workflows/ci.yml`, `pull_request_template.md`).
 - As implementation grows, keep app code in `src/` (frontend), `src-tauri/` (Rust backend), and tests in `tests/`.
+
+## Status Snapshot Workflow (Required)
+- Goal: make every completed iteration recoverable after context clear.
+- At the end of each implementation task, update status artifacts in `docs/status/`.
+- Minimum update checklist:
+	- `current.md`: refresh latest commit, current phase, completed/in-progress/next work.
+	- `progress-log.md`: append one entry with date, scope, commit, and validation result.
+	- `prd-tracker.md`: update user-story status (`todo|in-progress|done`) and evidence.
+- Validation before closing a task:
+	- Run relevant quality gates for changed scope (`lint`, `typecheck`, `test`, `build`, `cargo:check` when Rust touched).
+	- Record pass/fail/skip outcomes in the status docs.
+- Session bootstrap rule (for new/cleared sessions):
+	- Read `docs/status/current.md`, `docs/status/prd-tracker.md`, and latest entries in `docs/status/progress-log.md` before coding.
 
 ## Build, Test, and Development Commands
 - `nvm use` - switch to the pinned Node major version from `.nvmrc`.
