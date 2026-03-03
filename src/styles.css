@@ -1,0 +1,39 @@
+:root {
+	font-family:
+		"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	background: #f4f6fb;
+	color: #111827;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+}
+
+.app-shell {
+	max-width: 720px;
+	margin: 40px auto;
+	padding: 24px;
+	background: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+}
+
+.app-shell h1 {
+	margin: 0 0 8px;
+	font-size: 28px;
+}
+
+.app-shell h2 {
+	margin-top: 24px;
+	font-size: 18px;
+}
+
+.preview-list {
+	margin: 12px 0 0;
+	padding: 0 0 0 20px;
+	line-height: 1.7;
+}

@@ -9,11 +9,13 @@
 	},
 	"scripts": {
 		"prepare": "husky install",
+		"dev": "vite",
 		"lint": "biome check .",
 		"format": "biome check --write .",
 		"typecheck": "node scripts/typecheck.mjs",
 		"test": "node scripts/test.mjs",
 		"build": "node scripts/build.mjs",
+		"preview": "vite preview",
 		"precommit": "lint-staged",
 		"commitlint": "commitlint --from=HEAD~1 --to=HEAD --verbose"
 	},
@@ -22,13 +24,21 @@
 			"biome check --write"
 		]
 	},
+	"dependencies": {
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.0",
+		"@types/react": "^19.1.12",
+		"@types/react-dom": "^19.1.9",
+		"@vitejs/plugin-react": "^5.0.2",
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
 		"husky": "^8.0.3",
 		"lint-staged": "^15.5.0",
 		"typescript": "^5.9.2",
+		"vite": "^7.1.5",
 		"vitest": "^3.2.4"
 	}
 }
