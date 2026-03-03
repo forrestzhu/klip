@@ -38,6 +38,7 @@
 - Commit header max length is 72, lowercase subject, no trailing period.
 - Hooks enforce quality: `pre-commit` runs `lint-staged`; `commit-msg` runs commitlint.
 - PRs must complete the template: scope, DoD checks, security/privacy checks, risks, and rollback plan.
+- Use trunk-based branching: short-lived `feat/*|fix/*|chore/*` branches from `main`, prefer squash merge, avoid direct push to `main` except emergency `hotfix/*`.
 
 ## Security & Configuration Tips
 - Treat clipboard content as sensitive data; do not log plaintext clipboard payloads.

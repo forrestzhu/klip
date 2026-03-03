@@ -247,6 +247,46 @@ chore: misc changes
 
 以上反例的问题是：语义模糊、无法追踪影响范围、回滚成本高。
 
+### 6.6 分支与发布策略（强制）
+
+采用 **Trunk-Based Development**，以 `main` 为唯一长期分支。
+
+#### 6.6.1 分支规则
+
+- `main` 必须保持可发布状态，不允许长期开发分叉。
+- 功能开发必须从 `main` 拉出短生命周期分支。
+- 非紧急场景禁止直接 push 到 `main`。
+- 分支生命周期目标：1 个用户故事/缺陷，尽快合并。
+
+#### 6.6.2 分支命名
+
+```text
+feat/us-001-history-listener
+fix/paste-fallback
+refactor/storage-split-repository
+chore/ci-quality-matrix
+hotfix/history-crash-on-startup
+```
+
+#### 6.6.3 PR 与合并策略
+
+- 每个 PR 应聚焦单一目标，避免混入无关改动。
+- 推荐使用 `squash merge`，保持主干历史清晰可回滚。
+- 合并前必须通过质量门禁（见 7.3）。
+- PR 需明确风险与回滚方案（按模板填写）。
+
+#### 6.6.4 里程碑与发布
+
+- 日常开发持续合入 `main`。
+- 里程碑通过 tag 标记（例如 `v0.1.0-mvp.1`、`v0.2.0-parity.1`）。
+- 仅在需要稳定维护窗口时创建 `release/x.y`。
+
+#### 6.6.5 紧急修复
+
+- 从 `main` 创建 `hotfix/*` 分支。
+- 修复后优先合回 `main`，并补充回归测试。
+- 按需打补丁版本 tag（例如 `v0.2.1`）。
+
 ---
 
 ## 7. 测试策略与质量门禁
