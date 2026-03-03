@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 - Root configuration files (`package.json`, `biome.json`, `.commitlintrc.json`, `rust-toolchain.toml`) define toolchain and quality gates.
 - Planning and standards live in `docs/plans/`.
-- Automation scripts are in `scripts/` (`typecheck.mjs`, `test.mjs`, `build.mjs`).
+- Automation scripts are in `scripts/` (`typecheck.mjs`, `test.mjs`, `test-e2e.mjs`, `test-coverage.mjs`, `build.mjs`, `cargo-check.mjs`).
 - CI and PR policy live in `.github/` (`workflows/ci.yml`, `pull_request_template.md`).
 - As implementation grows, keep app code in `src/` (frontend), `src-tauri/` (Rust backend), and tests in `tests/`.
 
@@ -14,7 +14,11 @@
 - `npm run format` - auto-fix formatting with Biome.
 - `npm run typecheck` - run TypeScript type checks (skips if no `tsconfig.json`).
 - `npm run test` - run Vitest (skips if no tests/config yet).
+- `npm run test:e2e` - run Playwright e2e tests (skips if Playwright setup is absent).
+- `npm run test:coverage` - run Vitest with coverage thresholds.
 - `npm run build` - run frontend build checks (skips if `src/` is absent).
+- `npm run cargo:check` - run Rust checks for `src-tauri` (skips if absent).
+- `npm run qa` - run the full local quality gate pipeline.
 - `cargo check --manifest-path src-tauri/Cargo.toml --locked` - required when Rust backend exists.
 
 ## Coding Style & Naming Conventions

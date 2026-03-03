@@ -178,6 +178,75 @@ klip/
 - 提交信息建议使用英文，减少工具链大小写/词法误判。
 - `BREAKING CHANGE` 必须在 footer 标注。
 
+### 6.5 高质量提交示例
+
+推荐：`header` 说明“做了什么”，`body` 说明“为什么做/怎么做/风险”，`footer` 放关联信息。
+
+#### 6.5.1 单行提交（小改动）
+
+```text
+feat(clipboard): add deduplication for consecutive copies
+fix(hotkey): prevent duplicate registration on app resume
+refactor(storage): split history repository from settings store
+perf(search): cache normalized keywords for history filtering
+test(ui): add keyboard navigation cases for history list
+docs(prd): clarify phase-2 parity acceptance criteria
+ci(actions): run quality gates on macos and windows
+chore(deps): pin vitest coverage provider to v8
+```
+
+#### 6.5.2 带 Body 的完整提交（推荐）
+
+```text
+feat(history): add configurable max history size
+
+add max_items to settings and enforce fifo eviction in the
+history repository when the limit is exceeded.
+
+this keeps memory usage predictable and aligns with prd us-002.
+
+Refs: US-002
+```
+
+```text
+fix(paste): fallback to clipboard copy when direct paste fails
+
+handle platform paste injection errors and keep user flow unblocked
+by copying the selected value back to the system clipboard.
+
+risk: fallback depends on foreground app permissions on macos.
+```
+
+```text
+ci(quality): enforce coverage threshold in pull request pipeline
+
+run test:coverage in ci and fail early when changed code falls below
+the project threshold.
+
+Refs: docs/plans/2026-03-03-code-standards-design.md
+```
+
+#### 6.5.3 Breaking Change 示例
+
+```text
+refactor(storage): replace history item schema with versioned format
+
+migrate persisted records to include source metadata and timestamp
+precision in milliseconds.
+
+BREAKING CHANGE: old history snapshots must be migrated before read.
+```
+
+#### 6.5.4 反例（避免）
+
+```text
+fix: update stuff
+feat(ui): make it better
+chore: misc changes
+```
+
+以上反例的问题是：语义模糊、无法追踪影响范围、回滚成本高。
+
 ---
 
 ## 7. 测试策略与质量门禁
@@ -201,8 +270,12 @@ klip/
 npm run lint
 npm run typecheck
 npm run test
+npm run test:e2e
 npm run build
-cargo check --manifest-path src-tauri/Cargo.toml
+npm run test:coverage
+cargo check --manifest-path src-tauri/Cargo.toml --locked
+# or one-shot:
+npm run qa
 ```
 
 CI 必须包含同等校验；任何一项失败不得合并。

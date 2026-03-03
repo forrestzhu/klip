@@ -12,7 +12,9 @@
 - [ ] `npm run lint` passes.
 - [ ] `npm run typecheck` passes.
 - [ ] `npm run test` passes.
+- [ ] `npm run test:e2e` passes.
 - [ ] `npm run build` passes.
+- [ ] `npm run test:coverage` passes.
 - [ ] (If touched) `cargo check --manifest-path src-tauri/Cargo.toml --locked` passes.
 - [ ] Required docs are updated (`README.md` or `docs/plans/*`).
 

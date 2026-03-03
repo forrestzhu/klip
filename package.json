@@ -14,7 +14,11 @@
 		"format": "biome check --write .",
 		"typecheck": "node scripts/typecheck.mjs",
 		"test": "node scripts/test.mjs",
+		"test:e2e": "node scripts/test-e2e.mjs",
+		"test:coverage": "node scripts/test-coverage.mjs",
 		"build": "node scripts/build.mjs",
+		"cargo:check": "node scripts/cargo-check.mjs",
+		"qa": "npm run lint && npm run typecheck && npm run test && npm run test:e2e && npm run build && npm run test:coverage && npm run cargo:check",
 		"preview": "vite preview",
 		"precommit": "lint-staged",
 		"commitlint": "commitlint --from=HEAD~1 --to=HEAD --verbose"
@@ -39,6 +43,7 @@
 		"lint-staged": "^15.5.0",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.5",
+		"@vitest/coverage-v8": "^3.2.4",
 		"vitest": "^3.2.4"
 	}
 }

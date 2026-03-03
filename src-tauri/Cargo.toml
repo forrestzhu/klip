@@ -1,0 +1,16 @@
+[package]
+name = "klip-tauri"
+version = "0.1.0"
+edition = "2021"
+description = "Klip desktop backend scaffold"
+license = "MIT"
+
+[lib]
+name = "klip_tauri_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "klip-tauri"
+path = "src/main.rs"
+
+[dependencies]
