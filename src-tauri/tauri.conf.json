@@ -11,6 +11,7 @@
 	"app": {
 		"windows": [
 			{
+				"label": "main",
 				"title": "Klip",
 				"width": 1024,
 				"height": 720
