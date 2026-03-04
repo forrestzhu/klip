@@ -53,6 +53,7 @@
 ## Commit & Pull Request Guidelines
 - Follow Conventional Commits: `feat|fix|docs|style|refactor|perf|test|chore|ci`.
 - Commit header max length is 72, lowercase subject, no trailing period.
+- Commit body max line length is 100 characters (hard limit enforced by commitlint).
 - Every commit message must include structured body sections with non-empty content:
 	- `### What changes were proposed in this CL?`
 	- `### Why are the changes needed?`

@@ -572,7 +572,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-04 - strict three-window runtime split (popup + snippet-editor + preferences)
 
-- Commit: `pending`
+- Commit: `8d860eb`
 - Summary:
   - Added Tauri commands to open/focus independent `snippet-editor` and `preferences` windows with deterministic sizing (`800x600` and `480x374`) and popup-hide handoff (`src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`).
   - Updated popup action flow so `编辑片断...` / `偏好设置...` open dedicated windows on desktop runtime; browser preview keeps inline fallback (`src/App.tsx`, `src/features/settings/hotkeyRuntime.ts`, `src/features/settings/index.ts`).
@@ -585,3 +585,18 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Interactive macOS/Windows GUI verification is still pending for popup->editor/preferences transition, reuse/focus lifecycle, and close/reopen behavior.
   - Snippet editor and preferences visuals are still not aligned to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
+
+## 2026-03-04 - commit rule clarity for body line length
+
+- Commit: `pending`
+- Summary:
+  - Added explicit repository guideline that commit body lines must stay within 100 characters to match commitlint enforcement (`AGENTS.md`).
+  - Made commitlint body line-length enforcement explicit in local config with `body-max-line-length: 100` for clearer, self-documenting rules (`.commitlintrc.json`).
+- Validation:
+  - lint: pass (`npm run lint`)
+  - typecheck: skip (commit-rule/docs-only change)
+  - test: skip (commit-rule/docs-only change)
+  - build: skip (commit-rule/docs-only change)
+  - cargo:check: skip (commit-rule/docs-only change)
+- Risks / Follow-ups:
+  - Contributors still need to manually wrap long bullet text in commit bodies; this iteration clarifies rules but does not auto-wrap commit messages.
