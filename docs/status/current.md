@@ -3,7 +3,7 @@
 - Last Updated: 2026-03-04
 - Branch: `main`
 - Latest Commit: `ff8a4d2` (`feat(ui): add clipy-style compact popup and editor split`)
-- Working Tree: clean
+- Working Tree: uncommitted local changes for three-window Clipy parity design doc and status sync
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -41,6 +41,7 @@
 - Clipy-style popup hierarchy baseline added: compact menu now shows `History`/`Snippets` submenu structure plus `Edit Snippets...` and `Preferences...`, with history default capped to 30 and grouped as `1-10`, `11-20`, `21-30` (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/features/history/history.constants.ts`).
 - Popup keyboard navigation now supports `↑/↓` selection and `←/→` hierarchical navigation, with `Enter` selecting/pasting at leaf items (`src/App.tsx`).
 - Editor/preferences split baseline added: popup stays compact by default; snippet editing and settings move to expanded panels and runtime window resize targets (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
+- Added three-window Clipy parity design spec for next implementation iteration (`docs/plans/2026-03-04-three-window-clipy-parity-design.md`).
 
 ## In Progress / Gaps
 
@@ -50,15 +51,16 @@
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
 - US-011 packaging baseline now exists, but Windows installer artifact evidence and install/uninstall interactive checks are still pending.
-- New Clipy-style popup behavior still needs manual interactive verification (submenu navigation, paste flow, focus return, and editor/preferences entry transitions).
+- New Clipy-style popup behavior still needs adjustment to strict three-window model (remove `History/Snippets` wrapper nodes and move snippet/settings to independent windows).
+- Pixel-level visual parity is still blocked by missing reference screenshots for popup/snippet editor/preferences states.
 - Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
 - Manual matrix exists, but interactive GUI step execution evidence is still pending for both macOS and Windows.
 
 ## Next Focus
 
-1. Run macOS interactive verification for new compact popup hierarchy (`History` ranges, `Snippets` folders, arrow-key navigation, paste-and-hide behavior).
-2. Verify expanded `Edit Snippets...` and `Preferences...` transitions from popup and confirm expected window-size changes.
-3. Execute the existing manual matrix (US-001/US-003/US-004/US-006) and Windows packaging/install evidence update.
+1. Confirm three-window design spec and collect Clipy reference screenshots for pixel-level parity.
+2. Implement strict three-window behavior: popup-only quick paste + standalone snippet editor + standalone preferences.
+3. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions.
 
 ## Last Validation Snapshot
 

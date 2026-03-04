@@ -392,3 +392,20 @@ This file is append-only. Add one entry after each completed iteration.
   - Clipy-style popup/menu behavior still needs interactive hands-on verification (submenu traversal, paste hide, focus return) on macOS and Windows.
   - Expanded `Edit Snippets...` and `Preferences...` transition flows need manual UX verification in desktop runtime.
   - Local runtime is still Node `v25.2.1`; project target remains Node 22.
+
+## 2026-03-04 - three-window clipy parity design spec (planning)
+
+- Commit: `pending`
+- Summary:
+  - Added a dedicated design spec for strict three-window parity with Clipy:
+    - popup-only quick paste window
+    - standalone snippet editor window
+    - standalone preferences window
+  - Documented target information architecture, window sizing baselines, keyboard/focus behaviors, and 1:1 acceptance checklist in `docs/plans/2026-03-04-three-window-clipy-parity-design.md`.
+  - Added required screenshot list to unblock pixel-level style parity decisions.
+  - Synced status snapshot and PRD tracker to point implementation to this design-first step.
+- Validation:
+  - docs update only; no runtime command executed in this planning iteration.
+- Risks / Follow-ups:
+  - Pixel-level parity still depends on user-provided reference screenshots (popup root/submenu, snippet editor, preferences tabs).
+  - Implementation is still pending for strict three-window runtime behavior.
