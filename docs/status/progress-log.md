@@ -369,7 +369,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-04 - clipy-style compact popup menu and editor split baseline
 
-- Commit: `pending`
+- Commit: `ff8a4d2`
 - Summary:
   - Reworked panel UX from tri-mode tabs into Clipy-style compact popup hierarchy with root entries: `History`, `Snippets`, `Edit Snippets...`, and `Preferences...` (`src/App.tsx`).
   - Added popup menu model module for history range grouping (`1-10`, `11-20`, `21-30`), snippet folder submenus, and breadcrumb path resolution (`src/features/menu/popupMenuModel.ts`).

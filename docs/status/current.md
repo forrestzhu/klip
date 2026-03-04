@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `505b94d` (`feat(release): add desktop packaging baseline for us011`)
-- Working Tree: uncommitted local changes for Clipy-style compact popup menu and editor/preferences split
+- Latest Commit: `ff8a4d2` (`feat(ui): add clipy-style compact popup and editor split`)
+- Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
