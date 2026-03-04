@@ -5,6 +5,7 @@ pub mod hotkey;
 pub mod history_model;
 pub mod history_repository;
 pub mod history_storage;
+pub mod startup_launch;
 pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,6 +21,10 @@ pub fn run() {
                 })
                 .build(),
         )
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .setup(|app| {
             tray::setup_tray(app)?;
             hotkey::register_default_panel_hotkey(&app.handle()).map_err(|error| {
@@ -34,7 +39,9 @@ pub fn run() {
             clipboard::write_clipboard_text,
             direct_paste::direct_paste_text,
             hotkey::register_panel_hotkey,
-            hotkey::hide_panel_window
+            hotkey::hide_panel_window,
+            startup_launch::get_startup_launch_enabled,
+            startup_launch::set_startup_launch_enabled
         ])
         .on_menu_event(|app, event| {
             if let Some(action) = tray::parse_tray_menu_action(event.id().as_ref()) {
@@ -54,7 +61,7 @@ mod tests {
 
     #[test]
     fn default_capabilities_are_available() {
-        assert_eq!(commands::capabilities().len(), 3);
+        assert_eq!(commands::capabilities().len(), 4);
     }
 
     #[test]

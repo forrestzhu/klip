@@ -316,3 +316,28 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - User still reports seeing `shift+super+KeyV` in panel hotkey input after restart; interactive runtime repro evidence is pending to confirm whether the latest hardening fully resolves this path.
   - Cross-platform interactive manual verification for hotkey conflict/focus/escape behavior remains pending in `docs/status/manual-verification-us001-us006.md`.
+
+## 2026-03-04 - settings startup-launch toggle and runtime bridge baseline (US-010)
+
+- Commit: `pending`
+- Summary:
+  - Implemented settings startup-launch persistence module and desktop runtime bridge in frontend (`src/features/settings/startupLaunchStorage.ts`, `src/features/settings/startupLaunchRuntime.ts`, `src/features/settings/index.ts`, `src/App.tsx`).
+  - Added settings panel launch-on-login toggle UI and status messaging with browser-preview fallback behavior (`src/App.tsx`, `src/styles.css`).
+  - Added Tauri startup-launch command module and registered commands/plugin integration (`src-tauri/src/startup_launch.rs`, `src-tauri/src/lib.rs`, `src-tauri/src/commands.rs`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`).
+  - Added startup-launch storage unit coverage (`tests/startupLaunchStorage.test.ts`) and revalidated baseline quality gates.
+  - Synced status snapshot and PRD tracker to reflect US-010 scope completion baseline and remaining manual verification scope.
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass
+  - typecheck: pass
+  - test: pass (65 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 86.55%, branches 86.47%, funcs 87.5%, lines 86.55%)
+  - cargo:check: pass
+  - cargo:test: pass (24 tests)
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri` before 35s command timeout)
+- Risks / Follow-ups:
+  - Manual matrix execution is still pending for macOS/Windows interactive GUI workflows; startup-launch behavior still needs cross-platform hands-on evidence.
+  - US-011 packaging/install verification workflow remains todo.
+  - Local runtime is still Node `v25.2.1`; project target remains Node 22.

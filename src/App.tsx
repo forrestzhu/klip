@@ -13,17 +13,22 @@ import {
 	canonicalizePanelHotkey,
 	DEFAULT_PANEL_HOTKEY,
 	DEFAULT_PASTE_MODE,
+	DEFAULT_STARTUP_LAUNCH_ENABLED,
 	formatPanelHotkeyForDisplay,
 	hideDesktopPanelWindow,
 	isDesktopRuntime,
 	PASTE_MODE_CLIPBOARD_ONLY,
 	PASTE_MODE_DIRECT_WITH_FALLBACK,
 	type PasteMode,
+	readDesktopStartupLaunchEnabled,
 	readPanelHotkey,
 	readPasteMode,
+	readStartupLaunchEnabled,
 	registerDesktopPanelHotkey,
+	writeDesktopStartupLaunchEnabled,
 	writePanelHotkey,
 	writePasteMode,
+	writeStartupLaunchEnabled,
 } from "./features/settings";
 import {
 	createBrowserSnippetsStorage,
@@ -54,6 +59,9 @@ export function App() {
 	const [panelHotkeyDraft, setPanelHotkeyDraft] =
 		useState(DEFAULT_PANEL_HOTKEY);
 	const [pasteMode, setPasteMode] = useState<PasteMode>(DEFAULT_PASTE_MODE);
+	const [startupLaunchEnabled, setStartupLaunchEnabled] = useState(
+		DEFAULT_STARTUP_LAUNCH_ENABLED,
+	);
 	const [snippetFolders, setSnippetFolders] = useState<SnippetFolder[]>([]);
 	const [snippetItems, setSnippetItems] = useState<SnippetItem[]>([]);
 	const [selectedSnippetFolderId, setSelectedSnippetFolderId] = useState(
@@ -209,9 +217,13 @@ export function App() {
 			const savedPanelHotkey = normalizePanelHotkeyValue(
 				readPanelHotkey(window.localStorage),
 			);
+			const savedStartupLaunchEnabled = readStartupLaunchEnabled(
+				window.localStorage,
+			);
 			setPanelHotkey(savedPanelHotkey);
 			setPanelHotkeyDraft(savedPanelHotkey);
 			setPasteMode(readPasteMode(window.localStorage));
+			setStartupLaunchEnabled(savedStartupLaunchEnabled);
 
 			if (!isDesktopRuntime()) {
 				return;
@@ -236,6 +248,28 @@ export function App() {
 
 				setActionMessage(
 					`Global hotkey setup failed: ${toErrorMessage(error)}`,
+				);
+			}
+
+			try {
+				const runtimeStartupLaunchEnabled =
+					await readDesktopStartupLaunchEnabled();
+				if (disposed) {
+					return;
+				}
+
+				const persistedStartupLaunchEnabled = writeStartupLaunchEnabled(
+					window.localStorage,
+					runtimeStartupLaunchEnabled,
+				);
+				setStartupLaunchEnabled(persistedStartupLaunchEnabled);
+			} catch (error) {
+				if (disposed) {
+					return;
+				}
+
+				setActionMessage(
+					`Startup launch status check failed: ${toErrorMessage(error)}`,
 				);
 			}
 		};
@@ -448,6 +482,41 @@ export function App() {
 				? "Paste mode updated: clipboard only."
 				: "Paste mode updated: direct paste with clipboard fallback.",
 		);
+	};
+
+	const handleChangeStartupLaunch = async (
+		event: ChangeEvent<HTMLInputElement>,
+	) => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const requestedEnabled = event.currentTarget.checked;
+
+		if (!isDesktopRuntime()) {
+			const persisted = writeStartupLaunchEnabled(
+				window.localStorage,
+				requestedEnabled,
+			);
+			setStartupLaunchEnabled(persisted);
+			setActionMessage(
+				"Startup launch preference saved in browser preview. Desktop runtime is required to configure OS login items.",
+			);
+			return;
+		}
+
+		try {
+			const applied = await writeDesktopStartupLaunchEnabled(requestedEnabled);
+			const persisted = writeStartupLaunchEnabled(window.localStorage, applied);
+			setStartupLaunchEnabled(persisted);
+			setActionMessage(
+				persisted ? "Startup launch enabled." : "Startup launch disabled.",
+			);
+		} catch (error) {
+			setActionMessage(
+				`Startup launch update failed: ${toErrorMessage(error)}`,
+			);
+		}
 	};
 
 	const pasteTextWithFallback = async ({
@@ -959,6 +1028,20 @@ export function App() {
 							<option value={PASTE_MODE_CLIPBOARD_ONLY}>Clipboard only</option>
 						</select>
 					</label>
+					<label className="startup-launch-field">
+						Launch on login
+						<span className="startup-launch-row">
+							<input
+								aria-label="Launch on login"
+								checked={startupLaunchEnabled}
+								type="checkbox"
+								onChange={(event) => {
+									void handleChangeStartupLaunch(event);
+								}}
+							/>
+							<span>{startupLaunchEnabled ? "Enabled" : "Disabled"}</span>
+						</span>
+					</label>
 				</div>
 
 				<label className="hotkey-field">
@@ -1003,7 +1086,9 @@ export function App() {
 				</label>
 
 				<p className="settings-note">
-					Startup launch toggle will be added in a follow-up iteration.
+					{isDesktopRuntime()
+						? "Startup launch changes apply to OS login items immediately."
+						: "Browser preview only saves startup preference locally; desktop runtime is required to configure OS login items."}
 				</p>
 			</section>
 		);

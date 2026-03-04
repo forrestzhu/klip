@@ -101,6 +101,32 @@ body {
 	color: #475569;
 }
 
+.startup-launch-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	color: #475569;
+}
+
+.startup-launch-row {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	border: 1px solid #cbd5e1;
+	border-radius: 8px;
+	background: #ffffff;
+	font-size: 14px;
+	color: #0f172a;
+}
+
+.startup-launch-row input {
+	width: 16px;
+	height: 16px;
+	margin: 0;
+}
+
 .settings-panel {
 	display: grid;
 	gap: 14px;

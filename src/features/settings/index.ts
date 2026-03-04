@@ -22,3 +22,13 @@ export {
 	readPasteMode,
 	writePasteMode,
 } from "./pasteModeStorage";
+export {
+	readDesktopStartupLaunchEnabled,
+	writeDesktopStartupLaunchEnabled,
+} from "./startupLaunchRuntime";
+export {
+	DEFAULT_STARTUP_LAUNCH_ENABLED,
+	readStartupLaunchEnabled,
+	STARTUP_LAUNCH_STORAGE_KEY,
+	writeStartupLaunchEnabled,
+} from "./startupLaunchStorage";

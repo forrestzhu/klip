@@ -3,13 +3,13 @@
 - Last Updated: 2026-03-04
 - Branch: `main`
 - Latest Commit: `9fa6085` (`feat(runtime): add settings center and desktop clipboard bridge`)
-- Working Tree: uncommitted local changes for manual verification matrix and status sync
+- Working Tree: uncommitted local changes for US-010 startup-launch toggle/runtime bridge and status sync
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
-- Active scope: Phase 1 (MVP) plus Phase 2 settings center baseline and local desktop startup smoke baseline.
-- Product state: local offline clipboard workflow with history + snippets + settings tri-mode panel in web runtime; Tauri runtime supports tray/menu bar, configurable global hotkey, best-effort direct paste with clipboard fallback, and desktop-native clipboard read/write bridge for history capture.
+- Active scope: Phase 1 (MVP) plus Phase 2 settings center baseline completion and local desktop startup smoke baseline.
+- Product state: local offline clipboard workflow with history + snippets + settings tri-mode panel in web runtime; Tauri runtime supports tray/menu bar, configurable global hotkey, best-effort direct paste with clipboard fallback, desktop-native clipboard read/write bridge for history capture, and startup-launch toggle runtime bridge.
 
 ## Completed Highlights
 
@@ -20,6 +20,7 @@
 - History/Snippets/Settings tri-mode panel with mode memory and keyboard mode switch (`Ctrl/Cmd+1`, `Ctrl/Cmd+2`, `Ctrl/Cmd+3`).
 - Dedicated settings center baseline in panel for max history, panel hotkey apply, and paste mode selection (`src/App.tsx`, `src/styles.css`, `src/features/settings`).
 - Paste mode persistence (`direct-with-fallback` vs `clipboard-only`) for desktop reliability fallback testing (`src/features/settings/pasteModeStorage.ts`).
+- Settings center startup-launch toggle baseline added with local persistence normalization and desktop runtime bridge (`src/features/settings/startupLaunchStorage.ts`, `src/features/settings/startupLaunchRuntime.ts`, `src-tauri/src/startup_launch.rs`, `src-tauri/src/lib.rs`).
 - Tauri tray/menu bar resident entry with icon click open, menu open, and quit action (`src-tauri/src/tray.rs`).
 - Tauri global hotkey baseline for opening panel, dynamic rebind, and conflict-aware error feedback (`src-tauri/src/hotkey.rs`, `src-tauri/src/lib.rs`).
 - Direct paste abstraction baseline in Tauri (`src-tauri/src/direct_paste.rs`) with platform paste attempt (macOS `osascript`, Windows `SendKeys`) and clipboard fallback response.
@@ -41,7 +42,7 @@
 - History capture now has desktop-native clipboard read path, but still uses polling and lacks event-driven system listener integration (US-001 hardening gap).
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
-- Settings center startup-launch toggle is still missing (US-010 remaining scope).
+- Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
 - Cross-platform installer release and e2e desktop regression baseline (US-011, US-012 partial) not implemented.
 - Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
 - Manual matrix exists, but interactive GUI step execution evidence is still pending for both macOS and Windows.
@@ -50,7 +51,7 @@
 
 1. Execute the manual verification matrix on macOS interactive session and record pass/fail for US-001/US-003/US-004/US-006.
 2. Execute the same manual verification matrix on Windows and record cross-platform deltas.
-3. Complete US-010 remaining scope: startup-launch toggle and related runtime bridge.
+3. Start US-011 packaging verification baseline (artifact checklist + install/run validation plan).
 
 ## Last Validation Snapshot
 
@@ -74,6 +75,7 @@
 - 2026-03-04: panel hotkey draft canonicalization follow-up validated via `npm run lint` and `npm run test` (59 tests).
 - 2026-03-04: panel hotkey runtime-return canonicalization follow-up validated via `npm run lint` and `npm run test` (59 tests).
 - 2026-03-04: token-based panel hotkey canonicalization follow-up validated via `npm run qa` (`test` 60 tests; coverage statements 87.37%, branches 85.88%, funcs 89.01%, lines 87.37%), `npm run lint`, and `cargo test --manifest-path src-tauri/Cargo.toml` (23 tests).
+- 2026-03-04: startup-launch toggle/runtime bridge iteration validated via `npm run qa` (`test` 65 tests; coverage statements 86.55%, branches 86.47%, funcs 87.5%, lines 86.55%), `cargo test --manifest-path src-tauri/Cargo.toml` (24 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri` before command timeout at 35s).
 
 ## Quick Resume Steps
 
