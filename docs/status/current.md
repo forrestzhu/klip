@@ -3,7 +3,7 @@
 - Last Updated: 2026-03-04
 - Branch: `main`
 - Latest Commit: `0e2abb9` (`feat(ui): align popup parity and runtime sizing`)
-- Working Tree: clean
+- Working Tree: dirty (`.github/workflows/ci.yml` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -48,6 +48,7 @@
 - Popup shell/chrome follow-up updated: runtime decoration toggle is removed from resize path to avoid blocking popup `setSize`; popup sizing now follows rendered content changes via `ResizeObserver` (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
 - Added Tauri capability file for main window to explicitly allow runtime window operations used by popup flow (`src-tauri/capabilities/default.json`).
 - Added local popup badcase screenshot artifacts for visual debugging and manual verification traceability (`docs/klip-test-ui/*.png`).
+- CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 
 ## In Progress / Gaps
 
@@ -103,6 +104,7 @@
 - 2026-03-04: popup resize error hotfix validated via `npm run format`, `npm run lint`, `npm run typecheck`, and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri` before 30s command timeout).
 - 2026-03-04: popup content-size sync follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri`).
 - 2026-03-04: popup parity commit preflight validated via `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), `npm run build`, `npm run cargo:check`, `cargo test --manifest-path src-tauri/Cargo.toml` (24 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri`; Vite switched to `5174` because `5173` was occupied).
+- 2026-03-04: CI workflow hardening iteration validated via `npm run lint` after updating install path in `.github/workflows/ci.yml`.
 
 ## Quick Resume Steps
 

@@ -500,3 +500,19 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Popup badcase still needs interactive GUI verification against new screenshot artifacts.
   - Strict three-window split (`snippet-editor` / `preferences` standalone windows) remains pending.
+
+## 2026-03-04 - ci npm install stability hardening
+
+- Commit: `pending`
+- Summary:
+  - Reviewed failing CI run `22661252459` across `ubuntu-latest`, `windows-latest`, and `macos-latest`; all jobs failed at `npm ci` with `Exit handler never called` while using Node `22.22.0` and npm `10.9.4`.
+  - Hardened quality workflow install path by pinning setup-node to explicit `22.22.0`, explicitly setting npm `10.9.4`, disabling Husky in CI install, adding retry + cache clean around `npm ci`, and printing npm debug logs on final failure (`.github/workflows/ci.yml`).
+  - Updated status artifacts to capture this CI stabilization iteration (`docs/status/current.md`, `docs/status/prd-tracker.md`, `docs/status/progress-log.md`).
+- Validation:
+  - lint: pass (`npm run lint`)
+  - typecheck: skip (workflow/docs-only change)
+  - test: skip (workflow/docs-only change)
+  - build: skip (workflow/docs-only change)
+  - cargo:check: skip (workflow/docs-only change)
+- Risks / Follow-ups:
+  - CI re-run is required to confirm this hardening resolves recurring `npm ci` internal failures on all three OS jobs.

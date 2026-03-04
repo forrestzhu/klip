@@ -25,11 +25,45 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version: 22.22.0
           cache: npm
 
-      - name: Install Node dependencies
-        run: npm ci
+      - name: Ensure reliable npm version
+        run: npm install -g npm@10.9.4
+
+      - name: Install Node dependencies (with retry)
+        shell: bash
+        env:
+          HUSKY: 0
+        run: |
+          set -o pipefail
+
+          for attempt in 1 2 3; do
+            if npm ci; then
+              exit 0
+            fi
+
+            echo "npm ci failed (attempt ${attempt}/3)."
+            if [ "${attempt}" -lt 3 ]; then
+              echo "cleaning npm cache and retrying..."
+              npm cache clean --force || true
+              sleep 5
+              continue
+            fi
+
+            npm_cache="$(npm config get cache || true)"
+            if [ -n "${npm_cache}" ] && [ -d "${npm_cache}/_logs" ]; then
+              echo "dumping npm debug logs from ${npm_cache}/_logs"
+              ls -la "${npm_cache}/_logs" || true
+              for log_file in "${npm_cache}"/_logs/*-debug-0.log; do
+                [ -f "${log_file}" ] || continue
+                echo "----- ${log_file} -----"
+                cat "${log_file}" || true
+              done
+            fi
+
+            exit 1
+          done
 
       - name: Lint
         run: npm run lint
