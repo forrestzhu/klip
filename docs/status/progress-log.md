@@ -191,3 +191,128 @@ This file is append-only. Add one entry after each completed iteration.
   - tauri:info: pass (warning: Xcode not installed)
 - Risks / Follow-ups:
   - Merge/revert commits are intentionally exempt from template validation.
+
+## 2026-03-04 - local desktop startup and baseline qa verification
+
+- Commit: `pending`
+- Summary:
+  - Read `docs/status/current.md`, `docs/status/prd-tracker.md`, and recent commit history to resume from latest baseline (`9fa6085`).
+  - Ran `npm run dev:desktop` and confirmed desktop runtime startup (`Running target/debug/klip-tauri`); Vite auto-switched to port `5174` because `5173` was already in use.
+  - Ran `npm run qa`; lint/typecheck/unit tests/build/coverage/cargo check all passed, and e2e remained intentionally skipped without Playwright setup.
+  - Synced status snapshot and PRD tracker evidence for this local startup + basic test iteration.
+- Validation:
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri`)
+  - lint: pass
+  - typecheck: pass
+  - test: pass (51 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 89.97%, branches 87.26%, funcs 89.41%, lines 89.97%)
+  - cargo:check: pass
+- Risks / Follow-ups:
+  - Local environment is still Node `v25.2.1`; project target remains Node 22 for consistent team/CI behavior.
+  - Manual verification matrix for US-001/US-006 and startup-launch toggle implementation for US-010 remain next scope.
+
+## 2026-03-04 - manual verification matrix baseline for US-001/US-003/US-004/US-006
+
+- Commit: `pending`
+- Summary:
+  - Added a dedicated manual verification matrix for clipboard capture/tray/hotkey/direct-paste scenarios across macOS and Windows (`docs/status/manual-verification-us001-us006.md`).
+  - Recorded local machine baseline (macOS 15.7.4, Node `v25.2.1`) and attached reproducible startup log evidence at `/tmp/klip-dev-desktop-20260304.log`.
+  - Re-ran desktop startup preflight (`npm run dev:desktop`) and confirmed runtime reaches `Running target/debug/klip-tauri`.
+  - Re-ran baseline gates (`npm run qa`) and Rust unit suite (`cargo test --manifest-path src-tauri/Cargo.toml`) for verification evidence refresh.
+  - Synced `docs/status/current.md` and `docs/status/prd-tracker.md` to reference this matrix and next manual execution scope.
+- Validation:
+  - dev:desktop smoke: pass (log evidence includes `Running target/debug/klip-tauri`)
+  - lint: pass
+  - typecheck: pass
+  - test: pass (51 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 89.97%, branches 87.26%, funcs 89.41%, lines 89.97%)
+  - cargo:check: pass
+  - cargo:test: pass (23 tests)
+- Risks / Follow-ups:
+  - Manual matrix rows are still `pending`; interactive GUI verification on macOS and Windows is not yet executed in this terminal-only session.
+  - Local runtime still uses Node `v25.2.1`; project target remains Node 22 for team/CI parity.
+
+## 2026-03-04 - panel hotkey default and display normalization update (US-004)
+
+- Commit: `pending`
+- Summary:
+  - Changed panel hotkey default from `CommandOrControl+Shift+K` to `CommandOrControl+Shift+V` in frontend and Tauri runtime (`src/features/settings/hotkey.constants.ts`, `src-tauri/src/hotkey.rs`).
+  - Added legacy-default migration so stored old defaults (`CommandOrControl+Shift+K` and `shift+super+KeyK`) are auto-upgraded to the new default in settings storage (`src/features/settings/hotkeyStorage.ts`).
+  - Added hotkey display formatter to render normalized runtime strings (for example `shift+super+KeyV`) as readable labels (for example `Cmd+Shift+V`) in Settings, and updated user-facing messaging/placeholder text (`src/features/settings/hotkeyDisplay.ts`, `src/features/settings/index.ts`, `src/App.tsx`).
+  - Added new tests for hotkey display formatting and legacy storage migration (`tests/panelHotkeyDisplay.test.ts`, `tests/panelHotkeyStorage.test.ts`).
+  - Updated manual verification matrix default shortcut reference to `CommandOrControl+Shift+V` (`docs/status/manual-verification-us001-us006.md`).
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass (57 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 87.55%, branches 85.57%, funcs 88.88%, lines 87.55%)
+  - cargo:check: pass
+  - cargo:test: pass (23 tests)
+  - dev:desktop smoke: pass (log evidence `/tmp/klip-dev-desktop-hotkey-20260304.log`, reached `Running target/debug/klip-tauri`)
+- Risks / Follow-ups:
+  - Interactive hotkey conflict/focus behavior validation on macOS and Windows is still pending in `docs/status/manual-verification-us001-us006.md`.
+  - Local runtime is still Node `v25.2.1`; project target remains Node 22.
+
+## 2026-03-04 - panel hotkey canonical input normalization follow-up
+
+- Commit: `pending`
+- Summary:
+  - Fixed remaining UX inconsistency where panel hotkey input could still display runtime-normalized strings like `shift+super+KeyV` after registration.
+  - Updated hotkey storage normalization to canonicalize runtime tokens before persistence/input value rendering (for example `shift+super+KeyV` -> `CommandOrControl+Shift+V`) in `src/features/settings/hotkeyStorage.ts`.
+  - Added regression coverage for runtime-format canonicalization in `tests/panelHotkeyStorage.test.ts`.
+- Validation:
+  - lint: pass
+  - test: pass (58 tests)
+- Risks / Follow-ups:
+  - Cross-platform interactive manual verification for hotkey conflict/focus/escape behavior remains pending in `docs/status/manual-verification-us001-us006.md`.
+
+## 2026-03-04 - panel hotkey draft canonicalization follow-up
+
+- Commit: `pending`
+- Summary:
+  - Addressed remaining inconsistency where settings input could still show runtime-formatted `shift+super+KeyV` after app restart.
+  - Exported canonicalizer in settings hotkey storage and reused it in App hotkey draft `onChange` + apply flow, so input state is kept canonical (`CommandOrControl+Shift+V`).
+  - Added read-path normalization regression test for existing runtime-format storage value (`tests/panelHotkeyStorage.test.ts`).
+- Validation:
+  - lint: pass
+  - test: pass (59 tests)
+- Risks / Follow-ups:
+  - Cross-platform interactive manual verification for hotkey conflict/focus/escape behavior remains pending in `docs/status/manual-verification-us001-us006.md`.
+
+## 2026-03-04 - panel hotkey runtime return canonicalization follow-up
+
+- Commit: `pending`
+- Summary:
+  - Added canonicalization in desktop hotkey runtime bridge so Tauri-returned shortcut strings are normalized before UI state update (`src/features/settings/hotkeyRuntime.ts`).
+  - Hardened App hotkey initialization/apply paths to normalize values before state assignment, preventing restart-time reappearance of runtime format strings (`src/App.tsx`).
+- Validation:
+  - lint: pass
+  - test: pass (59 tests)
+- Risks / Follow-ups:
+  - Interactive macOS/Windows manual verification of hotkey conflict/focus/escape behavior remains pending in `docs/status/manual-verification-us001-us006.md`.
+
+## 2026-03-04 - panel hotkey token-based canonicalization hardening
+
+- Commit: `pending`
+- Summary:
+  - Hardened hotkey canonicalization to extract alphanumeric tokens instead of splitting only on `+`, so runtime variants like `shift super KeyV` and `shift+super+KeyV` normalize identically (`src/features/settings/hotkeyStorage.ts`).
+  - Added regression test for non-plus separator runtime format normalization (`tests/panelHotkeyStorage.test.ts`).
+  - Revalidated local quality gates after hardening update.
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass (60 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 87.37%, branches 85.88%, funcs 89.01%, lines 87.37%)
+  - cargo:check: pass
+  - cargo:test: pass (23 tests)
+- Risks / Follow-ups:
+  - User still reports seeing `shift+super+KeyV` in panel hotkey input after restart; interactive runtime repro evidence is pending to confirm whether the latest hardening fully resolves this path.
+  - Cross-platform interactive manual verification for hotkey conflict/focus/escape behavior remains pending in `docs/status/manual-verification-us001-us006.md`.

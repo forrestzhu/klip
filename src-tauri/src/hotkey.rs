@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::tray;
 
-pub const DEFAULT_PANEL_HOTKEY: &str = "CommandOrControl+Shift+K";
+pub const DEFAULT_PANEL_HOTKEY: &str = "CommandOrControl+Shift+V";
 
 #[derive(Default)]
 pub struct PanelHotkeyState {
@@ -22,9 +22,9 @@ pub struct RegisterPanelHotkeyResponse {
 
 #[derive(Debug, Error)]
 enum PanelHotkeyError {
-    #[error("Shortcut cannot be empty. Use a format like CommandOrControl+Shift+K.")]
+    #[error("Shortcut cannot be empty. Use a format like CommandOrControl+Shift+V.")]
     EmptyShortcut,
-    #[error("Shortcut format is invalid. Use a format like CommandOrControl+Shift+K.")]
+    #[error("Shortcut format is invalid. Use a format like CommandOrControl+Shift+V.")]
     InvalidShortcut,
     #[error("Shortcut conflict: \"{shortcut}\" is already in use. Choose a different shortcut.")]
     Conflict { shortcut: String },

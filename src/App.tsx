@@ -10,8 +10,10 @@ import {
 } from "./features/history";
 import { directPasteText } from "./features/paste";
 import {
+	canonicalizePanelHotkey,
 	DEFAULT_PANEL_HOTKEY,
 	DEFAULT_PASTE_MODE,
+	formatPanelHotkeyForDisplay,
 	hideDesktopPanelWindow,
 	isDesktopRuntime,
 	PASTE_MODE_CLIPBOARD_ONLY,
@@ -75,6 +77,7 @@ export function App() {
 	const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
 
 	const runtimeRef = useRef<RuntimeContext | null>(null);
+	const panelHotkeyDraftDisplay = canonicalizePanelHotkey(panelHotkeyDraft);
 
 	const filteredHistoryItems = useMemo(() => {
 		const keyword = query.trim().toLowerCase();
@@ -203,7 +206,9 @@ export function App() {
 		}
 
 		const initializeSettings = async () => {
-			const savedPanelHotkey = readPanelHotkey(window.localStorage);
+			const savedPanelHotkey = normalizePanelHotkeyValue(
+				readPanelHotkey(window.localStorage),
+			);
 			setPanelHotkey(savedPanelHotkey);
 			setPanelHotkeyDraft(savedPanelHotkey);
 			setPasteMode(readPasteMode(window.localStorage));
@@ -219,9 +224,8 @@ export function App() {
 					return;
 				}
 
-				const persistedHotkey = writePanelHotkey(
-					window.localStorage,
-					registeredHotkey,
+				const persistedHotkey = normalizePanelHotkeyValue(
+					writePanelHotkey(window.localStorage, registeredHotkey),
 				);
 				setPanelHotkey(persistedHotkey);
 				setPanelHotkeyDraft(persistedHotkey);
@@ -392,15 +396,18 @@ export function App() {
 		}
 
 		const candidateHotkey = panelHotkeyDraft.trim();
-		if (candidateHotkey.length === 0) {
+		const normalizedCandidateHotkey = canonicalizePanelHotkey(candidateHotkey);
+		if (normalizedCandidateHotkey.length === 0) {
 			setActionMessage(
-				"Shortcut cannot be empty. Use a format like CommandOrControl+Shift+K.",
+				"Shortcut cannot be empty. Use a format like CommandOrControl+Shift+V.",
 			);
 			return;
 		}
 
 		if (!isDesktopRuntime()) {
-			const persisted = writePanelHotkey(window.localStorage, candidateHotkey);
+			const persisted = normalizePanelHotkeyValue(
+				writePanelHotkey(window.localStorage, normalizedCandidateHotkey),
+			);
 			setPanelHotkey(persisted);
 			setPanelHotkeyDraft(persisted);
 			setActionMessage(
@@ -410,11 +417,17 @@ export function App() {
 		}
 
 		try {
-			const registered = await registerDesktopPanelHotkey(candidateHotkey);
-			const persisted = writePanelHotkey(window.localStorage, registered);
+			const registered = await registerDesktopPanelHotkey(
+				normalizedCandidateHotkey,
+			);
+			const persisted = normalizePanelHotkeyValue(
+				writePanelHotkey(window.localStorage, registered),
+			);
 			setPanelHotkey(persisted);
 			setPanelHotkeyDraft(persisted);
-			setActionMessage(`Panel hotkey updated to ${persisted}.`);
+			setActionMessage(
+				`Panel hotkey updated to ${formatPanelHotkeyForDisplay(persisted)}.`,
+			);
 		} catch (error) {
 			setActionMessage(`Panel hotkey update failed: ${toErrorMessage(error)}`);
 		}
@@ -954,11 +967,13 @@ export function App() {
 						<input
 							aria-label="Panel hotkey"
 							className="hotkey-input"
-							placeholder="CommandOrControl+Shift+K"
+							placeholder="CommandOrControl+Shift+V"
 							type="text"
-							value={panelHotkeyDraft}
+							value={panelHotkeyDraftDisplay}
 							onChange={(event) => {
-								setPanelHotkeyDraft(event.currentTarget.value);
+								setPanelHotkeyDraft(
+									canonicalizePanelHotkey(event.currentTarget.value),
+								);
 							}}
 							onKeyDown={(event) => {
 								if (event.key === "Enter") {
@@ -977,7 +992,9 @@ export function App() {
 							Apply
 						</button>
 					</div>
-					<span className="hotkey-hint">Current: {panelHotkey}</span>
+					<span className="hotkey-hint">
+						Current: {formatPanelHotkeyForDisplay(panelHotkey)}
+					</span>
 					<span className="hotkey-hint">
 						{isDesktopRuntime()
 							? "Hotkey registration is active in desktop runtime."
@@ -1129,4 +1146,9 @@ function toErrorMessage(error: unknown): string {
 	}
 
 	return "Unexpected runtime error.";
+}
+
+function normalizePanelHotkeyValue(value: string): string {
+	const normalized = canonicalizePanelHotkey(value);
+	return normalized.length > 0 ? normalized : DEFAULT_PANEL_HOTKEY;
 }

@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { canonicalizePanelHotkey } from "./hotkeyStorage";
 
 interface RegisterPanelHotkeyPayload {
 	shortcut: string;
@@ -20,7 +21,8 @@ export async function registerDesktopPanelHotkey(
 	const response = await invoke<{ shortcut: string }>("register_panel_hotkey", {
 		shortcut: payload.shortcut,
 	});
-	return response.shortcut;
+	const canonical = canonicalizePanelHotkey(response.shortcut);
+	return canonical.length > 0 ? canonical : response.shortcut;
 }
 
 export async function hideDesktopPanelWindow(): Promise<void> {

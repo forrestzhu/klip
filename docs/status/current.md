@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `30a6501` (`feat(runtime): add global hotkey and direct paste fallback`)
-- Working Tree: uncommitted local changes for settings center baseline, desktop startup scripts, clipboard monitor runtime fix, desktop-native clipboard runtime bridge, and commit message policy enforcement
+- Latest Commit: `9fa6085` (`feat(runtime): add settings center and desktop clipboard bridge`)
+- Working Tree: uncommitted local changes for manual verification matrix and status sync
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -27,6 +27,13 @@
 - Clipboard monitor timer binding fix for Tauri window runtime (`Can only call Window.setTimeout on instances of Window`) with regression test coverage (`src/features/history/clipboardMonitor.ts`, `tests/clipboardMonitor.test.ts`).
 - Desktop-native clipboard runtime bridge added: frontend now selects desktop clipboard port (`createClipboardPort`) and Tauri exposes `read_clipboard_text` / `write_clipboard_text` commands (`src/features/history/browserClipboard.ts`, `src-tauri/src/clipboard.rs`, `src-tauri/src/lib.rs`).
 - Commit message governance tightened: commit body now requires `What changes` / `Why needed` / `How tested` sections, enforced by `commit-msg` hook + validator script (`.commitlintrc.json`, `.husky/commit-msg`, `scripts/validate-commit-message.mjs`, `AGENTS.md`, `README.md`).
+- Local desktop startup smoke revalidated on latest runtime baseline (`npm run dev:desktop` reached `Running target/debug/klip-tauri`), and full local `npm run qa` pipeline passed.
+- Added desktop manual verification matrix baseline for US-001/US-003/US-004/US-006 with reproducible scenarios and latest preflight evidence (`docs/status/manual-verification-us001-us006.md`).
+- Panel hotkey usability update: default shortcut changed to `CommandOrControl+Shift+V`, legacy default `...+K` values auto-migrate to new default, and normalized runtime values (for example `shift+super+KeyV`) now render as readable labels (for example `Cmd+Shift+V`) in Settings (`src/features/settings`, `src/App.tsx`, `src-tauri/src/hotkey.rs`).
+- Panel hotkey input normalization update: runtime-returned strings (for example `shift+super+KeyV`) are now canonicalized before persistence/input display, so settings field stores and shows `CommandOrControl+Shift+V` consistently (`src/features/settings/hotkeyStorage.ts`).
+- Panel hotkey draft field now canonicalizes on user input and on apply flow, preventing runtime-formatted strings from reappearing in the input box (`src/App.tsx`, `src/features/settings/hotkeyStorage.ts`).
+- Panel hotkey runtime bridge now canonicalizes backend return values before they reach UI state, removing remaining `shift+super+KeyV` leakage in restart scenarios (`src/features/settings/hotkeyRuntime.ts`, `src/App.tsx`).
+- Panel hotkey parser now canonicalizes by extracted tokens instead of relying on `+` separators, so runtime variants like `shift super KeyV` or `shift+super+KeyV` map to `CommandOrControl+Shift+V` consistently (`src/features/settings/hotkeyStorage.ts`).
 
 ## In Progress / Gaps
 
@@ -36,12 +43,14 @@
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Settings center startup-launch toggle is still missing (US-010 remaining scope).
 - Cross-platform installer release and e2e desktop regression baseline (US-011, US-012 partial) not implemented.
+- Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
+- Manual matrix exists, but interactive GUI step execution evidence is still pending for both macOS and Windows.
 
 ## Next Focus
 
-1. Run focused manual verification for clipboard history capture + tray/hotkey/direct-paste on macOS/Windows (US-001/US-003/US-004/US-006).
-2. Complete US-010 remaining scope: startup-launch toggle and related runtime bridge.
-3. Add snippets quick-trigger strategy and conflict handling (US-008 remaining scope).
+1. Execute the manual verification matrix on macOS interactive session and record pass/fail for US-001/US-003/US-004/US-006.
+2. Execute the same manual verification matrix on Windows and record cross-platform deltas.
+3. Complete US-010 remaining scope: startup-launch toggle and related runtime bridge.
 
 ## Last Validation Snapshot
 
@@ -55,11 +64,23 @@
 - 2026-03-04: `cargo test --manifest-path src-tauri/Cargo.toml` passed (23 tests).
 - 2026-03-04: `npm run tauri:info` completed (warning: Xcode not installed, command exited successfully).
 - 2026-03-04: `npm run dev:desktop` smoke passed (process reached `Running target/debug/klip-tauri`).
+- 2026-03-04: `npm run qa` passed (`lint`/`typecheck`/`test`/`test:e2e` skip/`build`/`test:coverage`/`cargo:check`).
+- 2026-03-04: `npm run dev:desktop` smoke passed again on latest commit (`9fa6085`), with Vite auto-switching to port `5174` because `5173` was occupied.
+- 2026-03-04: `npm run dev:desktop` startup preflight rechecked and logged at `/tmp/klip-dev-desktop-20260304.log` (includes `Running target/debug/klip-tauri`).
+- 2026-03-04: `cargo test --manifest-path src-tauri/Cargo.toml` passed again (23 tests).
+- 2026-03-04: hotkey usability update validation passed via `npm run qa` (`test` now 57 tests, `test:coverage` statements 87.55%, branches 85.57%, funcs 88.88%, lines 87.55%) and `cargo test --manifest-path src-tauri/Cargo.toml` (23 tests).
+- 2026-03-04: `npm run dev:desktop` startup smoke rechecked after hotkey update (log: `/tmp/klip-dev-desktop-hotkey-20260304.log`, reached `Running target/debug/klip-tauri`).
+- 2026-03-04: panel hotkey canonical-input fix validated via `npm run lint` and `npm run test` (58 tests).
+- 2026-03-04: panel hotkey draft canonicalization follow-up validated via `npm run lint` and `npm run test` (59 tests).
+- 2026-03-04: panel hotkey runtime-return canonicalization follow-up validated via `npm run lint` and `npm run test` (59 tests).
+- 2026-03-04: token-based panel hotkey canonicalization follow-up validated via `npm run qa` (`test` 60 tests; coverage statements 87.37%, branches 85.88%, funcs 89.01%, lines 87.37%), `npm run lint`, and `cargo test --manifest-path src-tauri/Cargo.toml` (23 tests).
 
 ## Quick Resume Steps
 
-1. Run `nvm use` (project requires Node 22 from `.nvmrc`).
+1. Ensure local Node major is 22 (`node -v`; use your local version manager such as `nvm`/`asdf`/`volta` as available).
 2. Read `docs/status/prd-tracker.md`.
-3. Read latest entries in `docs/status/progress-log.md`.
-4. Run `git log --oneline -n 10`.
-5. Run `npm run dev:desktop` for local desktop smoke verification.
+3. Read `docs/status/manual-verification-us001-us006.md`.
+4. Read latest entries in `docs/status/progress-log.md`.
+5. Run `git log --oneline -n 10`.
+6. Run `npm run dev:desktop` for local desktop smoke verification.
+7. Run `npm run qa` for baseline quality gates.

@@ -19,12 +19,58 @@ describe("panel hotkey storage", () => {
 		expect(readPanelHotkey(storage)).toBe("CommandOrControl+Shift+V");
 	});
 
+	it("normalizes tauri runtime hotkey format into readable canonical value", () => {
+		const storage = createStorage();
+		const persisted = writePanelHotkey(storage, "shift+super+KeyV");
+
+		expect(persisted).toBe("CommandOrControl+Shift+V");
+		expect(readPanelHotkey(storage)).toBe("CommandOrControl+Shift+V");
+	});
+
+	it("normalizes runtime hotkey with non-plus separators", () => {
+		const storage = createStorage();
+		const persisted = writePanelHotkey(storage, "shift super KeyV");
+
+		expect(persisted).toBe("CommandOrControl+Shift+V");
+		expect(readPanelHotkey(storage)).toBe("CommandOrControl+Shift+V");
+	});
+
+	it("normalizes existing runtime-format storage value on read", () => {
+		const storage = createStorage();
+		storage.setItem("klip.settings.panelHotkey", "shift+super+KeyV");
+
+		expect(readPanelHotkey(storage)).toBe("CommandOrControl+Shift+V");
+		expect(storage.getItem("klip.settings.panelHotkey")).toBe(
+			"CommandOrControl+Shift+V",
+		);
+	});
+
 	it("falls back to default when writing empty values", () => {
 		const storage = createStorage();
 		const persisted = writePanelHotkey(storage, "   ");
 
 		expect(persisted).toBe(DEFAULT_PANEL_HOTKEY);
 		expect(readPanelHotkey(storage)).toBe(DEFAULT_PANEL_HOTKEY);
+	});
+
+	it("migrates legacy default hotkey literal to latest default", () => {
+		const storage = createStorage();
+		storage.setItem("klip.settings.panelHotkey", "CommandOrControl+Shift+K");
+
+		expect(readPanelHotkey(storage)).toBe(DEFAULT_PANEL_HOTKEY);
+		expect(storage.getItem("klip.settings.panelHotkey")).toBe(
+			DEFAULT_PANEL_HOTKEY,
+		);
+	});
+
+	it("migrates legacy normalized hotkey to latest default", () => {
+		const storage = createStorage();
+		storage.setItem("klip.settings.panelHotkey", "shift+super+KeyK");
+
+		expect(readPanelHotkey(storage)).toBe(DEFAULT_PANEL_HOTKEY);
+		expect(storage.getItem("klip.settings.panelHotkey")).toBe(
+			DEFAULT_PANEL_HOTKEY,
+		);
 	});
 });
 
