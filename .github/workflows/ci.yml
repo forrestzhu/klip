@@ -90,7 +90,7 @@ jobs:
         if: ${{ hashFiles('src-tauri/Cargo.toml') != '' }}
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.84.0
+          toolchain: 1.85.0
 
       - name: Cache Rust
         if: ${{ hashFiles('src-tauri/Cargo.toml') != '' }}

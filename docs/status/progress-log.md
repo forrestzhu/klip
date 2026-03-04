@@ -535,3 +535,20 @@ This file is append-only. Add one entry after each completed iteration.
   - cargo:check: skip (dependency/CI config iteration)
 - Risks / Follow-ups:
   - Current CI run `22670335659` started before this lockfile/registry fix; re-run is required on the new commit to verify all three OS jobs install from npmjs successfully.
+
+## 2026-03-04 - ci post-npm follow-up fixes (windows lint + ubuntu cargo)
+
+- Commit: `pending`
+- Summary:
+  - Verified npm root-cause fix effectiveness: in run `22672192432`, `Install Node dependencies` passed on Ubuntu/macOS/Windows with npm registry now resolved as `https://registry.npmjs.org/`.
+  - Fixed new Windows lint blocker caused by CRLF checkout transformations by adding `.gitattributes` with LF normalization (`* text=auto eol=lf`).
+  - Fixed Ubuntu `cargo:check` blocker (`edition2024` parse requirement from transitive `dlopen2`) by upgrading Rust toolchain from `1.84.0` to `1.85.0` in both `rust-toolchain.toml` and CI workflow.
+- Validation:
+  - lint: pass (`npm run lint`)
+  - cargo:check: pass (`npm run cargo:check`)
+  - CI evidence: run `22672192432` shows dependency install success on all three OS jobs before non-npm failures.
+  - typecheck: skip (already validated in CI run evidence)
+  - test: skip (already validated in CI run evidence)
+  - build: skip (already validated in CI run evidence)
+- Risks / Follow-ups:
+  - CI run `22672192432` still in progress for macOS at log-capture time; a fresh run on this follow-up commit is required to confirm end-to-end green state.
