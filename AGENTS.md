@@ -53,7 +53,26 @@
 ## Commit & Pull Request Guidelines
 - Follow Conventional Commits: `feat|fix|docs|style|refactor|perf|test|chore|ci`.
 - Commit header max length is 72, lowercase subject, no trailing period.
-- Hooks enforce quality: `pre-commit` runs `lint-staged`; `commit-msg` runs commitlint.
+- Every commit message must include structured body sections with non-empty content:
+	- `### What changes were proposed in this CL?`
+	- `### Why are the changes needed?`
+	- `### How was this CL tested?`
+- Commit message template:
+```text
+feat|fix|docs|style|refactor|perf|test|chore|ci: short summary
+
+### What changes were proposed in this CL?
+- Scope might be affected include: ...
+- ...
+
+### Why are the changes needed?
+- ...
+
+### How was this CL tested?
+- `npm run lint`
+- `npm run typecheck`
+```
+- Hooks enforce quality: `pre-commit` runs `lint-staged`; `commit-msg` runs `commitlint` plus `scripts/validate-commit-message.mjs` for the required body template.
 - PRs must complete the template: scope, DoD checks, security/privacy checks, risks, and rollback plan.
 - Use trunk-based branching: short-lived `feat/*|fix/*|chore/*` branches from `main`, prefer squash merge, avoid direct push to `main` except emergency `hotfix/*`.
 

@@ -49,7 +49,11 @@ scripts/            QA and automation scripts
 nvm use
 npm install
 npm run dev
+npm run dev:desktop
 ```
+
+- `npm run dev`: web preview only.
+- `npm run dev:desktop`: start the full Tauri desktop runtime for local manual testing.
 
 ## Quality Gates
 
@@ -70,6 +74,35 @@ npm run qa
 ```
 
 `test:e2e` currently skips when no Playwright setup exists.
+
+## Commit Message Format
+
+Use Conventional Commits with a required body template:
+
+```text
+feat|fix|docs|style|refactor|perf|test|chore|ci: short summary
+
+### What changes were proposed in this CL?
+- ...
+
+### Why are the changes needed?
+- ...
+
+### How was this CL tested?
+- ...
+```
+
+`commit-msg` hook enforces both conventional header rules and these body sections.
+
+## Desktop Smoke Test
+
+1. Run `nvm use` to match `.nvmrc` (`Node 22`).
+2. Run `npm run dev:desktop`.
+3. Verify the basic flow:
+	- Tray icon is visible and can reopen the window.
+	- `Ctrl/Cmd+1`, `Ctrl/Cmd+2`, `Ctrl/Cmd+3` switch History/Snippets/Settings.
+	- Settings panel can update max history, panel hotkey, and paste mode.
+	- Selecting a history/snippet item triggers paste or clipboard fallback.
 
 ## License
 

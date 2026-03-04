@@ -130,6 +130,93 @@ describe("ClipboardMonitor", () => {
 		await vi.advanceTimersByTimeAsync(2_000);
 		expect(captured).toEqual(["alpha"]);
 	});
+
+	it("binds default timer APIs to globalThis", async () => {
+		const originalSetTimeout = globalThis.setTimeout;
+		const originalClearTimeout = globalThis.clearTimeout;
+		const originalSetInterval = globalThis.setInterval;
+		const originalClearInterval = globalThis.clearInterval;
+
+		try {
+			let nextTimerId = 1;
+
+			const strictSetTimeout = function (
+				this: unknown,
+				handler: TimerHandler,
+				_timeout?: number,
+				...args: unknown[]
+			): ReturnType<typeof setTimeout> {
+				if (this !== globalThis) {
+					throw new TypeError("setTimeout called with invalid this");
+				}
+
+				if (typeof handler === "function") {
+					handler(...args);
+				}
+
+				return nextTimerId++ as unknown as ReturnType<typeof setTimeout>;
+			} as unknown as typeof globalThis.setTimeout;
+
+			const strictClearTimeout = function (
+				this: unknown,
+				_timerId: ReturnType<typeof setTimeout>,
+			): void {
+				if (this !== globalThis) {
+					throw new TypeError("clearTimeout called with invalid this");
+				}
+			} as unknown as typeof globalThis.clearTimeout;
+
+			const strictSetInterval = function (
+				this: unknown,
+				handler: TimerHandler,
+				_timeout?: number,
+				...args: unknown[]
+			): ReturnType<typeof setInterval> {
+				if (this !== globalThis) {
+					throw new TypeError("setInterval called with invalid this");
+				}
+
+				if (typeof handler === "function") {
+					handler(...args);
+				}
+
+				return nextTimerId++ as unknown as ReturnType<typeof setInterval>;
+			} as unknown as typeof globalThis.setInterval;
+
+			const strictClearInterval = function (
+				this: unknown,
+				_timerId: ReturnType<typeof setInterval>,
+			): void {
+				if (this !== globalThis) {
+					throw new TypeError("clearInterval called with invalid this");
+				}
+			} as unknown as typeof globalThis.clearInterval;
+
+			globalThis.setTimeout = strictSetTimeout;
+			globalThis.clearTimeout = strictClearTimeout;
+			globalThis.setInterval = strictSetInterval;
+			globalThis.clearInterval = strictClearInterval;
+
+			const reader = createReader("alpha");
+			const captured: string[] = [];
+			const monitor = new ClipboardMonitor({
+				reader,
+				onTextCaptured: (text) => {
+					captured.push(text);
+				},
+			});
+
+			monitor.start();
+			await Promise.resolve();
+			expect(captured).toEqual(["alpha"]);
+			monitor.stop();
+		} finally {
+			globalThis.setTimeout = originalSetTimeout;
+			globalThis.clearTimeout = originalClearTimeout;
+			globalThis.setInterval = originalSetInterval;
+			globalThis.clearInterval = originalClearInterval;
+		}
+	});
 });
 
 function createReader(initialValue: string | null) {

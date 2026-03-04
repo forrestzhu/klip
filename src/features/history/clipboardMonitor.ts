@@ -50,10 +50,14 @@ export class ClipboardMonitor {
 		this.readyTimeoutMs =
 			options.readyTimeoutMs ?? DEFAULT_CLIPBOARD_READY_TIMEOUT_MS;
 		this.now = options.now ?? Date.now;
-		this.setIntervalImpl = options.setIntervalImpl ?? setInterval;
-		this.clearIntervalImpl = options.clearIntervalImpl ?? clearInterval;
-		this.setTimeoutImpl = options.setTimeoutImpl ?? setTimeout;
-		this.clearTimeoutImpl = options.clearTimeoutImpl ?? clearTimeout;
+		this.setIntervalImpl =
+			options.setIntervalImpl ?? globalThis.setInterval.bind(globalThis);
+		this.clearIntervalImpl =
+			options.clearIntervalImpl ?? globalThis.clearInterval.bind(globalThis);
+		this.setTimeoutImpl =
+			options.setTimeoutImpl ?? globalThis.setTimeout.bind(globalThis);
+		this.clearTimeoutImpl =
+			options.clearTimeoutImpl ?? globalThis.clearTimeout.bind(globalThis);
 		this.readyPromise = new Promise((resolve) => {
 			this.readyResolver = resolve;
 		});

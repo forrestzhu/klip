@@ -21,7 +21,10 @@
 		"qa": "npm run lint && npm run typecheck && npm run test && npm run test:e2e && npm run build && npm run test:coverage && npm run cargo:check",
 		"preview": "vite preview",
 		"precommit": "lint-staged",
-		"commitlint": "commitlint --from=HEAD~1 --to=HEAD --verbose"
+		"commitlint": "commitlint --from=HEAD~1 --to=HEAD --verbose",
+		"dev:desktop": "tauri dev",
+		"build:desktop": "tauri build --debug --no-bundle",
+		"tauri:info": "tauri info"
 	},
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,md}": [
@@ -37,6 +40,7 @@
 		"@biomejs/biome": "^2.2.0",
 		"@commitlint/cli": "^19.8.1",
 		"@commitlint/config-conventional": "^19.8.1",
+		"@tauri-apps/cli": "^2.10.0",
 		"@types/react": "^19.1.12",
 		"@types/react-dom": "^19.1.9",
 		"@vitejs/plugin-react": "^5.0.2",

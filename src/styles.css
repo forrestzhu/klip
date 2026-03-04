@@ -32,12 +32,6 @@ body {
 	margin-bottom: 20px;
 }
 
-.topbar-controls {
-	display: grid;
-	gap: 10px;
-	justify-items: end;
-}
-
 .topbar h1 {
 	margin: 0 0 8px;
 	font-size: 28px;
@@ -83,7 +77,7 @@ body {
 }
 
 .max-items-field input {
-	width: 132px;
+	width: 100%;
 	padding: 8px 10px;
 	border: 1px solid #cbd5e1;
 	border-radius: 8px;
@@ -96,7 +90,33 @@ body {
 	gap: 6px;
 	font-size: 13px;
 	color: #475569;
-	width: min(360px, 100%);
+	width: 100%;
+}
+
+.paste-mode-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	color: #475569;
+}
+
+.settings-panel {
+	display: grid;
+	gap: 14px;
+	margin-top: 14px;
+}
+
+.settings-grid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.settings-note {
+	margin: 0;
+	font-size: 12px;
+	color: #64748b;
 }
 
 .hotkey-row {
@@ -318,15 +338,6 @@ body {
 	.topbar {
 		flex-direction: column;
 		gap: 14px;
-	}
-
-	.topbar-controls {
-		width: 100%;
-		justify-items: stretch;
-	}
-
-	.max-items-field input {
-		width: 100%;
 	}
 
 	.panel-title-row {

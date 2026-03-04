@@ -2,6 +2,7 @@ export {
 	type ClipboardPort,
 	type ClipboardWriter,
 	createBrowserClipboardPort,
+	createClipboardPort,
 } from "./browserClipboard";
 export { ClipboardMonitor, type ClipboardReader } from "./clipboardMonitor";
 export {

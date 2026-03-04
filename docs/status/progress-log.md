@@ -128,3 +128,66 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Manual desktop verification is still required for hotkey/direct-paste behavior on macOS and Windows.
   - Dedicated settings center (US-010) and snippet quick trigger (US-008) remain next implementation scope.
+
+## 2026-03-04 - settings center baseline + desktop startup smoke unblock (US-010/US-001)
+
+- Commit: `pending`
+- Summary:
+  - Added dedicated settings center mode in panel (`Ctrl/Cmd+3`) and moved settings controls out of top header (`src/App.tsx`, `src/styles.css`).
+  - Added paste mode persistence (`direct-with-fallback` and `clipboard-only`) and wired runtime behavior to honor clipboard-only path for basic desktop reliability testing (`src/features/settings/pasteModeStorage.ts`, `src/App.tsx`).
+  - Added local desktop runtime scripts and Tauri CLI dependency (`package.json`, `package-lock.json`, `README.md`) so `npm run dev:desktop` can launch Tauri directly.
+  - Fixed Tauri runtime error `Can only call Window.setTimeout on instances of Window` by binding default timer APIs to `globalThis` in clipboard monitor; added regression coverage (`src/features/history/clipboardMonitor.ts`, `tests/clipboardMonitor.test.ts`).
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass
+  - build: pass
+  - cargo:check: pass
+  - test:e2e: skip (Playwright not configured)
+  - tauri:info: pass (warning: Xcode not installed)
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri`)
+- Risks / Follow-ups:
+  - Local environment is currently Node `v25.2.1`; project target is Node 22 (`.nvmrc`), so `nvm use` is recommended before further validation.
+  - Full macOS/Windows manual verification evidence for tray/hotkey/direct-paste behavior is still pending.
+  - US-010 startup-launch toggle/runtime bridge is still pending.
+
+## 2026-03-04 - desktop clipboard capture bridge for history monitor (US-001)
+
+- Commit: `pending`
+- Summary:
+  - Added Tauri clipboard command module (`src-tauri/src/clipboard.rs`) with `read_clipboard_text` and `write_clipboard_text` for desktop runtime use.
+  - Registered clipboard commands in Tauri invoke handler (`src-tauri/src/lib.rs`) so frontend can access system clipboard through Rust runtime.
+  - Added runtime-aware clipboard port selection (`createClipboardPort`) to route desktop runtime reads/writes through Tauri commands while preserving browser fallback (`src/features/history/browserClipboard.ts`, `src/features/history/index.ts`).
+  - Switched app initialization from browser-only clipboard port to runtime-aware port so copied content can flow into history in desktop mode (`src/App.tsx`).
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass
+  - build: pass
+  - cargo:check: pass
+  - cargo:test: pass
+  - test:e2e: skip (Playwright not configured)
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri`)
+- Risks / Follow-ups:
+  - Clipboard monitor is still polling-based; event-driven OS listener integration is not implemented yet.
+  - Need manual verification matrix across macOS/Windows apps for clipboard-read reliability and duplicate suppression behavior.
+
+## 2026-03-04 - commit message template enforcement baseline
+
+- Commit: `pending`
+- Summary:
+  - Added required commit body template sections (`What changes`, `Why needed`, `How tested`) into repository guidelines (`AGENTS.md`, `README.md`).
+  - Tightened commitlint policy to reject empty commit bodies and require body-leading blank line (`.commitlintrc.json`).
+  - Added commit message validator script and wired it into Husky `commit-msg` hook so commits with header-only or missing required sections are rejected (`scripts/validate-commit-message.mjs`, `.husky/commit-msg`).
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass
+  - test:coverage: pass
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - cargo:check: pass
+  - cargo:test: pass
+  - tauri:info: pass (warning: Xcode not installed)
+- Risks / Follow-ups:
+  - Merge/revert commits are intentionally exempt from template validation.

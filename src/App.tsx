@@ -3,19 +3,25 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	ClipboardMonitor,
 	type ClipboardPort,
-	createBrowserClipboardPort,
 	createBrowserHistoryStorage,
+	createClipboardPort,
 	type HistoryItem,
 	HistoryRepository,
 } from "./features/history";
 import { directPasteText } from "./features/paste";
 import {
 	DEFAULT_PANEL_HOTKEY,
+	DEFAULT_PASTE_MODE,
 	hideDesktopPanelWindow,
 	isDesktopRuntime,
+	PASTE_MODE_CLIPBOARD_ONLY,
+	PASTE_MODE_DIRECT_WITH_FALLBACK,
+	type PasteMode,
 	readPanelHotkey,
+	readPasteMode,
 	registerDesktopPanelHotkey,
 	writePanelHotkey,
+	writePasteMode,
 } from "./features/settings";
 import {
 	createBrowserSnippetsStorage,
@@ -34,7 +40,7 @@ interface RuntimeContext {
 }
 
 type ListenerStatus = "starting" | "ready" | "error";
-type PanelMode = "history" | "snippets";
+type PanelMode = "history" | "snippets" | "settings";
 
 const PANEL_MODE_STORAGE_KEY = "klip.ui.panel.mode";
 const ALL_SNIPPET_FOLDERS_VALUE = "__all_folders__";
@@ -45,6 +51,7 @@ export function App() {
 	const [panelHotkey, setPanelHotkey] = useState(DEFAULT_PANEL_HOTKEY);
 	const [panelHotkeyDraft, setPanelHotkeyDraft] =
 		useState(DEFAULT_PANEL_HOTKEY);
+	const [pasteMode, setPasteMode] = useState<PasteMode>(DEFAULT_PASTE_MODE);
 	const [snippetFolders, setSnippetFolders] = useState<SnippetFolder[]>([]);
 	const [snippetItems, setSnippetItems] = useState<SnippetItem[]>([]);
 	const [selectedSnippetFolderId, setSelectedSnippetFolderId] = useState(
@@ -151,6 +158,11 @@ export function App() {
 				event.preventDefault();
 				setPanelMode("snippets");
 			}
+
+			if (event.key === "3") {
+				event.preventDefault();
+				setPanelMode("settings");
+			}
 		};
 
 		window.addEventListener("keydown", handleModeSwitch);
@@ -190,10 +202,11 @@ export function App() {
 			return undefined;
 		}
 
-		const initializePanelHotkey = async () => {
+		const initializeSettings = async () => {
 			const savedPanelHotkey = readPanelHotkey(window.localStorage);
 			setPanelHotkey(savedPanelHotkey);
 			setPanelHotkeyDraft(savedPanelHotkey);
+			setPasteMode(readPasteMode(window.localStorage));
 
 			if (!isDesktopRuntime()) {
 				return;
@@ -229,7 +242,7 @@ export function App() {
 		const snippetRepository = new SnippetRepository({
 			storage: createBrowserSnippetsStorage(window.localStorage),
 		});
-		const clipboard = createBrowserClipboardPort();
+		const clipboard = createClipboardPort();
 		const refreshHistory = () => {
 			if (disposed) {
 				return;
@@ -272,7 +285,7 @@ export function App() {
 			try {
 				setListenerStatus("starting");
 				setListenerMessage("Starting clipboard listener...");
-				await initializePanelHotkey();
+				await initializeSettings();
 				await Promise.all([historyRepository.load(), snippetRepository.load()]);
 				refreshAll();
 				monitor.start();
@@ -334,7 +347,7 @@ export function App() {
 			event.preventDefault();
 			if (panelMode === "history") {
 				await copySelectedHistory();
-			} else {
+			} else if (panelMode === "snippets") {
 				await pasteSelectedSnippet();
 			}
 			return;
@@ -348,6 +361,11 @@ export function App() {
 		if ((event.ctrlKey || event.metaKey) && event.key === "2") {
 			event.preventDefault();
 			setPanelMode("snippets");
+		}
+
+		if ((event.ctrlKey || event.metaKey) && event.key === "3") {
+			event.preventDefault();
+			setPanelMode("settings");
 		}
 	};
 
@@ -402,6 +420,23 @@ export function App() {
 		}
 	};
 
+	const handleChangePasteMode = (event: ChangeEvent<HTMLSelectElement>) => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const persisted = writePasteMode(
+			window.localStorage,
+			event.currentTarget.value,
+		);
+		setPasteMode(persisted);
+		setActionMessage(
+			persisted === PASTE_MODE_CLIPBOARD_ONLY
+				? "Paste mode updated: clipboard only."
+				: "Paste mode updated: direct paste with clipboard fallback.",
+		);
+	};
+
 	const pasteTextWithFallback = async ({
 		text,
 		directSuccessMessage,
@@ -423,6 +458,18 @@ export function App() {
 			try {
 				await runtime.clipboard.writeText(text);
 				setActionMessage(fallbackSuccessMessage);
+			} catch (error) {
+				setActionMessage(`Copy failed: ${toErrorMessage(error)}`);
+			}
+			return;
+		}
+
+		if (pasteMode === PASTE_MODE_CLIPBOARD_ONLY) {
+			try {
+				await runtime.clipboard.writeText(text);
+				setActionMessage(
+					`Clipboard-only mode is active. ${fallbackSuccessMessage}`,
+				);
 			} catch (error) {
 				setActionMessage(`Copy failed: ${toErrorMessage(error)}`);
 			}
@@ -868,20 +915,10 @@ export function App() {
 		);
 	};
 
-	return (
-		<main className="app-shell">
-			<header className="topbar">
-				<div>
-					<h1>Klip</h1>
-					<p className="status-line">
-						Status:{" "}
-						<span className={`status-pill status-${listenerStatus}`}>
-							{listenerStatus}
-						</span>{" "}
-						{listenerMessage}
-					</p>
-				</div>
-				<div className="topbar-controls">
+	const renderSettingsPanel = () => {
+		return (
+			<section className="settings-panel">
+				<div className="settings-grid">
 					<label className="max-items-field">
 						Max history
 						<input
@@ -895,37 +932,78 @@ export function App() {
 							}}
 						/>
 					</label>
-					<label className="hotkey-field">
-						Panel hotkey
-						<div className="hotkey-row">
-							<input
-								aria-label="Panel hotkey"
-								className="hotkey-input"
-								placeholder="CommandOrControl+Shift+K"
-								type="text"
-								value={panelHotkeyDraft}
-								onChange={(event) => {
-									setPanelHotkeyDraft(event.currentTarget.value);
-								}}
-								onKeyDown={(event) => {
-									if (event.key === "Enter") {
-										event.preventDefault();
-										void handleApplyPanelHotkey();
-									}
-								}}
-							/>
-							<button
-								className="ghost-button"
-								type="button"
-								onClick={() => {
-									void handleApplyPanelHotkey();
-								}}
-							>
-								Apply
-							</button>
-						</div>
-						<span className="hotkey-hint">Current: {panelHotkey}</span>
+					<label className="paste-mode-field">
+						Paste mode
+						<select
+							aria-label="Paste mode"
+							className="search-input"
+							value={pasteMode}
+							onChange={handleChangePasteMode}
+						>
+							<option value={PASTE_MODE_DIRECT_WITH_FALLBACK}>
+								Direct paste + clipboard fallback
+							</option>
+							<option value={PASTE_MODE_CLIPBOARD_ONLY}>Clipboard only</option>
+						</select>
 					</label>
+				</div>
+
+				<label className="hotkey-field">
+					Panel hotkey
+					<div className="hotkey-row">
+						<input
+							aria-label="Panel hotkey"
+							className="hotkey-input"
+							placeholder="CommandOrControl+Shift+K"
+							type="text"
+							value={panelHotkeyDraft}
+							onChange={(event) => {
+								setPanelHotkeyDraft(event.currentTarget.value);
+							}}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") {
+									event.preventDefault();
+									void handleApplyPanelHotkey();
+								}
+							}}
+						/>
+						<button
+							className="ghost-button"
+							type="button"
+							onClick={() => {
+								void handleApplyPanelHotkey();
+							}}
+						>
+							Apply
+						</button>
+					</div>
+					<span className="hotkey-hint">Current: {panelHotkey}</span>
+					<span className="hotkey-hint">
+						{isDesktopRuntime()
+							? "Hotkey registration is active in desktop runtime."
+							: "Browser preview only persists settings; desktop runtime is needed for global hotkey registration."}
+					</span>
+				</label>
+
+				<p className="settings-note">
+					Startup launch toggle will be added in a follow-up iteration.
+				</p>
+			</section>
+		);
+	};
+
+	return (
+		<main className="app-shell">
+			<header className="topbar">
+				<div>
+					<h1>Klip</h1>
+					<p className="status-line">
+						Status:{" "}
+						<span className={`status-pill status-${listenerStatus}`}>
+							{listenerStatus}
+						</span>{" "}
+						{listenerMessage}
+					</p>
 				</div>
 			</header>
 
@@ -954,50 +1032,72 @@ export function App() {
 						>
 							Snippets
 						</button>
+						<button
+							type="button"
+							className={`mode-button ${
+								panelMode === "settings" ? "active" : ""
+							}`}
+							onClick={() => {
+								setPanelMode("settings");
+							}}
+						>
+							Settings
+						</button>
 					</div>
-					<button
-						className="ghost-button"
-						type="button"
-						onClick={() => {
-							if (panelMode === "history") {
-								void copySelectedHistory();
-							} else {
-								void pasteSelectedSnippet();
-							}
-						}}
-					>
-						{panelMode === "history" ? "Paste Selected" : "Paste Snippet"}
-					</button>
+					{panelMode === "settings" ? null : (
+						<button
+							className="ghost-button"
+							type="button"
+							onClick={() => {
+								if (panelMode === "history") {
+									void copySelectedHistory();
+								} else {
+									void pasteSelectedSnippet();
+								}
+							}}
+						>
+							{panelMode === "history" ? "Paste Selected" : "Paste Snippet"}
+						</button>
+					)}
 				</div>
 				<p className="mode-hint">
-					Switch mode with Ctrl/Cmd+1 and Ctrl/Cmd+2. Press Esc to close panel.
+					Switch mode with Ctrl/Cmd+1, Ctrl/Cmd+2, and Ctrl/Cmd+3. Press Esc to
+					close panel.
 				</p>
 
-				<label className="search-field" htmlFor="panel-search">
-					{panelMode === "history" ? "Search history" : "Search snippets"}
-				</label>
-				<input
-					id="panel-search"
-					autoComplete="off"
-					className="search-input"
-					placeholder={
-						panelMode === "history"
-							? "Type to filter history..."
-							: "Search snippets by title or text..."
-					}
-					type="text"
-					value={query}
-					onChange={(event) => {
-						setQuery(event.currentTarget.value);
-						setSelectedHistoryIndex(0);
-						setSelectedSnippetIndex(0);
-					}}
-					onKeyDown={(event) => {
-						void handleSearchKeyDown(event);
-					}}
-				/>
+				{panelMode === "settings" ? null : (
+					<>
+						<label className="search-field" htmlFor="panel-search">
+							{panelMode === "history" ? "Search history" : "Search snippets"}
+						</label>
+						<input
+							id="panel-search"
+							autoComplete="off"
+							className="search-input"
+							placeholder={
+								panelMode === "history"
+									? "Type to filter history..."
+									: "Search snippets by title or text..."
+							}
+							type="text"
+							value={query}
+							onChange={(event) => {
+								setQuery(event.currentTarget.value);
+								setSelectedHistoryIndex(0);
+								setSelectedSnippetIndex(0);
+							}}
+							onKeyDown={(event) => {
+								void handleSearchKeyDown(event);
+							}}
+						/>
+					</>
+				)}
 
-				{panelMode === "history" ? renderHistoryPanel() : renderSnippetsPanel()}
+				{panelMode === "history"
+					? renderHistoryPanel()
+					: panelMode === "snippets"
+						? renderSnippetsPanel()
+						: renderSettingsPanel()}
 				{actionMessage ? (
 					<p className="action-message">{actionMessage}</p>
 				) : null}
@@ -1012,7 +1112,15 @@ function readInitialPanelMode(): PanelMode {
 	}
 
 	const savedValue = window.localStorage.getItem(PANEL_MODE_STORAGE_KEY);
-	return savedValue === "snippets" ? "snippets" : "history";
+	if (savedValue === "snippets") {
+		return "snippets";
+	}
+
+	if (savedValue === "settings") {
+		return "settings";
+	}
+
+	return "history";
 }
 
 function toErrorMessage(error: unknown): string {

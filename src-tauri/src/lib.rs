@@ -1,3 +1,4 @@
+pub mod clipboard;
 pub mod commands;
 pub mod direct_paste;
 pub mod hotkey;
@@ -29,6 +30,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            clipboard::read_clipboard_text,
+            clipboard::write_clipboard_text,
             direct_paste::direct_paste_text,
             hotkey::register_panel_hotkey,
             hotkey::hide_panel_window
