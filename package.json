@@ -24,6 +24,9 @@
 		"commitlint": "commitlint --from=HEAD~1 --to=HEAD --verbose",
 		"dev:desktop": "tauri dev",
 		"build:desktop": "tauri build --debug --no-bundle",
+		"build:desktop:bundle": "tauri build --ci --no-sign",
+		"build:desktop:bundle:macos": "tauri build --ci --no-sign --bundles app,dmg",
+		"build:desktop:bundle:windows": "tauri build --ci --no-sign --bundles nsis",
 		"tauri:info": "tauri info"
 	},
 	"lint-staged": {

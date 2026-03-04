@@ -104,6 +104,17 @@ feat|fix|docs|style|refactor|perf|test|chore|ci: short summary
 	- Settings panel can update max history, panel hotkey, and paste mode.
 	- Selecting a history/snippet item triggers paste or clipboard fallback.
 
+## Desktop Packaging Baseline (US-011)
+
+```bash
+npm run build:desktop:bundle:macos
+npm run build:desktop:bundle:windows
+```
+
+- `build:desktop:bundle:macos` is for macOS runners/local macOS.
+- `build:desktop:bundle:windows` is for Windows runners/local Windows.
+- Verification matrix and release-note constraints are tracked in `docs/status/packaging-verification-us011.md`.
+
 ## License
 
 MIT

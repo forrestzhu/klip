@@ -341,3 +341,28 @@ This file is append-only. Add one entry after each completed iteration.
   - Manual matrix execution is still pending for macOS/Windows interactive GUI workflows; startup-launch behavior still needs cross-platform hands-on evidence.
   - US-011 packaging/install verification workflow remains todo.
   - Local runtime is still Node `v25.2.1`; project target remains Node 22.
+
+## 2026-03-04 - desktop packaging verification baseline (US-011)
+
+- Commit: `pending`
+- Summary:
+  - Enabled desktop bundle mode and added explicit packaging scripts for local/CI use (`package.json`, `src-tauri/tauri.conf.json`).
+  - Added cross-platform packaging workflow baseline for macOS + Windows artifact generation and upload (`.github/workflows/desktop-packaging.yml`).
+  - Added US-011 status document with artifact checklist, install/run/uninstall matrix, and release-note permission/limitation draft (`docs/status/packaging-verification-us011.md`).
+  - Added README packaging baseline command guidance and status-doc pointer (`README.md`).
+  - Executed local macOS bundle preflight and produced unsigned artifacts: `src-tauri/target/release/bundle/macos/Klip.app` and `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`.
+- Validation:
+  - tauri:info: pass (log: `/tmp/klip-tauri-info-us011-20260304.log`; warning: Xcode app not installed)
+  - build:desktop:bundle:macos: pass (log: `/tmp/klip-build-bundle-macos-us011-20260304.log`)
+  - lint: pass
+  - typecheck: pass
+  - test: pass (65 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 86.55%, branches 86.47%, funcs 87.5%, lines 86.55%)
+  - cargo:check: pass
+  - qa: pass (`npm run qa`)
+- Risks / Follow-ups:
+  - Windows installer artifact generation evidence is still pending until workflow execution on `windows-latest`.
+  - Interactive install/first-run/uninstall verification is still pending for macOS and Windows.
+  - Local runtime is still Node `v25.2.1`; project target remains Node 22.
