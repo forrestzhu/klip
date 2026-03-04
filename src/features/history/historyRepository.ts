@@ -100,6 +100,17 @@ export class HistoryRepository {
 		return clamped;
 	}
 
+	public async clearItems(): Promise<void> {
+		await this.ensureLoaded();
+
+		if (this.state.items.length === 0) {
+			return;
+		}
+
+		this.state.items = [];
+		await this.persist();
+	}
+
 	public async addCapturedText(
 		input: AddCapturedTextInput,
 	): Promise<HistoryItem | null> {

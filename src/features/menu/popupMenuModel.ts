@@ -5,7 +5,11 @@ import type { SnippetFolder, SnippetItem } from "../snippets";
 export const POPUP_HISTORY_LIMIT = 30;
 export const POPUP_HISTORY_GROUP_SIZE = 10;
 
-export type PopupMenuAction = "edit-snippets" | "open-preferences";
+export type PopupMenuAction =
+	| "clear-history"
+	| "edit-snippets"
+	| "open-preferences"
+	| "quit-app";
 
 interface PopupMenuBaseEntry {
 	id: string;
@@ -34,6 +38,14 @@ export interface PopupActionEntry extends PopupMenuBaseEntry {
 	action: PopupMenuAction;
 }
 
+export interface PopupSectionEntry extends PopupMenuBaseEntry {
+	kind: "section";
+}
+
+export interface PopupSeparatorEntry extends PopupMenuBaseEntry {
+	kind: "separator";
+}
+
 export interface PopupEmptyEntry extends PopupMenuBaseEntry {
 	kind: "empty";
 }
@@ -43,6 +55,8 @@ export type PopupMenuEntry =
 	| PopupHistoryItemEntry
 	| PopupSnippetItemEntry
 	| PopupActionEntry
+	| PopupSectionEntry
+	| PopupSeparatorEntry
 	| PopupEmptyEntry;
 
 export interface PopupMenuContext {
@@ -60,35 +74,53 @@ interface BuildPopupMenuRootEntriesInput {
 export function buildPopupMenuRootEntries(
 	input: BuildPopupMenuRootEntriesInput,
 ): PopupMenuEntry[] {
-	return [
+	const entries: PopupMenuEntry[] = [
+		createSectionEntry("history-section", "历史"),
+		...buildHistoryRangeEntries(input.historyItems),
+		createSeparatorEntry("history-divider"),
+	];
+
+	const snippetEntries = buildSnippetFolderEntries(
+		input.snippetFolders,
+		input.snippetItems,
+	);
+	if (snippetEntries.length > 0) {
+		entries.push(
+			createSectionEntry("snippets-section", "片断"),
+			...snippetEntries,
+			createSeparatorEntry("snippets-divider"),
+		);
+	}
+
+	entries.push(
 		{
-			id: "history",
-			kind: "submenu",
-			label: "History",
-			children: buildHistoryRangeEntries(input.historyItems),
-		},
-		{
-			id: "snippets",
-			kind: "submenu",
-			label: "Snippets",
-			children: buildSnippetFolderEntries(
-				input.snippetFolders,
-				input.snippetItems,
-			),
+			id: "clear-history",
+			kind: "action",
+			label: "清除历史",
+			action: "clear-history",
 		},
 		{
 			id: "edit-snippets",
 			kind: "action",
-			label: "Edit Snippets...",
+			label: "编辑片断...",
 			action: "edit-snippets",
 		},
 		{
 			id: "preferences",
 			kind: "action",
-			label: "Preferences...",
+			label: "偏好设置...",
 			action: "open-preferences",
 		},
-	];
+		createSeparatorEntry("quit-divider"),
+		{
+			id: "quit-klip",
+			kind: "action",
+			label: "退出 Klip",
+			action: "quit-app",
+		},
+	);
+
+	return entries;
 }
 
 export function resolvePopupMenuContext(
@@ -126,12 +158,20 @@ export function isPopupSubmenuEntry(
 	return entry.kind === "submenu";
 }
 
+export function isPopupSelectableEntry(entry: PopupMenuEntry): boolean {
+	return (
+		entry.kind !== "section" &&
+		entry.kind !== "separator" &&
+		entry.kind !== "empty"
+	);
+}
+
 function buildHistoryRangeEntries(
 	historyItems: HistoryItem[],
 ): PopupMenuEntry[] {
 	const limitedHistoryItems = historyItems.slice(0, POPUP_HISTORY_LIMIT);
 	if (limitedHistoryItems.length === 0) {
-		return [createEmptyEntry("No history items yet.")];
+		return [createEmptyEntry("暂无历史记录")];
 	}
 
 	const rangeEntries: PopupMenuEntry[] = [];
@@ -149,7 +189,7 @@ function buildHistoryRangeEntries(
 		rangeEntries.push({
 			id: `history-range-${startIndex + 1}-${endIndex}`,
 			kind: "submenu",
-			label: `${startIndex + 1}-${endIndex}`,
+			label: `${startIndex + 1} - ${endIndex}`,
 			children: group.map((item, index) => ({
 				id: `history-item-${item.id}`,
 				kind: "history-item",
@@ -167,8 +207,8 @@ function buildSnippetFolderEntries(
 	snippetFolders: SnippetFolder[],
 	snippetItems: SnippetItem[],
 ): PopupMenuEntry[] {
-	if (snippetFolders.length === 0) {
-		return [createEmptyEntry("No snippet folders yet.")];
+	if (snippetItems.length === 0 || snippetFolders.length === 0) {
+		return [];
 	}
 
 	const snippetsByFolderId = new Map<string, SnippetItem[]>();
@@ -178,28 +218,51 @@ function buildSnippetFolderEntries(
 		snippetsByFolderId.set(snippet.folderId, list);
 	}
 
-	return snippetFolders.map((folder) => {
-		const snippetsInFolder = snippetsByFolderId.get(folder.id) ?? [];
-		const children: PopupMenuEntry[] =
-			snippetsInFolder.length === 0
-				? [createEmptyEntry("No snippets in this folder.")]
-				: snippetsInFolder.map((snippet, index) => {
-						return {
-							id: `snippet-item-${snippet.id}`,
-							kind: "snippet-item",
-							label: `${index + 1}. ${toClipboardPreview(snippet.title, 54)}`,
-							text: snippet.text,
-							detail: toClipboardPreview(snippet.text, 72),
-						} satisfies PopupSnippetItemEntry;
-					});
+	const folderEntries = snippetFolders
+		.map((folder) => {
+			const snippetsInFolder = snippetsByFolderId.get(folder.id) ?? [];
+			if (snippetsInFolder.length === 0) {
+				return null;
+			}
 
-		return {
-			id: `snippet-folder-${folder.id}`,
-			kind: "submenu",
-			label: folder.name,
-			children,
-		} satisfies PopupSubmenuEntry;
-	});
+			const children: PopupMenuEntry[] = snippetsInFolder.map(
+				(snippet, index) => {
+					return {
+						id: `snippet-item-${snippet.id}`,
+						kind: "snippet-item",
+						label: `${index + 1}. ${toClipboardPreview(snippet.title, 54)}`,
+						text: snippet.text,
+						detail: toClipboardPreview(snippet.text, 72),
+					} satisfies PopupSnippetItemEntry;
+				},
+			);
+
+			return {
+				id: `snippet-folder-${folder.id}`,
+				kind: "submenu",
+				label: folder.name,
+				children,
+			} satisfies PopupSubmenuEntry;
+		})
+		.filter((entry): entry is PopupSubmenuEntry => entry !== null);
+
+	return folderEntries;
+}
+
+function createSectionEntry(id: string, label: string): PopupSectionEntry {
+	return {
+		id,
+		kind: "section",
+		label,
+	};
+}
+
+function createSeparatorEntry(id: string): PopupSeparatorEntry {
+	return {
+		id,
+		kind: "separator",
+		label: "",
+	};
 }
 
 function createEmptyEntry(label: string): PopupEmptyEntry {

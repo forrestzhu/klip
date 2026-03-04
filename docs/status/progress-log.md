@@ -409,3 +409,94 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Pixel-level parity still depends on user-provided reference screenshots (popup root/submenu, snippet editor, preferences tabs).
   - Implementation is still pending for strict three-window runtime behavior.
+
+## 2026-03-04 - popup window parity implementation (three-window phase 1)
+
+- Commit: `pending`
+- Summary:
+  - Reworked popup menu model to match Clipy screenshot structure: flattened root history/snippet sections, grouped history ranges, action rows (`清除历史`/`编辑片断...`/`偏好设置...`/`退出 Klip`), and conditional snippets section visibility (`src/features/menu/popupMenuModel.ts`).
+  - Rebuilt popup rendering/interaction to cascading multi-column menu behavior with section/separator rows, submenu hover-open, keyboard navigation that skips non-selectable rows, and snippet content preview pane (`src/App.tsx`, `src/styles.css`).
+  - Added popup action runtime support: history clear repository API and desktop quit command bridge (`src/features/history/historyRepository.ts`, `src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`).
+  - Updated desktop compact popup baseline size (`src/App.tsx`, `src-tauri/tauri.conf.json`) and refreshed popup/history unit coverage (`tests/popupMenuModel.test.ts`, `tests/historyRepository.test.ts`).
+- Validation:
+  - format: pass
+  - lint: pass
+  - typecheck: pass
+  - test: pass (71 tests)
+  - build: pass
+  - cargo:check: pass
+  - cargo:test: pass (24 tests)
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri` before 45s command timeout)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Popup is now close to screenshot parity, but `编辑片断...` and `偏好设置...` still reuse current webview instead of opening independent windows.
+  - Snippet editor/preferences pixel-level parity to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png` is still pending.
+
+## 2026-03-04 - popup shell and titlebar controls fix
+
+- Commit: `pending`
+- Summary:
+  - Removed popup wrapper spacing so popup content fills the window directly, avoiding the large outer container look (`src/styles.css`).
+  - Added desktop runtime window chrome switching: menu mode disables decorations/resizable (hides macOS close/min/max controls), non-menu mode restores them (`src/App.tsx`).
+  - Updated Tauri main window defaults to undecorated/non-resizable for popup-first startup (`src-tauri/tauri.conf.json`).
+- Validation:
+  - format: pass
+  - lint: pass
+  - typecheck: pass
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri` before 30s command timeout)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Current implementation still multiplexes popup/snippet/settings in one webview; strict three-window split remains pending.
+
+## 2026-03-04 - popup resize error hotfix
+
+- Commit: `pending`
+- Summary:
+  - Removed runtime `setDecorations`/`setResizable` toggles from popup resize path because they could fail and block `setSize`, causing popup to stay in large window dimensions (`src/App.tsx`).
+  - Improved frontend runtime error parsing to surface `message` from non-`Error` rejection payloads (`src/App.tsx`).
+- Validation:
+  - format: pass
+  - lint: pass
+  - typecheck: pass
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri` before 30s command timeout)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - If popup still appears oversized on existing process, a full desktop app restart is required to clear old window state.
+
+## 2026-03-04 - popup content-size sync follow-up
+
+- Commit: `pending`
+- Summary:
+  - Removed dependency-based popup resize triggering and switched to `ResizeObserver` on rendered popup container so submenu open/close can drive deterministic window resizing (`src/App.tsx`).
+  - Updated popup container styling to remove outer shell panel look and keep only menu column panels, avoiding the large-window wrapping-small-window visual issue (`src/styles.css`).
+  - Set Tauri main window `resizable` back to `true` so runtime `setSize` can apply reliably while keeping undecorated popup startup (`src-tauri/tauri.conf.json`).
+- Validation:
+  - format: pass
+  - lint: pass
+  - typecheck: pass
+  - test: pass (71 tests)
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri`)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Strict three-window split is still pending; current iteration focuses on popup shell/layout/resize behavior only.
+
+## 2026-03-04 - popup parity commit sync and capability follow-up
+
+- Commit: `pending`
+- Summary:
+  - Synced popup flow changes for commit readiness: flattened Clipy-style popup structure, cascading submenu interaction, clear-history action, quit command bridge, and content-driven resize behavior (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/features/history/historyRepository.ts`, `src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`, `src/styles.css`).
+  - Added Tauri main-window capability config for popup runtime window operations (`src-tauri/capabilities/default.json`) and kept popup-oriented window defaults (`src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`).
+  - Added popup badcase screenshot artifacts for local visual verification and issue traceability (`docs/klip-test-ui/chrome_localhost_popup.png`, `docs/klip-test-ui/popup-badcase.png`, `docs/klip-test-ui/popup-badcase2.png`, `docs/klip-test-ui/popup-panel-badcase3.png`).
+  - Refreshed status docs for latest validation evidence and current US-009 progress (`docs/status/current.md`, `docs/status/prd-tracker.md`, `docs/status/progress-log.md`).
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass (71 tests)
+  - build: pass
+  - cargo:check: pass
+  - cargo:test: pass (24 tests)
+  - dev:desktop smoke: pass (reached `Running target/debug/klip-tauri`; Vite switched to `5174` because `5173` was occupied)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Popup badcase still needs interactive GUI verification against new screenshot artifacts.
+  - Strict three-window split (`snippet-editor` / `preferences` standalone windows) remains pending.

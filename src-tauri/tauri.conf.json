@@ -6,15 +6,20 @@
 	"build": {
 		"beforeDevCommand": "npm run dev",
 		"beforeBuildCommand": "npm run build",
+		"devUrl": "http://localhost:5173",
 		"frontendDist": "../dist"
 	},
 	"app": {
+		"macOSPrivateApi": true,
 		"windows": [
 			{
 				"label": "main",
 				"title": "Klip",
-				"width": 460,
-				"height": 560
+				"width": 340,
+				"height": 720,
+				"decorations": false,
+				"resizable": true,
+				"transparent": true
 			}
 		]
 	},

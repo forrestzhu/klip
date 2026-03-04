@@ -136,6 +136,26 @@ describe("HistoryRepository", () => {
 		expect(repository.getItems()).toHaveLength(12);
 		expect(repository.getItems()[11]?.text).toBe("entry-9");
 	});
+
+	it("clears all history items and persists empty state", async () => {
+		const storage = new InMemoryHistoryStorage();
+		const repository = new HistoryRepository({
+			storage,
+			createId: (() => {
+				let id = 0;
+				return () => `id-${++id}`;
+			})(),
+		});
+
+		await repository.load();
+		await repository.addCapturedText({ text: "alpha" });
+		await repository.addCapturedText({ text: "beta" });
+
+		await repository.clearItems();
+
+		expect(repository.getItems()).toHaveLength(0);
+		expect(storage.state?.items).toHaveLength(0);
+	});
 });
 
 function cloneState(state: HistoryState | null): HistoryState | null {

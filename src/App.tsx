@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -10,6 +11,7 @@ import {
 } from "./features/history";
 import {
 	buildPopupMenuRootEntries,
+	isPopupSelectableEntry,
 	isPopupSubmenuEntry,
 	type PopupMenuEntry,
 	resolvePopupMenuContext,
@@ -56,7 +58,7 @@ type ListenerStatus = "starting" | "ready" | "error";
 type PanelView = "menu" | "snippet-editor" | "settings";
 
 const ALL_SNIPPET_FOLDERS_VALUE = "__all_folders__";
-const COMPACT_PANEL_SIZE = { width: 460, height: 560 };
+const COMPACT_PANEL_SIZE = { width: 340, height: 720 };
 const EXPANDED_PANEL_SIZE = { width: 1024, height: 720 };
 
 export function App() {
@@ -78,7 +80,7 @@ export function App() {
 	const [selectedSnippetIndex, setSelectedSnippetIndex] = useState(0);
 	const [panelView, setPanelView] = useState<PanelView>("menu");
 	const [menuPath, setMenuPath] = useState<string[]>([]);
-	const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
+	const [selectedMenuIndexes, setSelectedMenuIndexes] = useState<number[]>([0]);
 	const [listenerStatus, setListenerStatus] =
 		useState<ListenerStatus>("starting");
 	const [listenerMessage, setListenerMessage] = useState(
@@ -91,8 +93,9 @@ export function App() {
 	const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
 
 	const runtimeRef = useRef<RuntimeContext | null>(null);
+	const popupPanelRef = useRef<HTMLElement | null>(null);
 	const activatePopupEntryRef = useRef<
-		(entry: PopupMenuEntry) => Promise<void>
+		(entry: PopupMenuEntry, depth: number, index: number) => Promise<void>
 	>(async () => {});
 	const panelHotkeyDraftDisplay = canonicalizePanelHotkey(panelHotkeyDraft);
 
@@ -130,11 +133,29 @@ export function App() {
 		});
 	}, [historyItems, snippetFolders, snippetItems]);
 
-	const popupContext = useMemo(() => {
-		return resolvePopupMenuContext(popupRootEntries, menuPath);
-	}, [popupRootEntries, menuPath]);
+	const popupContext = useMemo(
+		() => resolvePopupMenuContext(popupRootEntries, menuPath),
+		[popupRootEntries, menuPath],
+	);
 
-	const popupEntries = popupContext.entries;
+	const popupColumns = useMemo(() => {
+		const columns: PopupMenuEntry[][] = [popupRootEntries];
+		for (let depth = 0; depth < popupContext.path.length; depth += 1) {
+			const context = resolvePopupMenuContext(
+				popupRootEntries,
+				popupContext.path.slice(0, depth + 1),
+			);
+			columns.push(context.entries);
+		}
+		return columns;
+	}, [popupContext.path, popupRootEntries]);
+
+	const activeMenuDepth = popupColumns.length - 1;
+	const activePopupEntries = popupColumns[activeMenuDepth] ?? popupRootEntries;
+	const activeSelectedMenuIndex = selectedMenuIndexes[activeMenuDepth] ?? 0;
+	const activePopupEntry = activePopupEntries[activeSelectedMenuIndex];
+	const selectedSnippetPreview =
+		activePopupEntry?.kind === "snippet-item" ? activePopupEntry.text : null;
 
 	useEffect(() => {
 		setSelectedSnippetIndex((current) => {
@@ -153,13 +174,24 @@ export function App() {
 	}, [menuPath, popupContext.path]);
 
 	useEffect(() => {
-		setSelectedMenuIndex((current) => {
-			if (popupEntries.length === 0) {
-				return 0;
+		setSelectedMenuIndexes((current) => {
+			if (popupColumns.length === 0) {
+				return [0];
 			}
-			return Math.min(current, popupEntries.length - 1);
+
+			let hasChanged = current.length !== popupColumns.length;
+			const next = popupColumns.map((entries, depth) => {
+				const preferredIndex = current[depth] ?? 0;
+				const resolvedIndex = resolveSelectableIndex(entries, preferredIndex);
+				if (resolvedIndex !== preferredIndex) {
+					hasChanged = true;
+				}
+				return resolvedIndex;
+			});
+
+			return hasChanged ? next : current;
 		});
-	}, [popupEntries.length]);
+	}, [popupColumns]);
 
 	useEffect(() => {
 		if (typeof document === "undefined") {
@@ -172,7 +204,7 @@ export function App() {
 			}
 			setPanelView("menu");
 			setMenuPath([]);
-			setSelectedMenuIndex(0);
+			setSelectedMenuIndexes([0]);
 		};
 
 		document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -194,7 +226,7 @@ export function App() {
 			event.preventDefault();
 			setPanelView("menu");
 			setMenuPath([]);
-			setSelectedMenuIndex(0);
+			setSelectedMenuIndexes([0]);
 			void hideDesktopPanelWindow().catch((error) => {
 				setActionMessage(`Failed to close panel: ${toErrorMessage(error)}`);
 			});
@@ -372,15 +404,33 @@ export function App() {
 
 			if (event.key === "ArrowDown") {
 				event.preventDefault();
-				setSelectedMenuIndex((current) =>
-					Math.min(current + 1, Math.max(0, popupEntries.length - 1)),
-				);
+				setSelectedMenuIndexes((current) => {
+					const next = [...current];
+					const entries = popupColumns[activeMenuDepth] ?? [];
+					const currentIndex = next[activeMenuDepth] ?? 0;
+					next[activeMenuDepth] = findNextSelectableIndex(
+						entries,
+						currentIndex,
+						1,
+					);
+					return next;
+				});
 				return;
 			}
 
 			if (event.key === "ArrowUp") {
 				event.preventDefault();
-				setSelectedMenuIndex((current) => Math.max(current - 1, 0));
+				setSelectedMenuIndexes((current) => {
+					const next = [...current];
+					const entries = popupColumns[activeMenuDepth] ?? [];
+					const currentIndex = next[activeMenuDepth] ?? 0;
+					next[activeMenuDepth] = findNextSelectableIndex(
+						entries,
+						currentIndex,
+						-1,
+					);
+					return next;
+				});
 				return;
 			}
 
@@ -390,7 +440,9 @@ export function App() {
 				}
 				event.preventDefault();
 				setMenuPath((current) => current.slice(0, current.length - 1));
-				setSelectedMenuIndex(0);
+				setSelectedMenuIndexes((current) =>
+					current.slice(0, Math.max(1, current.length - 1)),
+				);
 				return;
 			}
 
@@ -398,23 +450,66 @@ export function App() {
 				return;
 			}
 
-			event.preventDefault();
-			const selectedEntry = popupEntries[selectedMenuIndex];
-			if (!selectedEntry) {
+			if (!activePopupEntry || !isPopupSelectableEntry(activePopupEntry)) {
 				return;
 			}
 
-			void activatePopupEntryRef.current(selectedEntry);
+			event.preventDefault();
+			void activatePopupEntryRef.current(
+				activePopupEntry,
+				activeMenuDepth,
+				activeSelectedMenuIndex,
+			);
 		};
 
 		window.addEventListener("keydown", handleMenuNavigation);
 		return () => {
 			window.removeEventListener("keydown", handleMenuNavigation);
 		};
-	}, [menuPath.length, panelView, popupEntries, selectedMenuIndex]);
+	}, [
+		activeMenuDepth,
+		activePopupEntry,
+		activeSelectedMenuIndex,
+		menuPath.length,
+		panelView,
+		popupColumns,
+	]);
 
 	useEffect(() => {
-		void syncDesktopWindowSize(panelView, setActionMessage);
+		void syncDesktopWindowSize(panelView, {
+			popupPanelElement: popupPanelRef.current,
+		});
+	}, [panelView]);
+
+	useEffect(() => {
+		if (typeof window === "undefined" || panelView !== "menu") {
+			return;
+		}
+
+		const panelElement = popupPanelRef.current;
+		if (!panelElement || typeof ResizeObserver === "undefined") {
+			return;
+		}
+
+		let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+		const observer = new ResizeObserver(() => {
+			if (resizeTimeout) {
+				clearTimeout(resizeTimeout);
+			}
+			resizeTimeout = setTimeout(() => {
+				void syncDesktopWindowSize("menu", {
+					popupPanelElement: panelElement,
+				});
+			}, 50);
+		});
+		observer.observe(panelElement);
+
+		return () => {
+			if (resizeTimeout) {
+				clearTimeout(resizeTimeout);
+			}
+			observer.disconnect();
+		};
 	}, [panelView]);
 
 	const handleSnippetSearchKeyDown = async (
@@ -559,7 +654,7 @@ export function App() {
 
 		setPanelView("menu");
 		setMenuPath([]);
-		setSelectedMenuIndex(0);
+		setSelectedMenuIndexes([0]);
 
 		try {
 			await hideDesktopPanelWindow();
@@ -842,24 +937,95 @@ export function App() {
 		setActionMessage("Folder deleted and snippets moved to General.");
 	};
 
-	const activatePopupEntry = async (entry: PopupMenuEntry) => {
-		if (entry.kind === "empty") {
+	const handleClearHistory = async () => {
+		const runtime = runtimeRef.current;
+		if (!runtime) {
+			setActionMessage("Runtime is not ready.");
+			return;
+		}
+
+		if (historyItems.length === 0) {
+			setActionMessage("当前没有可清除的历史记录。");
+			return;
+		}
+
+		const shouldClear =
+			typeof window === "undefined"
+				? true
+				: window.confirm("确认清除所有历史记录吗？");
+		if (!shouldClear) {
+			return;
+		}
+
+		await runtime.historyRepository.clearItems();
+		setHistoryItems(runtime.historyRepository.getItems());
+		setMenuPath([]);
+		setSelectedMenuIndexes([0]);
+		setActionMessage("历史记录已清除。");
+	};
+
+	const handleQuitApp = async () => {
+		if (!isDesktopRuntime()) {
+			setActionMessage("Browser preview cannot quit desktop app.");
+			return;
+		}
+
+		try {
+			await invoke("quit_app");
+		} catch (error) {
+			setActionMessage(`Failed to quit app: ${toErrorMessage(error)}`);
+		}
+	};
+
+	const openPopupSubmenu = (
+		entry: PopupMenuEntry,
+		depth: number,
+		index: number,
+	) => {
+		if (!isPopupSubmenuEntry(entry)) {
+			return;
+		}
+
+		setMenuPath((current) => [...current.slice(0, depth), entry.id]);
+		setSelectedMenuIndexes((current) => {
+			const next = current.slice(0, depth + 2);
+			next[depth] = index;
+			next[depth + 1] = resolveSelectableIndex(entry.children, 0);
+			return next;
+		});
+	};
+
+	const activatePopupEntry = async (
+		entry: PopupMenuEntry,
+		depth: number,
+		index: number,
+	) => {
+		if (!isPopupSelectableEntry(entry)) {
 			return;
 		}
 
 		if (isPopupSubmenuEntry(entry)) {
-			setMenuPath([...popupContext.path, entry.id]);
-			setSelectedMenuIndex(0);
+			openPopupSubmenu(entry, depth, index);
 			return;
 		}
 
 		if (entry.kind === "action") {
+			if (entry.action === "clear-history") {
+				await handleClearHistory();
+				return;
+			}
+
 			if (entry.action === "edit-snippets") {
 				setPanelView("snippet-editor");
 				return;
 			}
 
-			setPanelView("settings");
+			if (entry.action === "open-preferences") {
+				setPanelView("settings");
+				return;
+			}
+
+			await handleQuitApp();
 			return;
 		}
 
@@ -874,6 +1040,10 @@ export function App() {
 			return;
 		}
 
+		if (entry.kind !== "snippet-item") {
+			return;
+		}
+
 		await pasteTextWithFallback({
 			text: entry.text,
 			directSuccessMessage: "Snippet pasted into active app.",
@@ -884,68 +1054,120 @@ export function App() {
 	};
 	activatePopupEntryRef.current = activatePopupEntry;
 
+	const handlePopupEntryHover = (
+		entry: PopupMenuEntry,
+		depth: number,
+		index: number,
+	) => {
+		if (!isPopupSelectableEntry(entry)) {
+			return;
+		}
+
+		if (isPopupSubmenuEntry(entry)) {
+			openPopupSubmenu(entry, depth, index);
+			return;
+		}
+
+		setMenuPath((current) => current.slice(0, depth));
+		setSelectedMenuIndexes((current) => {
+			const next = current.slice(0, depth + 1);
+			next[depth] = index;
+			return next;
+		});
+	};
+
 	const renderPopupPanel = () => {
-		const breadcrumb = popupContext.breadcrumb.join(" / ");
-
 		return (
-			<section className="popup-panel">
-				<div className="popup-toolbar">
-					{popupContext.path.length > 0 ? (
-						<button
-							className="ghost-button"
-							type="button"
-							onClick={() => {
-								setMenuPath((current) => current.slice(0, current.length - 1));
-								setSelectedMenuIndex(0);
-							}}
-						>
-							Back
-						</button>
-					) : null}
-					<span className="popup-breadcrumb">
-						{breadcrumb.length === 0 ? "Menu" : `Menu / ${breadcrumb}`}
-					</span>
-				</div>
-
-				<ul className="popup-list">
-					{popupEntries.map((entry, index) => {
-						const selectedClass = index === selectedMenuIndex ? "selected" : "";
-						const disabled = entry.kind === "empty";
-						const detail =
-							entry.kind === "history-item" || entry.kind === "snippet-item"
-								? entry.detail
-								: null;
-
+			<section
+				className="popup-panel"
+				ref={(element) => {
+					popupPanelRef.current = element;
+				}}
+			>
+				<div className="popup-columns">
+					{popupColumns.map((entries, depth) => {
 						return (
-							<li key={entry.id}>
-								<button
-									type="button"
-									disabled={disabled}
-									className={`popup-entry popup-entry-${entry.kind} ${selectedClass}`}
-									onClick={() => {
-										setSelectedMenuIndex(index);
-										void activatePopupEntry(entry);
-									}}
-								>
-									<div>
-										<div className="popup-entry-title">{entry.label}</div>
-										{detail ? (
-											<div className="popup-entry-detail">{detail}</div>
-										) : null}
-									</div>
-									{entry.kind === "submenu" ? (
-										<span className="popup-entry-chevron">›</span>
-									) : null}
-								</button>
-							</li>
+							<ul
+								key={
+									depth === 0
+										? "popup-column-root"
+										: `popup-column-${popupContext.path.slice(0, depth).join(".")}`
+								}
+								className="popup-list"
+							>
+								{entries.map((entry, index) => {
+									if (entry.kind === "separator") {
+										return (
+											<li key={entry.id} className="popup-entry-separator" />
+										);
+									}
+
+									if (entry.kind === "section") {
+										return (
+											<li key={entry.id} className="popup-entry-section">
+												{entry.label}
+											</li>
+										);
+									}
+
+									if (entry.kind === "empty") {
+										return (
+											<li key={entry.id} className="popup-entry-empty">
+												{entry.label}
+											</li>
+										);
+									}
+
+									const selected =
+										isPopupSelectableEntry(entry) &&
+										selectedMenuIndexes[depth] === index;
+									const showFolderIcon =
+										entry.kind === "submenu" || entry.kind === "snippet-item";
+
+									return (
+										<li key={entry.id}>
+											<button
+												type="button"
+												className={`popup-entry popup-entry-${entry.kind} ${
+													selected ? "selected" : ""
+												}`}
+												onMouseEnter={() => {
+													handlePopupEntryHover(entry, depth, index);
+												}}
+												onFocus={() => {
+													handlePopupEntryHover(entry, depth, index);
+												}}
+												onClick={() => {
+													void activatePopupEntry(entry, depth, index);
+												}}
+											>
+												<span className="popup-entry-main">
+													{showFolderIcon ? (
+														<span
+															aria-hidden="true"
+															className="popup-folder-icon"
+														/>
+													) : null}
+													<span className="popup-entry-title">
+														{entry.label}
+													</span>
+												</span>
+												{entry.kind === "submenu" ? (
+													<span className="popup-entry-chevron">›</span>
+												) : null}
+											</button>
+										</li>
+									);
+								})}
+							</ul>
 						);
 					})}
-				</ul>
-
-				<p className="popup-hint">
-					Use ↑/↓ to select, →/Enter to open or paste, ← to go back, Esc to
-					close.
-				</p>
+					{selectedSnippetPreview ? (
+						<aside className="popup-preview-panel">
+							{selectedSnippetPreview}
+						</aside>
+					) : null}
+				</div>
 			</section>
 		);
 	};
@@ -961,7 +1183,7 @@ export function App() {
 						onClick={() => {
 							setPanelView("menu");
 							setMenuPath([]);
-							setSelectedMenuIndex(0);
+							setSelectedMenuIndexes([0]);
 						}}
 					>
 						Back to Menu
@@ -1160,7 +1382,7 @@ export function App() {
 						onClick={() => {
 							setPanelView("menu");
 							setMenuPath([]);
-							setSelectedMenuIndex(0);
+							setSelectedMenuIndexes([0]);
 						}}
 					>
 						Back to Menu
@@ -1261,12 +1483,19 @@ export function App() {
 		);
 	};
 
+	if (panelView === "menu") {
+		return (
+			<main className="popup-shell">
+				{renderPopupPanel()}
+				{actionMessage ? (
+					<p className="popup-action-message">{actionMessage}</p>
+				) : null}
+			</main>
+		);
+	}
+
 	return (
-		<main
-			className={`app-shell ${
-				panelView === "menu" ? "app-shell-compact" : "app-shell-expanded"
-			}`}
-		>
+		<main className="app-shell app-shell-expanded">
 			<header className="topbar">
 				<div>
 					<h1>Klip</h1>
@@ -1280,11 +1509,9 @@ export function App() {
 				</div>
 			</header>
 
-			{panelView === "menu"
-				? renderPopupPanel()
-				: panelView === "snippet-editor"
-					? renderSnippetEditorPanel()
-					: renderSettingsPanel()}
+			{panelView === "snippet-editor"
+				? renderSnippetEditorPanel()
+				: renderSettingsPanel()}
 			{actionMessage ? <p className="action-message">{actionMessage}</p> : null}
 		</main>
 	);
@@ -1293,6 +1520,22 @@ export function App() {
 function toErrorMessage(error: unknown): string {
 	if (error instanceof Error && error.message.trim().length > 0) {
 		return error.message;
+	}
+
+	if (
+		typeof error === "object" &&
+		error !== null &&
+		"message" in error &&
+		typeof (error as { message?: unknown }).message === "string"
+	) {
+		const message = (error as { message: string }).message.trim();
+		if (message.length > 0) {
+			return message;
+		}
+	}
+
+	if (typeof error === "string" && error.trim().length > 0) {
+		return error;
 	}
 
 	return "Unexpected runtime error.";
@@ -1331,9 +1574,57 @@ function isSameStringArray(left: string[], right: string[]): boolean {
 	return true;
 }
 
+function resolveSelectableIndex(
+	entries: PopupMenuEntry[],
+	preferredIndex: number,
+): number {
+	if (entries.length === 0) {
+		return 0;
+	}
+
+	const clampedPreferredIndex = Math.max(
+		0,
+		Math.min(preferredIndex, entries.length - 1),
+	);
+	if (isPopupSelectableEntry(entries[clampedPreferredIndex])) {
+		return clampedPreferredIndex;
+	}
+
+	const fallbackIndex = entries.findIndex((entry) =>
+		isPopupSelectableEntry(entry),
+	);
+	return fallbackIndex >= 0 ? fallbackIndex : 0;
+}
+
+function findNextSelectableIndex(
+	entries: PopupMenuEntry[],
+	currentIndex: number,
+	direction: 1 | -1,
+): number {
+	if (entries.length === 0) {
+		return 0;
+	}
+
+	let nextIndex = Math.max(0, Math.min(currentIndex, entries.length - 1));
+	for (let attempt = 0; attempt < entries.length; attempt += 1) {
+		nextIndex += direction;
+		if (nextIndex < 0 || nextIndex >= entries.length) {
+			nextIndex = direction > 0 ? 0 : entries.length - 1;
+		}
+
+		if (isPopupSelectableEntry(entries[nextIndex])) {
+			return nextIndex;
+		}
+	}
+
+	return resolveSelectableIndex(entries, currentIndex);
+}
+
 async function syncDesktopWindowSize(
 	panelView: PanelView,
-	setActionMessage: (value: string | null) => void,
+	options?: {
+		popupPanelElement: HTMLElement | null;
+	},
 ): Promise<void> {
 	if (!isDesktopRuntime()) {
 		return;
@@ -1344,10 +1635,27 @@ async function syncDesktopWindowSize(
 			"@tauri-apps/api/window"
 		);
 		const appWindow = getCurrentWindow();
-		const nextSize =
+		let nextSize =
 			panelView === "menu" ? COMPACT_PANEL_SIZE : EXPANDED_PANEL_SIZE;
+		if (panelView === "menu") {
+			const panelElement = options?.popupPanelElement;
+			if (panelElement) {
+				const measuredWidth = Math.ceil(panelElement.scrollWidth);
+				const measuredHeight = Math.ceil(panelElement.scrollHeight);
+				if (measuredWidth > 0 && measuredHeight > 0) {
+					nextSize = {
+						width: clampNumber(measuredWidth + 2, 200, 1400),
+						height: clampNumber(measuredHeight + 2, 200, 900),
+					};
+				}
+			}
+		}
 		await appWindow.setSize(new LogicalSize(nextSize.width, nextSize.height));
 	} catch (error) {
-		setActionMessage(`Panel resize failed: ${toErrorMessage(error)}`);
+		console.warn("Window resize failed:", error);
 	}
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+	return Math.min(max, Math.max(min, value));
 }

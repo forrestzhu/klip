@@ -1,17 +1,18 @@
 :root {
 	font-family:
 		"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	background: #eef2f7;
-	color: #111827;
+	color: #222222;
 }
 
 * {
 	box-sizing: border-box;
 }
 
+html,
 body {
 	margin: 0;
-	min-height: 100vh;
+	padding: 0;
+	background: transparent;
 }
 
 .app-shell {
@@ -21,16 +22,15 @@ body {
 	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
-.app-shell-compact {
-	max-width: 460px;
-	padding: 12px;
-	border-radius: 12px;
-}
-
 .app-shell-expanded {
 	max-width: 1040px;
 	padding: 18px;
 	border-radius: 14px;
+}
+
+.popup-shell {
+	display: inline-block;
+	padding: 0;
 }
 
 .topbar {
@@ -79,31 +79,29 @@ body {
 }
 
 .popup-panel {
-	padding: 8px;
-	border: 1px solid #e5e7eb;
-	border-radius: 10px;
-	background: #f9fafb;
+	display: inline-block;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
 }
 
-.popup-toolbar {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 8px;
-}
-
-.popup-breadcrumb {
-	font-size: 12px;
-	font-weight: 600;
-	color: #4b5563;
+.popup-columns {
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 0;
 }
 
 .popup-list {
 	list-style: none;
 	margin: 0;
-	padding: 0;
-	display: grid;
-	gap: 4px;
+	padding: 4px;
+	min-width: 286px;
+	max-width: 286px;
+	background: rgba(246, 246, 246, 0.97);
+	border: 1px solid #c6c6c6;
+	border-radius: 10px;
+	box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
 }
 
 .popup-entry {
@@ -113,50 +111,109 @@ body {
 	justify-content: space-between;
 	gap: 8px;
 	text-align: left;
-	padding: 9px 10px;
-	border: 1px solid transparent;
-	border-radius: 8px;
-	background: #ffffff;
-	color: #111827;
+	padding: 6px 9px;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: #222222;
 	cursor: pointer;
+	font-size: 14px;
 }
 
 .popup-entry.selected {
-	border-color: #3b82f6;
-	background: #eff6ff;
-}
-
-.popup-entry:disabled {
-	background: #f3f4f6;
-	color: #6b7280;
-	cursor: default;
+	background: #5a95e5;
+	color: #ffffff;
 }
 
 .popup-entry-action {
-	font-weight: 600;
+	font-weight: 500;
+}
+
+.popup-entry-main {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .popup-entry-title {
-	font-size: 13px;
-	line-height: 1.35;
+	font-size: 14px;
+	line-height: 1.32;
+	font-weight: 500;
 }
 
-.popup-entry-detail {
-	margin-top: 3px;
-	font-size: 11px;
-	color: #6b7280;
+.popup-entry-section {
+	padding: 8px 10px 4px;
+	font-size: 12px;
+	line-height: 1.3;
+	color: #a0a0a0;
+	font-weight: 600;
+	user-select: none;
+}
+
+.popup-entry-separator {
+	height: 1px;
+	margin: 4px 8px;
+	background: #d2d2d2;
+}
+
+.popup-entry-empty {
+	padding: 7px 10px;
+	font-size: 13px;
+	color: #8b8b8b;
+}
+
+.popup-folder-icon {
+	width: 17px;
+	height: 13px;
+	border: 1.5px solid currentColor;
+	border-radius: 2px;
+	display: inline-block;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.popup-folder-icon::before {
+	content: "";
+	position: absolute;
+	left: 1px;
+	top: -5px;
+	width: 8px;
+	height: 4px;
+	border: 1.5px solid currentColor;
+	border-bottom: 0;
+	border-radius: 2px 2px 0 0;
 }
 
 .popup-entry-chevron {
-	font-size: 16px;
+	font-size: 24px;
 	line-height: 1;
-	color: #6b7280;
+	color: inherit;
 }
 
-.popup-hint {
-	margin: 8px 2px 2px;
-	font-size: 11px;
-	color: #6b7280;
+.popup-preview-panel {
+	min-width: 306px;
+	max-width: 340px;
+	padding: 10px 12px;
+	background: rgba(244, 244, 244, 0.96);
+	border: 1px solid #cfcfcf;
+	border-radius: 10px;
+	font-size: 13px;
+	color: #444444;
+	box-shadow: 0 7px 20px rgba(0, 0, 0, 0.12);
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.popup-action-message {
+	display: block;
+	margin: 10px 6px 0;
+	padding: 4px 8px;
+	font-size: 12px;
+	color: #52606d;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 4px;
+	max-width: 600px;
+	word-break: break-word;
 }
 
 .editor-panel,

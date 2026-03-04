@@ -3,13 +3,13 @@
 - Last Updated: 2026-03-04
 - Branch: `main`
 - Latest Commit: `ff8a4d2` (`feat(ui): add clipy-style compact popup and editor split`)
-- Working Tree: uncommitted local changes for three-window Clipy parity design doc and status sync
+- Working Tree: uncommitted local changes for popup parity follow-up commit, capability config, and status sync
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
 - Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy and editor/preferences split.
-- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses compact hierarchical menu behavior with separate large views for snippet editing and preferences.
+- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections, cascading submenu columns, and popup-only quick paste behavior while snippet editing/preferences remain in separate in-app views.
 
 ## Completed Highlights
 
@@ -42,6 +42,12 @@
 - Popup keyboard navigation now supports `↑/↓` selection and `←/→` hierarchical navigation, with `Enter` selecting/pasting at leaf items (`src/App.tsx`).
 - Editor/preferences split baseline added: popup stays compact by default; snippet editing and settings move to expanded panels and runtime window resize targets (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
 - Added three-window Clipy parity design spec for next implementation iteration (`docs/plans/2026-03-04-three-window-clipy-parity-design.md`).
+- Popup parity follow-up implemented: removed `History/Snippets` wrapper nodes, added section headers + separators + `清除历史/编辑片断.../偏好设置.../退出 Klip`, and added multi-column cascading submenu with snippet preview pane (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/styles.css`).
+- Popup action runtime follow-up implemented: added history clear repository API and desktop `quit_app` Tauri command bridge (`src/features/history/historyRepository.ts`, `src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`).
+- Popup shell/chrome follow-up implemented: popup webview now fills window without outer margin wrapper, and menu mode hides macOS titlebar controls by disabling decorations/resizable state (`src/styles.css`, `src/App.tsx`, `src-tauri/tauri.conf.json`).
+- Popup shell/chrome follow-up updated: runtime decoration toggle is removed from resize path to avoid blocking popup `setSize`; popup sizing now follows rendered content changes via `ResizeObserver` (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
+- Added Tauri capability file for main window to explicitly allow runtime window operations used by popup flow (`src-tauri/capabilities/default.json`).
+- Added local popup badcase screenshot artifacts for visual debugging and manual verification traceability (`docs/klip-test-ui/*.png`).
 
 ## In Progress / Gaps
 
@@ -51,15 +57,16 @@
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
 - US-011 packaging baseline now exists, but Windows installer artifact evidence and install/uninstall interactive checks are still pending.
-- New Clipy-style popup behavior still needs adjustment to strict three-window model (remove `History/Snippets` wrapper nodes and move snippet/settings to independent windows).
-- Pixel-level visual parity is still blocked by missing reference screenshots for popup/snippet editor/preferences states.
+- Three-window model is still incomplete: `编辑片断...` / `偏好设置...` still switch current webview content instead of opening dedicated `snippet-editor` / `preferences` windows.
+- Popup is now screenshot-driven, but snippet editor/preferences windows are still not visually aligned to `snippet_edit.png` and `settings*.png`.
+- Popup badcase behavior still requires hands-on verification against newly added local screenshots (`docs/klip-test-ui`).
 - Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
 - Manual matrix exists, but interactive GUI step execution evidence is still pending for both macOS and Windows.
 
 ## Next Focus
 
-1. Confirm three-window design spec and collect Clipy reference screenshots for pixel-level parity.
-2. Implement strict three-window behavior: popup-only quick paste + standalone snippet editor + standalone preferences.
+1. Implement standalone `snippet-editor` and `preferences` windows with window reuse/focus lifecycle.
+2. Align snippet editor and preferences UI to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
 3. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions.
 
 ## Last Validation Snapshot
@@ -90,6 +97,12 @@
 - 2026-03-04: `npm run qa` revalidated after US-011 baseline changes (`test` 65 tests; coverage statements 86.55%, branches 86.47%, funcs 87.5%, lines 86.55%).
 - 2026-03-04: Clipy-style popup/editor split iteration validated via `npm run lint`, `npm run typecheck`, `npm run test` (68 tests), and `npm run qa` (coverage statements 87.62%, branches 86.77%, funcs 87.25%, lines 87.62%).
 - 2026-03-04: `npm run dev:desktop` smoke rechecked after popup/menu refactor (log: `/tmp/klip-dev-desktop-menu-rework-20260304.log`, reached `Running target/debug/klip-tauri` before timeout).
+- 2026-03-04: popup parity follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), `npm run build`, `npm run cargo:check`, and `cargo test --manifest-path src-tauri/Cargo.toml` (24 tests).
+- 2026-03-04: `npm run dev:desktop` smoke rechecked after popup parity follow-up (reached `Running target/debug/klip-tauri` before 45s command timeout).
+- 2026-03-04: popup window shell/chrome fix validated via `npm run format`, `npm run lint`, `npm run typecheck`, and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri` before 30s command timeout).
+- 2026-03-04: popup resize error hotfix validated via `npm run format`, `npm run lint`, `npm run typecheck`, and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri` before 30s command timeout).
+- 2026-03-04: popup content-size sync follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri`).
+- 2026-03-04: popup parity commit preflight validated via `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), `npm run build`, `npm run cargo:check`, `cargo test --manifest-path src-tauri/Cargo.toml` (24 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri`; Vite switched to `5174` because `5173` was occupied).
 
 ## Quick Resume Steps
 
