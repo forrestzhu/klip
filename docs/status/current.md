@@ -2,13 +2,13 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `9e39d32` (`feat(snippets): add snippets mode and repository workflow`)
+- Latest Commit: `30a6501` (`feat(runtime): add global hotkey and direct paste fallback`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
-- Active scope: Phase 1 (MVP) plus initial Phase 2 snippets baseline and tray/menu bar entry.
-- Product state: local offline clipboard workflow with history + snippets dual mode in web runtime; Tauri runtime now boots with tray/menu bar open/quit baseline.
+- Active scope: Phase 1 (MVP) plus initial Phase 2 snippets baseline, tray/menu bar entry, global hotkey baseline, and direct-paste fallback abstraction baseline.
+- Product state: local offline clipboard workflow with history + snippets dual mode in web runtime; Tauri runtime now supports tray/menu bar entry, configurable panel global hotkey, and best-effort direct paste with clipboard fallback.
 
 ## Completed Highlights
 
@@ -18,30 +18,33 @@
 - Snippets domain modules (folder + snippet CRUD, persistence, normalization).
 - History/Snippets dual-mode UI with mode memory and keyboard mode switch (`Ctrl/Cmd+1`, `Ctrl/Cmd+2`).
 - Tauri tray/menu bar resident entry with icon click open, menu open, and quit action (`src-tauri/src/tray.rs`).
+- Tauri global hotkey baseline for opening panel, dynamic rebind, and conflict-aware error feedback (`src-tauri/src/hotkey.rs`, `src-tauri/src/lib.rs`).
+- Frontend shortcut settings baseline with persistence, apply action, and `Esc` panel hide integration (`src/features/settings`, `src/App.tsx`).
+- Direct paste abstraction baseline in Tauri (`src-tauri/src/direct_paste.rs`) with platform paste attempt (macOS `osascript`, Windows `SendKeys`) and clipboard fallback response.
+- History/Snippets selection flow now routes through direct paste runtime with fallback messaging in UI (`src/features/paste`, `src/App.tsx`).
 
 ## In Progress / Gaps
 
-- Global hotkey registration and conflict handling (US-004, US-010 partial) not implemented.
-- System-level direct paste injection (US-006/US-008 strict requirement) not implemented; current fallback writes to clipboard.
+- Direct paste path is best-effort and still needs manual verification for reliability/permissions on macOS and Windows foreground apps (US-006/US-008 hardening gap).
 - Tray behavior has only baseline runtime coverage; no desktop e2e/manual platform verification evidence yet.
+- Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
+- Dedicated settings center is still missing; controls are currently embedded in main panel (US-010 partial).
 - Cross-platform installer release and e2e desktop regression baseline (US-011, US-012 partial) not implemented.
 
 ## Next Focus
 
-1. Implement configurable global hotkey and conflict feedback (US-004 + settings baseline).
-2. Add direct paste backend abstraction with clipboard fallback and visible error feedback (US-006/US-008).
-3. Start dedicated settings center for shortcut/capacity/paste behavior controls (US-010).
+1. Expand settings into dedicated settings center for shortcut/capacity/paste controls (US-010).
+2. Add desktop manual verification evidence for tray/hotkey/direct-paste behavior on macOS/Windows (US-003/US-004/US-006).
+3. Add snippets quick-trigger strategy and conflict handling (US-008 remaining scope).
 
 ## Last Validation Snapshot
 
 - 2026-03-04: `npm run lint` passed.
 - 2026-03-04: `npm run typecheck` passed.
-- 2026-03-04: `npm run test` passed (44 tests).
-- 2026-03-04: `npm run test:coverage` passed (global branches 86.06%).
+- 2026-03-04: `npm run test` passed (47 tests).
 - 2026-03-04: `npm run build` passed.
 - 2026-03-04: `npm run cargo:check` passed.
-- 2026-03-04: `cargo test --manifest-path src-tauri/Cargo.toml` passed (14 tests).
-- 2026-03-04: `npm run test:e2e` skipped (no Playwright setup yet).
+- 2026-03-04: `cargo test --manifest-path src-tauri/Cargo.toml` passed (22 tests).
 
 ## Quick Resume Steps
 
