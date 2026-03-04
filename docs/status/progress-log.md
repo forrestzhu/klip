@@ -552,3 +552,20 @@ This file is append-only. Add one entry after each completed iteration.
   - build: skip (already validated in CI run evidence)
 - Risks / Follow-ups:
   - CI run `22672192432` still in progress for macOS at log-capture time; a fresh run on this follow-up commit is required to confirm end-to-end green state.
+
+## 2026-03-04 - ci cargo environment follow-up (ubuntu deps + windows icon)
+
+- Commit: `pending`
+- Summary:
+  - Reviewed run `22672407972`: npm install and lint/typecheck/test/build stages are now stable cross-platform, but `cargo:check` failed on Ubuntu and Windows.
+  - Fixed Ubuntu cargo dependency issue by installing Linux system packages required by Tauri/GTK/WebKit (`libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `patchelf`) before Rust checks in CI.
+  - Fixed Windows cargo build-script failure by replacing placeholder icon asset with real multi-size icon files (`src-tauri/icons/icon.png` and generated `src-tauri/icons/icon.ico`).
+- Validation:
+  - lint: pass (`npm run lint`)
+  - cargo:check: pass (`npm run cargo:check`)
+  - CI evidence:
+    - run `22672407972` showed `Install Node dependencies` success on all 3 OS jobs.
+    - Ubuntu cargo failure details indicated missing `glib-2.0`/`gio-2.0` pkg-config libs.
+    - Windows cargo failure details indicated missing `icons/icon.ico`.
+- Risks / Follow-ups:
+  - Re-run CI on this follow-up commit is required to confirm Ubuntu/Windows `cargo:check` are green with the new packages/icon.

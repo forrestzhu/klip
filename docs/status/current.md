@@ -3,7 +3,7 @@
 - Last Updated: 2026-03-04
 - Branch: `main`
 - Latest Commit: `b2284b4` (`fix(ci): harden npm ci install reliability`)
-- Working Tree: dirty (`.github/workflows/ci.yml` + `.npmrc` + `package-lock.json` + `docs/status/*`)
+- Working Tree: dirty (`.github/workflows/ci.yml` + `src-tauri/icons/*` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -51,6 +51,7 @@
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
+- CI cargo follow-up hardening added: install required Linux GTK/WebKit dependencies on Ubuntu runners before Rust checks, and add a real Windows `.ico` app icon for Tauri build-script requirements (`.github/workflows/ci.yml`, `src-tauri/icons/icon.png`, `src-tauri/icons/icon.ico`).
 
 ## In Progress / Gaps
 
@@ -109,6 +110,7 @@
 - 2026-03-04: CI workflow hardening iteration validated via `npm run lint` after updating install path in `.github/workflows/ci.yml`.
 - 2026-03-04: CI registry hardening iteration validated via `npm run lint` and `npm ci --ignore-scripts` after lockfile registry normalization.
 - 2026-03-04: CI cross-platform hardening follow-up validated via `npm run lint` and `npm run cargo:check` after LF normalization and Rust `1.85.0` bump.
+- 2026-03-04: CI cargo follow-up validated via `npm run lint` and `npm run cargo:check` after Linux dependency install step and Windows icon asset update.
 
 ## Quick Resume Steps
 
