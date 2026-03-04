@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `0e2abb9` (`feat(ui): align popup parity and runtime sizing`)
-- Working Tree: dirty (`.github/workflows/ci.yml` + `docs/status/*`)
+- Latest Commit: `b2284b4` (`fix(ci): harden npm ci install reliability`)
+- Working Tree: dirty (`.github/workflows/ci.yml` + `.npmrc` + `package-lock.json` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -49,6 +49,7 @@
 - Added Tauri capability file for main window to explicitly allow runtime window operations used by popup flow (`src-tauri/capabilities/default.json`).
 - Added local popup badcase screenshot artifacts for visual debugging and manual verification traceability (`docs/klip-test-ui/*.png`).
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
+- CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 
 ## In Progress / Gaps
 
@@ -105,6 +106,7 @@
 - 2026-03-04: popup content-size sync follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri`).
 - 2026-03-04: popup parity commit preflight validated via `npm run lint`, `npm run typecheck`, `npm run test` (71 tests), `npm run build`, `npm run cargo:check`, `cargo test --manifest-path src-tauri/Cargo.toml` (24 tests), and `npm run dev:desktop` smoke (reached `Running target/debug/klip-tauri`; Vite switched to `5174` because `5173` was occupied).
 - 2026-03-04: CI workflow hardening iteration validated via `npm run lint` after updating install path in `.github/workflows/ci.yml`.
+- 2026-03-04: CI registry hardening iteration validated via `npm run lint` and `npm ci --ignore-scripts` after lockfile registry normalization.
 
 ## Quick Resume Steps
 

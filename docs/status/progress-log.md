@@ -516,3 +516,22 @@ This file is append-only. Add one entry after each completed iteration.
   - cargo:check: skip (workflow/docs-only change)
 - Risks / Follow-ups:
   - CI re-run is required to confirm this hardening resolves recurring `npm ci` internal failures on all three OS jobs.
+
+## 2026-03-04 - ci registry root-cause fix for npm ci timeouts
+
+- Commit: `pending`
+- Summary:
+  - Inspected failed CI run `22670335659` and extracted Windows job debug logs; repeated `npm ci` failures showed `ETIMEDOUT` against `https://registry.anpm.alibaba-inc.com/...` tarball URLs, then npm terminated with `Exit handler never called`.
+  - Added repo-level npm registry pin (`.npmrc`) to `https://registry.npmjs.org/` to prevent host-specific mirror leakage into installs.
+  - Normalized `package-lock.json` resolved tarball hosts from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org` so GitHub runners can fetch dependencies reliably.
+  - Updated CI workflow to enforce npmjs registry via `setup-node` (`registry-url`) and install-step env (`NPM_CONFIG_REGISTRY`), while keeping existing retry and debug-log capture (`.github/workflows/ci.yml`).
+- Validation:
+  - lint: pass (`npm run lint`)
+  - install smoke: pass (`npm ci --ignore-scripts`)
+  - evidence: extracted failed job logs show `ETIMEDOUT` to `registry.anpm.alibaba-inc.com` before npm internal crash (`run 22670335659`, Windows job `65712463493`)
+  - typecheck: skip (dependency/CI config iteration)
+  - test: skip (dependency/CI config iteration)
+  - build: skip (dependency/CI config iteration)
+  - cargo:check: skip (dependency/CI config iteration)
+- Risks / Follow-ups:
+  - Current CI run `22670335659` started before this lockfile/registry fix; re-run is required on the new commit to verify all three OS jobs install from npmjs successfully.

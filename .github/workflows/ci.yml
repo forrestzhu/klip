@@ -27,6 +27,7 @@ jobs:
         with:
           node-version: 22.22.0
           cache: npm
+          registry-url: https://registry.npmjs.org
 
       - name: Ensure reliable npm version
         run: npm install -g npm@10.9.4
@@ -35,8 +36,10 @@ jobs:
         shell: bash
         env:
           HUSKY: 0
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
         run: |
           set -o pipefail
+          echo "npm registry: $(npm config get registry)"
 
           for attempt in 1 2 3; do
             if npm ci; then
