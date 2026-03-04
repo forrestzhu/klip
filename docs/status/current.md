@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `ff8a4d2` (`feat(ui): add clipy-style compact popup and editor split`)
-- Working Tree: uncommitted local changes for popup parity follow-up commit, capability config, and status sync
+- Latest Commit: `0e2abb9` (`feat(ui): align popup parity and runtime sizing`)
+- Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase

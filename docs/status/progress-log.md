@@ -482,7 +482,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-04 - popup parity commit sync and capability follow-up
 
-- Commit: `pending`
+- Commit: `0e2abb9`
 - Summary:
   - Synced popup flow changes for commit readiness: flattened Clipy-style popup structure, cascading submenu interaction, clear-history action, quit command bridge, and content-driven resize behavior (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/features/history/historyRepository.ts`, `src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`, `src/styles.css`).
   - Added Tauri main-window capability config for popup runtime window operations (`src-tauri/capabilities/default.json`) and kept popup-oriented window defaults (`src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`).
