@@ -68,6 +68,15 @@ pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     Ok(())
 }
 
+pub fn hide_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return Ok(());
+    };
+
+    window.hide()?;
+    Ok(())
+}
+
 pub fn handle_window_event<R: Runtime>(window: &Window<R>, event: &WindowEvent) {
     if let WindowEvent::CloseRequested { api, .. } = event {
         api.prevent_close();

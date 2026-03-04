@@ -1,4 +1,6 @@
 pub mod commands;
+pub mod direct_paste;
+pub mod hotkey;
 pub mod history_model;
 pub mod history_repository;
 pub mod history_storage;
@@ -7,10 +9,30 @@ pub mod tray;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(hotkey::PanelHotkeyState::default())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _shortcut, event| {
+                    if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                        let _ = tray::show_main_window(app);
+                    }
+                })
+                .build(),
+        )
         .setup(|app| {
             tray::setup_tray(app)?;
+            hotkey::register_default_panel_hotkey(&app.handle()).map_err(|error| {
+                let setup_error: Box<dyn std::error::Error> =
+                    Box::new(std::io::Error::other(error));
+                tauri::Error::Setup(setup_error.into())
+            })?;
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            direct_paste::direct_paste_text,
+            hotkey::register_panel_hotkey,
+            hotkey::hide_panel_window
+        ])
         .on_menu_event(|app, event| {
             if let Some(action) = tray::parse_tray_menu_action(event.id().as_ref()) {
                 tray::handle_menu_action(action, app);
@@ -24,6 +46,7 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::commands;
+    use super::hotkey;
     use super::tray;
 
     #[test]
@@ -35,5 +58,10 @@ mod tests {
     fn tray_menu_actions_are_registered() {
         assert!(tray::parse_tray_menu_action(tray::TRAY_MENU_OPEN_PANEL).is_some());
         assert!(tray::parse_tray_menu_action(tray::TRAY_MENU_QUIT_APP).is_some());
+    }
+
+    #[test]
+    fn default_panel_hotkey_is_defined() {
+        assert!(!hotkey::DEFAULT_PANEL_HOTKEY.is_empty());
     }
 }

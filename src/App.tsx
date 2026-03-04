@@ -8,6 +8,15 @@ import {
 	type HistoryItem,
 	HistoryRepository,
 } from "./features/history";
+import { directPasteText } from "./features/paste";
+import {
+	DEFAULT_PANEL_HOTKEY,
+	hideDesktopPanelWindow,
+	isDesktopRuntime,
+	readPanelHotkey,
+	registerDesktopPanelHotkey,
+	writePanelHotkey,
+} from "./features/settings";
 import {
 	createBrowserSnippetsStorage,
 	DEFAULT_SNIPPETS_FOLDER_ID,
@@ -33,6 +42,9 @@ const ALL_SNIPPET_FOLDERS_VALUE = "__all_folders__";
 export function App() {
 	const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 	const [maxItems, setMaxItems] = useState(200);
+	const [panelHotkey, setPanelHotkey] = useState(DEFAULT_PANEL_HOTKEY);
+	const [panelHotkeyDraft, setPanelHotkeyDraft] =
+		useState(DEFAULT_PANEL_HOTKEY);
 	const [snippetFolders, setSnippetFolders] = useState<SnippetFolder[]>([]);
 	const [snippetItems, setSnippetItems] = useState<SnippetItem[]>([]);
 	const [selectedSnippetFolderId, setSelectedSnippetFolderId] = useState(
@@ -148,6 +160,28 @@ export function App() {
 	}, []);
 
 	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const handleEscapeClose = (event: globalThis.KeyboardEvent) => {
+			if (event.key !== "Escape" || !isDesktopRuntime()) {
+				return;
+			}
+
+			event.preventDefault();
+			void hideDesktopPanelWindow().catch((error) => {
+				setActionMessage(`Failed to close panel: ${toErrorMessage(error)}`);
+			});
+		};
+
+		window.addEventListener("keydown", handleEscapeClose);
+		return () => {
+			window.removeEventListener("keydown", handleEscapeClose);
+		};
+	}, []);
+
+	useEffect(() => {
 		let disposed = false;
 
 		if (typeof window === "undefined") {
@@ -155,6 +189,39 @@ export function App() {
 			setListenerMessage("Browser runtime unavailable.");
 			return undefined;
 		}
+
+		const initializePanelHotkey = async () => {
+			const savedPanelHotkey = readPanelHotkey(window.localStorage);
+			setPanelHotkey(savedPanelHotkey);
+			setPanelHotkeyDraft(savedPanelHotkey);
+
+			if (!isDesktopRuntime()) {
+				return;
+			}
+
+			try {
+				const registeredHotkey =
+					await registerDesktopPanelHotkey(savedPanelHotkey);
+				if (disposed) {
+					return;
+				}
+
+				const persistedHotkey = writePanelHotkey(
+					window.localStorage,
+					registeredHotkey,
+				);
+				setPanelHotkey(persistedHotkey);
+				setPanelHotkeyDraft(persistedHotkey);
+			} catch (error) {
+				if (disposed) {
+					return;
+				}
+
+				setActionMessage(
+					`Global hotkey setup failed: ${toErrorMessage(error)}`,
+				);
+			}
+		};
 
 		const historyRepository = new HistoryRepository({
 			storage: createBrowserHistoryStorage(window.localStorage),
@@ -205,6 +272,7 @@ export function App() {
 			try {
 				setListenerStatus("starting");
 				setListenerMessage("Starting clipboard listener...");
+				await initializePanelHotkey();
 				await Promise.all([historyRepository.load(), snippetRepository.load()]);
 				refreshAll();
 				monitor.start();
@@ -300,25 +368,114 @@ export function App() {
 		setActionMessage(`History limit updated to ${applied}.`);
 	};
 
-	const copySelectedHistory = async () => {
-		const selectedItem = filteredHistoryItems[selectedHistoryIndex];
-		if (!selectedItem) {
+	const handleApplyPanelHotkey = async () => {
+		if (typeof window === "undefined") {
 			return;
 		}
 
+		const candidateHotkey = panelHotkeyDraft.trim();
+		if (candidateHotkey.length === 0) {
+			setActionMessage(
+				"Shortcut cannot be empty. Use a format like CommandOrControl+Shift+K.",
+			);
+			return;
+		}
+
+		if (!isDesktopRuntime()) {
+			const persisted = writePanelHotkey(window.localStorage, candidateHotkey);
+			setPanelHotkey(persisted);
+			setPanelHotkeyDraft(persisted);
+			setActionMessage(
+				"Shortcut saved in browser preview. Desktop runtime is required to activate global hotkey.",
+			);
+			return;
+		}
+
+		try {
+			const registered = await registerDesktopPanelHotkey(candidateHotkey);
+			const persisted = writePanelHotkey(window.localStorage, registered);
+			setPanelHotkey(persisted);
+			setPanelHotkeyDraft(persisted);
+			setActionMessage(`Panel hotkey updated to ${persisted}.`);
+		} catch (error) {
+			setActionMessage(`Panel hotkey update failed: ${toErrorMessage(error)}`);
+		}
+	};
+
+	const pasteTextWithFallback = async ({
+		text,
+		directSuccessMessage,
+		fallbackSuccessMessage,
+	}: {
+		text: string;
+		directSuccessMessage: string;
+		fallbackSuccessMessage: string;
+	}) => {
 		const runtime = runtimeRef.current;
 		if (!runtime) {
 			setActionMessage("Runtime is not ready.");
 			return;
 		}
 
-		try {
-			runtime.monitor.suppressText(selectedItem.text);
-			await runtime.clipboard.writeText(selectedItem.text);
-			setActionMessage("Copied selected history text to clipboard.");
-		} catch (error) {
-			setActionMessage(`Copy failed: ${toErrorMessage(error)}`);
+		runtime.monitor.suppressText(text);
+
+		if (!isDesktopRuntime()) {
+			try {
+				await runtime.clipboard.writeText(text);
+				setActionMessage(fallbackSuccessMessage);
+			} catch (error) {
+				setActionMessage(`Copy failed: ${toErrorMessage(error)}`);
+			}
+			return;
 		}
+
+		try {
+			const result = await directPasteText(text);
+			if (result.mode === "direct") {
+				setActionMessage(
+					result.message.trim().length > 0
+						? result.message
+						: directSuccessMessage,
+				);
+				return;
+			}
+
+			await runtime.clipboard.writeText(text);
+			setActionMessage(
+				result.message.trim().length > 0
+					? result.message
+					: fallbackSuccessMessage,
+			);
+		} catch (error) {
+			try {
+				await runtime.clipboard.writeText(text);
+				setActionMessage(
+					`Direct paste failed: ${toErrorMessage(
+						error,
+					)}. Text copied to clipboard instead.`,
+				);
+			} catch (clipboardError) {
+				setActionMessage(
+					`Paste failed: ${toErrorMessage(
+						error,
+					)}. Clipboard fallback also failed: ${toErrorMessage(clipboardError)}.`,
+				);
+			}
+		}
+	};
+
+	const copySelectedHistory = async () => {
+		const selectedItem = filteredHistoryItems[selectedHistoryIndex];
+		if (!selectedItem) {
+			return;
+		}
+
+		await pasteTextWithFallback({
+			text: selectedItem.text,
+			directSuccessMessage: "Pasted selected history text into active app.",
+			fallbackSuccessMessage:
+				"Direct paste unavailable. Selected history text copied to clipboard.",
+		});
 	};
 
 	const pasteSelectedSnippet = async () => {
@@ -327,21 +484,12 @@ export function App() {
 			return;
 		}
 
-		const runtime = runtimeRef.current;
-		if (!runtime) {
-			setActionMessage("Runtime is not ready.");
-			return;
-		}
-
-		try {
-			runtime.monitor.suppressText(selectedSnippet.text);
-			await runtime.clipboard.writeText(selectedSnippet.text);
-			setActionMessage(
-				"Snippet copied to clipboard. Paste in target app with system shortcut.",
-			);
-		} catch (error) {
-			setActionMessage(`Snippet copy failed: ${toErrorMessage(error)}`);
-		}
+		await pasteTextWithFallback({
+			text: selectedSnippet.text,
+			directSuccessMessage: "Snippet pasted into active app.",
+			fallbackSuccessMessage:
+				"Direct paste unavailable. Snippet copied to clipboard.",
+		});
 	};
 
 	const handleSaveSnippet = async () => {
@@ -733,19 +881,52 @@ export function App() {
 						{listenerMessage}
 					</p>
 				</div>
-				<label className="max-items-field">
-					Max history
-					<input
-						aria-label="Max history items"
-						min={10}
-						max={5000}
-						type="number"
-						value={maxItems}
-						onChange={(event) => {
-							void handleChangeMaxItems(event);
-						}}
-					/>
-				</label>
+				<div className="topbar-controls">
+					<label className="max-items-field">
+						Max history
+						<input
+							aria-label="Max history items"
+							min={10}
+							max={5000}
+							type="number"
+							value={maxItems}
+							onChange={(event) => {
+								void handleChangeMaxItems(event);
+							}}
+						/>
+					</label>
+					<label className="hotkey-field">
+						Panel hotkey
+						<div className="hotkey-row">
+							<input
+								aria-label="Panel hotkey"
+								className="hotkey-input"
+								placeholder="CommandOrControl+Shift+K"
+								type="text"
+								value={panelHotkeyDraft}
+								onChange={(event) => {
+									setPanelHotkeyDraft(event.currentTarget.value);
+								}}
+								onKeyDown={(event) => {
+									if (event.key === "Enter") {
+										event.preventDefault();
+										void handleApplyPanelHotkey();
+									}
+								}}
+							/>
+							<button
+								className="ghost-button"
+								type="button"
+								onClick={() => {
+									void handleApplyPanelHotkey();
+								}}
+							>
+								Apply
+							</button>
+						</div>
+						<span className="hotkey-hint">Current: {panelHotkey}</span>
+					</label>
+				</div>
 			</header>
 
 			<section className="panel">
@@ -785,10 +966,12 @@ export function App() {
 							}
 						}}
 					>
-						{panelMode === "history" ? "Copy Selected" : "Paste Snippet"}
+						{panelMode === "history" ? "Paste Selected" : "Paste Snippet"}
 					</button>
 				</div>
-				<p className="mode-hint">Switch mode with Ctrl/Cmd+1 and Ctrl/Cmd+2.</p>
+				<p className="mode-hint">
+					Switch mode with Ctrl/Cmd+1 and Ctrl/Cmd+2. Press Esc to close panel.
+				</p>
 
 				<label className="search-field" htmlFor="panel-search">
 					{panelMode === "history" ? "Search history" : "Search snippets"}
