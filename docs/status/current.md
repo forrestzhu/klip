@@ -2,14 +2,14 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `95f7c29` (`feat(settings): add startup launch toggle and desktop bridge`)
-- Working Tree: uncommitted local changes for US-011 packaging verification baseline and status sync
+- Latest Commit: `505b94d` (`feat(release): add desktop packaging baseline for us011`)
+- Working Tree: uncommitted local changes for Clipy-style compact popup menu and editor/preferences split
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
-- Active scope: Phase 1 (MVP) plus Phase 2 settings center and packaging verification baseline completion.
-- Product state: local offline clipboard workflow with history + snippets + settings tri-mode panel in web runtime; Tauri runtime supports tray/menu bar, configurable global hotkey, best-effort direct paste with clipboard fallback, desktop-native clipboard read/write bridge for history capture, startup-launch runtime bridge, and macOS bundle output path baseline.
+- Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy and editor/preferences split.
+- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses compact hierarchical menu behavior with separate large views for snippet editing and preferences.
 
 ## Completed Highlights
 
@@ -38,6 +38,9 @@
 - Desktop packaging baseline added: bundle build scripts and CI matrix workflow for macOS/Windows artifact generation (`package.json`, `src-tauri/tauri.conf.json`, `.github/workflows/desktop-packaging.yml`).
 - US-011 packaging verification document added with artifact checklist, install/run/uninstall matrix, and release-note permission/limitation draft (`docs/status/packaging-verification-us011.md`).
 - Local macOS packaging preflight now produced unsigned `.app` and `.dmg` artifacts (`src-tauri/target/release/bundle/macos/Klip.app`, `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`).
+- Clipy-style popup hierarchy baseline added: compact menu now shows `History`/`Snippets` submenu structure plus `Edit Snippets...` and `Preferences...`, with history default capped to 30 and grouped as `1-10`, `11-20`, `21-30` (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/features/history/history.constants.ts`).
+- Popup keyboard navigation now supports `↑/↓` selection and `←/→` hierarchical navigation, with `Enter` selecting/pasting at leaf items (`src/App.tsx`).
+- Editor/preferences split baseline added: popup stays compact by default; snippet editing and settings move to expanded panels and runtime window resize targets (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
 
 ## In Progress / Gaps
 
@@ -47,14 +50,15 @@
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
 - US-011 packaging baseline now exists, but Windows installer artifact evidence and install/uninstall interactive checks are still pending.
+- New Clipy-style popup behavior still needs manual interactive verification (submenu navigation, paste flow, focus return, and editor/preferences entry transitions).
 - Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
 - Manual matrix exists, but interactive GUI step execution evidence is still pending for both macOS and Windows.
 
 ## Next Focus
 
-1. Execute the manual verification matrix on macOS interactive session and record pass/fail for US-001/US-003/US-004/US-006.
-2. Execute the same manual verification matrix on Windows and record cross-platform deltas.
-3. Run Windows packaging workflow and fill US-011 install/run/uninstall evidence in `docs/status/packaging-verification-us011.md`.
+1. Run macOS interactive verification for new compact popup hierarchy (`History` ranges, `Snippets` folders, arrow-key navigation, paste-and-hide behavior).
+2. Verify expanded `Edit Snippets...` and `Preferences...` transitions from popup and confirm expected window-size changes.
+3. Execute the existing manual matrix (US-001/US-003/US-004/US-006) and Windows packaging/install evidence update.
 
 ## Last Validation Snapshot
 
@@ -82,6 +86,8 @@
 - 2026-03-04: `npm run tauri:info` rechecked for US-011 baseline (Xcode app missing warning remains; build-type now `bundle`; log: `/tmp/klip-tauri-info-us011-20260304.log`).
 - 2026-03-04: `npm run build:desktop:bundle:macos` passed and produced unsigned artifacts (`Klip.app` + `Klip_0.1.0_aarch64.dmg`; log: `/tmp/klip-build-bundle-macos-us011-20260304.log`).
 - 2026-03-04: `npm run qa` revalidated after US-011 baseline changes (`test` 65 tests; coverage statements 86.55%, branches 86.47%, funcs 87.5%, lines 86.55%).
+- 2026-03-04: Clipy-style popup/editor split iteration validated via `npm run lint`, `npm run typecheck`, `npm run test` (68 tests), and `npm run qa` (coverage statements 87.62%, branches 86.77%, funcs 87.25%, lines 87.62%).
+- 2026-03-04: `npm run dev:desktop` smoke rechecked after popup/menu refactor (log: `/tmp/klip-dev-desktop-menu-rework-20260304.log`, reached `Running target/debug/klip-tauri` before timeout).
 
 ## Quick Resume Steps
 
@@ -91,4 +97,4 @@
 4. Read `docs/status/packaging-verification-us011.md`.
 5. Read latest entries in `docs/status/progress-log.md`.
 6. Run `git log --oneline -n 10`.
-7. Run `npm run qa` and platform packaging commands for baseline verification.
+7. Run `npm run qa`, then `npm run dev:desktop` to verify compact popup defaults and keyboard submenu navigation.

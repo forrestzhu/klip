@@ -8,6 +8,12 @@ import {
 	type HistoryItem,
 	HistoryRepository,
 } from "./features/history";
+import {
+	buildPopupMenuRootEntries,
+	isPopupSubmenuEntry,
+	type PopupMenuEntry,
+	resolvePopupMenuContext,
+} from "./features/menu/popupMenuModel";
 import { directPasteText } from "./features/paste";
 import {
 	canonicalizePanelHotkey,
@@ -47,10 +53,11 @@ interface RuntimeContext {
 }
 
 type ListenerStatus = "starting" | "ready" | "error";
-type PanelMode = "history" | "snippets" | "settings";
+type PanelView = "menu" | "snippet-editor" | "settings";
 
-const PANEL_MODE_STORAGE_KEY = "klip.ui.panel.mode";
 const ALL_SNIPPET_FOLDERS_VALUE = "__all_folders__";
+const COMPACT_PANEL_SIZE = { width: 460, height: 560 };
+const EXPANDED_PANEL_SIZE = { width: 1024, height: 720 };
 
 export function App() {
 	const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -68,11 +75,10 @@ export function App() {
 		ALL_SNIPPET_FOLDERS_VALUE,
 	);
 	const [query, setQuery] = useState("");
-	const [selectedHistoryIndex, setSelectedHistoryIndex] = useState(0);
 	const [selectedSnippetIndex, setSelectedSnippetIndex] = useState(0);
-	const [panelMode, setPanelMode] = useState<PanelMode>(() =>
-		readInitialPanelMode(),
-	);
+	const [panelView, setPanelView] = useState<PanelView>("menu");
+	const [menuPath, setMenuPath] = useState<string[]>([]);
+	const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
 	const [listenerStatus, setListenerStatus] =
 		useState<ListenerStatus>("starting");
 	const [listenerMessage, setListenerMessage] = useState(
@@ -85,18 +91,10 @@ export function App() {
 	const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
 
 	const runtimeRef = useRef<RuntimeContext | null>(null);
+	const activatePopupEntryRef = useRef<
+		(entry: PopupMenuEntry) => Promise<void>
+	>(async () => {});
 	const panelHotkeyDraftDisplay = canonicalizePanelHotkey(panelHotkeyDraft);
-
-	const filteredHistoryItems = useMemo(() => {
-		const keyword = query.trim().toLowerCase();
-		if (keyword.length === 0) {
-			return historyItems;
-		}
-
-		return historyItems.filter((item) =>
-			item.text.toLowerCase().includes(keyword),
-		);
-	}, [historyItems, query]);
 
 	const filteredSnippetItems = useMemo(() => {
 		const keyword = query.trim().toLowerCase();
@@ -124,14 +122,19 @@ export function App() {
 		return new Map(snippetFolders.map((folder) => [folder.id, folder.name]));
 	}, [snippetFolders]);
 
-	useEffect(() => {
-		setSelectedHistoryIndex((current) => {
-			if (filteredHistoryItems.length === 0) {
-				return 0;
-			}
-			return Math.min(current, filteredHistoryItems.length - 1);
+	const popupRootEntries = useMemo(() => {
+		return buildPopupMenuRootEntries({
+			historyItems,
+			snippetFolders,
+			snippetItems,
 		});
-	}, [filteredHistoryItems.length]);
+	}, [historyItems, snippetFolders, snippetItems]);
+
+	const popupContext = useMemo(() => {
+		return resolvePopupMenuContext(popupRootEntries, menuPath);
+	}, [popupRootEntries, menuPath]);
+
+	const popupEntries = popupContext.entries;
 
 	useEffect(() => {
 		setSelectedSnippetIndex((current) => {
@@ -143,42 +146,38 @@ export function App() {
 	}, [filteredSnippetItems.length]);
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
+		if (isSameStringArray(menuPath, popupContext.path)) {
 			return;
 		}
-
-		window.localStorage.setItem(PANEL_MODE_STORAGE_KEY, panelMode);
-	}, [panelMode]);
+		setMenuPath(popupContext.path);
+	}, [menuPath, popupContext.path]);
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
+		setSelectedMenuIndex((current) => {
+			if (popupEntries.length === 0) {
+				return 0;
+			}
+			return Math.min(current, popupEntries.length - 1);
+		});
+	}, [popupEntries.length]);
+
+	useEffect(() => {
+		if (typeof document === "undefined") {
 			return;
 		}
 
-		const handleModeSwitch = (event: globalThis.KeyboardEvent) => {
-			if (!(event.ctrlKey || event.metaKey)) {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState !== "hidden") {
 				return;
 			}
-
-			if (event.key === "1") {
-				event.preventDefault();
-				setPanelMode("history");
-			}
-
-			if (event.key === "2") {
-				event.preventDefault();
-				setPanelMode("snippets");
-			}
-
-			if (event.key === "3") {
-				event.preventDefault();
-				setPanelMode("settings");
-			}
+			setPanelView("menu");
+			setMenuPath([]);
+			setSelectedMenuIndex(0);
 		};
 
-		window.addEventListener("keydown", handleModeSwitch);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
 		return () => {
-			window.removeEventListener("keydown", handleModeSwitch);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};
 	}, []);
 
@@ -193,6 +192,9 @@ export function App() {
 			}
 
 			event.preventDefault();
+			setPanelView("menu");
+			setMenuPath([]);
+			setSelectedMenuIndex(0);
 			void hideDesktopPanelWindow().catch((error) => {
 				setActionMessage(`Failed to close panel: ${toErrorMessage(error)}`);
 			});
@@ -354,56 +356,87 @@ export function App() {
 		};
 	}, []);
 
-	const handleSearchKeyDown = async (
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		if (panelView !== "menu") {
+			return;
+		}
+
+		const handleMenuNavigation = (event: globalThis.KeyboardEvent) => {
+			if (isEditableTarget(event.target)) {
+				return;
+			}
+
+			if (event.key === "ArrowDown") {
+				event.preventDefault();
+				setSelectedMenuIndex((current) =>
+					Math.min(current + 1, Math.max(0, popupEntries.length - 1)),
+				);
+				return;
+			}
+
+			if (event.key === "ArrowUp") {
+				event.preventDefault();
+				setSelectedMenuIndex((current) => Math.max(current - 1, 0));
+				return;
+			}
+
+			if (event.key === "ArrowLeft") {
+				if (menuPath.length === 0) {
+					return;
+				}
+				event.preventDefault();
+				setMenuPath((current) => current.slice(0, current.length - 1));
+				setSelectedMenuIndex(0);
+				return;
+			}
+
+			if (event.key !== "ArrowRight" && event.key !== "Enter") {
+				return;
+			}
+
+			event.preventDefault();
+			const selectedEntry = popupEntries[selectedMenuIndex];
+			if (!selectedEntry) {
+				return;
+			}
+
+			void activatePopupEntryRef.current(selectedEntry);
+		};
+
+		window.addEventListener("keydown", handleMenuNavigation);
+		return () => {
+			window.removeEventListener("keydown", handleMenuNavigation);
+		};
+	}, [menuPath.length, panelView, popupEntries, selectedMenuIndex]);
+
+	useEffect(() => {
+		void syncDesktopWindowSize(panelView, setActionMessage);
+	}, [panelView]);
+
+	const handleSnippetSearchKeyDown = async (
 		event: KeyboardEvent<HTMLInputElement>,
 	) => {
 		if (event.key === "ArrowDown") {
 			event.preventDefault();
-			if (panelMode === "history") {
-				setSelectedHistoryIndex((current) =>
-					Math.min(current + 1, Math.max(0, filteredHistoryItems.length - 1)),
-				);
-			} else {
-				setSelectedSnippetIndex((current) =>
-					Math.min(current + 1, Math.max(0, filteredSnippetItems.length - 1)),
-				);
-			}
+			setSelectedSnippetIndex((current) =>
+				Math.min(current + 1, Math.max(0, filteredSnippetItems.length - 1)),
+			);
 			return;
 		}
 
 		if (event.key === "ArrowUp") {
 			event.preventDefault();
-			if (panelMode === "history") {
-				setSelectedHistoryIndex((current) => Math.max(current - 1, 0));
-			} else {
-				setSelectedSnippetIndex((current) => Math.max(current - 1, 0));
-			}
+			setSelectedSnippetIndex((current) => Math.max(current - 1, 0));
 			return;
 		}
 
 		if (event.key === "Enter") {
 			event.preventDefault();
-			if (panelMode === "history") {
-				await copySelectedHistory();
-			} else if (panelMode === "snippets") {
-				await pasteSelectedSnippet();
-			}
-			return;
-		}
-
-		if ((event.ctrlKey || event.metaKey) && event.key === "1") {
-			event.preventDefault();
-			setPanelMode("history");
-		}
-
-		if ((event.ctrlKey || event.metaKey) && event.key === "2") {
-			event.preventDefault();
-			setPanelMode("snippets");
-		}
-
-		if ((event.ctrlKey || event.metaKey) && event.key === "3") {
-			event.preventDefault();
-			setPanelMode("settings");
+			await pasteSelectedSnippet();
 		}
 	};
 
@@ -519,14 +552,32 @@ export function App() {
 		}
 	};
 
+	const hidePanelAfterSuccess = async (hideAfterSuccess: boolean) => {
+		if (!hideAfterSuccess || !isDesktopRuntime()) {
+			return;
+		}
+
+		setPanelView("menu");
+		setMenuPath([]);
+		setSelectedMenuIndex(0);
+
+		try {
+			await hideDesktopPanelWindow();
+		} catch (error) {
+			setActionMessage(`Failed to close panel: ${toErrorMessage(error)}`);
+		}
+	};
+
 	const pasteTextWithFallback = async ({
 		text,
 		directSuccessMessage,
 		fallbackSuccessMessage,
+		hideAfterSuccess = false,
 	}: {
 		text: string;
 		directSuccessMessage: string;
 		fallbackSuccessMessage: string;
+		hideAfterSuccess?: boolean;
 	}) => {
 		const runtime = runtimeRef.current;
 		if (!runtime) {
@@ -540,6 +591,7 @@ export function App() {
 			try {
 				await runtime.clipboard.writeText(text);
 				setActionMessage(fallbackSuccessMessage);
+				await hidePanelAfterSuccess(hideAfterSuccess);
 			} catch (error) {
 				setActionMessage(`Copy failed: ${toErrorMessage(error)}`);
 			}
@@ -552,6 +604,7 @@ export function App() {
 				setActionMessage(
 					`Clipboard-only mode is active. ${fallbackSuccessMessage}`,
 				);
+				await hidePanelAfterSuccess(hideAfterSuccess);
 			} catch (error) {
 				setActionMessage(`Copy failed: ${toErrorMessage(error)}`);
 			}
@@ -566,6 +619,7 @@ export function App() {
 						? result.message
 						: directSuccessMessage,
 				);
+				await hidePanelAfterSuccess(hideAfterSuccess);
 				return;
 			}
 
@@ -575,6 +629,7 @@ export function App() {
 					? result.message
 					: fallbackSuccessMessage,
 			);
+			await hidePanelAfterSuccess(hideAfterSuccess);
 		} catch (error) {
 			try {
 				await runtime.clipboard.writeText(text);
@@ -593,20 +648,6 @@ export function App() {
 		}
 	};
 
-	const copySelectedHistory = async () => {
-		const selectedItem = filteredHistoryItems[selectedHistoryIndex];
-		if (!selectedItem) {
-			return;
-		}
-
-		await pasteTextWithFallback({
-			text: selectedItem.text,
-			directSuccessMessage: "Pasted selected history text into active app.",
-			fallbackSuccessMessage:
-				"Direct paste unavailable. Selected history text copied to clipboard.",
-		});
-	};
-
 	const pasteSelectedSnippet = async () => {
 		const selectedSnippet = filteredSnippetItems[selectedSnippetIndex];
 		if (!selectedSnippet) {
@@ -618,6 +659,7 @@ export function App() {
 			directSuccessMessage: "Snippet pasted into active app.",
 			fallbackSuccessMessage:
 				"Direct paste unavailable. Snippet copied to clipboard.",
+			hideAfterSuccess: false,
 		});
 	};
 
@@ -668,7 +710,7 @@ export function App() {
 	};
 
 	const handleEditSnippet = (snippet: SnippetItem) => {
-		setPanelMode("snippets");
+		setPanelView("snippet-editor");
 		setEditingSnippetId(snippet.id);
 		setSnippetTitleDraft(snippet.title);
 		setSnippetTextDraft(snippet.text);
@@ -800,41 +842,151 @@ export function App() {
 		setActionMessage("Folder deleted and snippets moved to General.");
 	};
 
-	const renderHistoryPanel = () => {
+	const activatePopupEntry = async (entry: PopupMenuEntry) => {
+		if (entry.kind === "empty") {
+			return;
+		}
+
+		if (isPopupSubmenuEntry(entry)) {
+			setMenuPath([...popupContext.path, entry.id]);
+			setSelectedMenuIndex(0);
+			return;
+		}
+
+		if (entry.kind === "action") {
+			if (entry.action === "edit-snippets") {
+				setPanelView("snippet-editor");
+				return;
+			}
+
+			setPanelView("settings");
+			return;
+		}
+
+		if (entry.kind === "history-item") {
+			await pasteTextWithFallback({
+				text: entry.text,
+				directSuccessMessage: "Pasted selected history text into active app.",
+				fallbackSuccessMessage:
+					"Direct paste unavailable. Selected history text copied to clipboard.",
+				hideAfterSuccess: true,
+			});
+			return;
+		}
+
+		await pasteTextWithFallback({
+			text: entry.text,
+			directSuccessMessage: "Snippet pasted into active app.",
+			fallbackSuccessMessage:
+				"Direct paste unavailable. Snippet copied to clipboard.",
+			hideAfterSuccess: true,
+		});
+	};
+	activatePopupEntryRef.current = activatePopupEntry;
+
+	const renderPopupPanel = () => {
+		const breadcrumb = popupContext.breadcrumb.join(" / ");
+
 		return (
-			<ul className="history-list">
-				{filteredHistoryItems.length === 0 ? (
-					<li className="empty-row">No history items yet.</li>
-				) : (
-					filteredHistoryItems.map((item, index) => (
-						<li key={item.id}>
-							<button
-								className={`history-item ${
-									index === selectedHistoryIndex ? "selected" : ""
-								}`}
-								type="button"
-								onClick={() => {
-									setSelectedHistoryIndex(index);
-									void copySelectedHistory();
-								}}
-							>
-								<div className="history-main">
-									{toClipboardPreview(item.text, 96)}
-								</div>
-								<div className="history-meta">
-									{new Date(item.createdAt).toLocaleString()}
-								</div>
-							</button>
-						</li>
-					))
-				)}
-			</ul>
+			<section className="popup-panel">
+				<div className="popup-toolbar">
+					{popupContext.path.length > 0 ? (
+						<button
+							className="ghost-button"
+							type="button"
+							onClick={() => {
+								setMenuPath((current) => current.slice(0, current.length - 1));
+								setSelectedMenuIndex(0);
+							}}
+						>
+							Back
+						</button>
+					) : null}
+					<span className="popup-breadcrumb">
+						{breadcrumb.length === 0 ? "Menu" : `Menu / ${breadcrumb}`}
+					</span>
+				</div>
+
+				<ul className="popup-list">
+					{popupEntries.map((entry, index) => {
+						const selectedClass = index === selectedMenuIndex ? "selected" : "";
+						const disabled = entry.kind === "empty";
+						const detail =
+							entry.kind === "history-item" || entry.kind === "snippet-item"
+								? entry.detail
+								: null;
+
+						return (
+							<li key={entry.id}>
+								<button
+									type="button"
+									disabled={disabled}
+									className={`popup-entry popup-entry-${entry.kind} ${selectedClass}`}
+									onClick={() => {
+										setSelectedMenuIndex(index);
+										void activatePopupEntry(entry);
+									}}
+								>
+									<div>
+										<div className="popup-entry-title">{entry.label}</div>
+										{detail ? (
+											<div className="popup-entry-detail">{detail}</div>
+										) : null}
+									</div>
+									{entry.kind === "submenu" ? (
+										<span className="popup-entry-chevron">›</span>
+									) : null}
+								</button>
+							</li>
+						);
+					})}
+				</ul>
+
+				<p className="popup-hint">
+					Use ↑/↓ to select, →/Enter to open or paste, ← to go back, Esc to
+					close.
+				</p>
+			</section>
 		);
 	};
 
-	const renderSnippetsPanel = () => {
+	const renderSnippetEditorPanel = () => {
 		return (
-			<>
+			<section className="editor-panel">
+				<div className="panel-title-row">
+					<h2>Snippet Editor</h2>
+					<button
+						className="ghost-button"
+						type="button"
+						onClick={() => {
+							setPanelView("menu");
+							setMenuPath([]);
+							setSelectedMenuIndex(0);
+						}}
+					>
+						Back to Menu
+					</button>
+				</div>
+
+				<label className="search-field" htmlFor="snippet-search">
+					Search snippets
+				</label>
+				<input
+					id="snippet-search"
+					autoComplete="off"
+					className="search-input"
+					placeholder="Search snippets by title or text..."
+					type="text"
+					value={query}
+					onChange={(event) => {
+						setQuery(event.currentTarget.value);
+						setSelectedSnippetIndex(0);
+					}}
+					onKeyDown={(event) => {
+						void handleSnippetSearchKeyDown(event);
+					}}
+				/>
+
 				<section className="snippet-controls">
 					<div className="snippet-folder-row">
 						<label className="search-field" htmlFor="snippet-folder-select">
@@ -966,7 +1118,7 @@ export function App() {
 										{new Date(item.updatedAt).toLocaleString()}
 									</div>
 									<div className="snippet-preview">
-										{toClipboardPreview(item.text, 96)}
+										{toClipboardPreview(item.text, 120)}
 									</div>
 								</button>
 								<div className="inline-actions">
@@ -993,13 +1145,28 @@ export function App() {
 						))
 					)}
 				</ul>
-			</>
+			</section>
 		);
 	};
 
 	const renderSettingsPanel = () => {
 		return (
 			<section className="settings-panel">
+				<div className="panel-title-row">
+					<h2>Preferences</h2>
+					<button
+						className="ghost-button"
+						type="button"
+						onClick={() => {
+							setPanelView("menu");
+							setMenuPath([]);
+							setSelectedMenuIndex(0);
+						}}
+					>
+						Back to Menu
+					</button>
+				</div>
+
 				<div className="settings-grid">
 					<label className="max-items-field">
 						Max history
@@ -1095,7 +1262,11 @@ export function App() {
 	};
 
 	return (
-		<main className="app-shell">
+		<main
+			className={`app-shell ${
+				panelView === "menu" ? "app-shell-compact" : "app-shell-expanded"
+			}`}
+		>
 			<header className="topbar">
 				<div>
 					<h1>Klip</h1>
@@ -1109,120 +1280,14 @@ export function App() {
 				</div>
 			</header>
 
-			<section className="panel">
-				<div className="panel-title-row">
-					<div className="mode-switch">
-						<button
-							type="button"
-							className={`mode-button ${
-								panelMode === "history" ? "active" : ""
-							}`}
-							onClick={() => {
-								setPanelMode("history");
-							}}
-						>
-							History
-						</button>
-						<button
-							type="button"
-							className={`mode-button ${
-								panelMode === "snippets" ? "active" : ""
-							}`}
-							onClick={() => {
-								setPanelMode("snippets");
-							}}
-						>
-							Snippets
-						</button>
-						<button
-							type="button"
-							className={`mode-button ${
-								panelMode === "settings" ? "active" : ""
-							}`}
-							onClick={() => {
-								setPanelMode("settings");
-							}}
-						>
-							Settings
-						</button>
-					</div>
-					{panelMode === "settings" ? null : (
-						<button
-							className="ghost-button"
-							type="button"
-							onClick={() => {
-								if (panelMode === "history") {
-									void copySelectedHistory();
-								} else {
-									void pasteSelectedSnippet();
-								}
-							}}
-						>
-							{panelMode === "history" ? "Paste Selected" : "Paste Snippet"}
-						</button>
-					)}
-				</div>
-				<p className="mode-hint">
-					Switch mode with Ctrl/Cmd+1, Ctrl/Cmd+2, and Ctrl/Cmd+3. Press Esc to
-					close panel.
-				</p>
-
-				{panelMode === "settings" ? null : (
-					<>
-						<label className="search-field" htmlFor="panel-search">
-							{panelMode === "history" ? "Search history" : "Search snippets"}
-						</label>
-						<input
-							id="panel-search"
-							autoComplete="off"
-							className="search-input"
-							placeholder={
-								panelMode === "history"
-									? "Type to filter history..."
-									: "Search snippets by title or text..."
-							}
-							type="text"
-							value={query}
-							onChange={(event) => {
-								setQuery(event.currentTarget.value);
-								setSelectedHistoryIndex(0);
-								setSelectedSnippetIndex(0);
-							}}
-							onKeyDown={(event) => {
-								void handleSearchKeyDown(event);
-							}}
-						/>
-					</>
-				)}
-
-				{panelMode === "history"
-					? renderHistoryPanel()
-					: panelMode === "snippets"
-						? renderSnippetsPanel()
-						: renderSettingsPanel()}
-				{actionMessage ? (
-					<p className="action-message">{actionMessage}</p>
-				) : null}
-			</section>
+			{panelView === "menu"
+				? renderPopupPanel()
+				: panelView === "snippet-editor"
+					? renderSnippetEditorPanel()
+					: renderSettingsPanel()}
+			{actionMessage ? <p className="action-message">{actionMessage}</p> : null}
 		</main>
 	);
-}
-
-function readInitialPanelMode(): PanelMode {
-	if (typeof window === "undefined") {
-		return "history";
-	}
-
-	const savedValue = window.localStorage.getItem(PANEL_MODE_STORAGE_KEY);
-	if (savedValue === "snippets") {
-		return "snippets";
-	}
-
-	if (savedValue === "settings") {
-		return "settings";
-	}
-
-	return "history";
 }
 
 function toErrorMessage(error: unknown): string {
@@ -1236,4 +1301,53 @@ function toErrorMessage(error: unknown): string {
 function normalizePanelHotkeyValue(value: string): string {
 	const normalized = canonicalizePanelHotkey(value);
 	return normalized.length > 0 ? normalized : DEFAULT_PANEL_HOTKEY;
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) {
+		return false;
+	}
+
+	const tagName = target.tagName.toLowerCase();
+	return (
+		tagName === "input" ||
+		tagName === "textarea" ||
+		tagName === "select" ||
+		target.isContentEditable
+	);
+}
+
+function isSameStringArray(left: string[], right: string[]): boolean {
+	if (left.length !== right.length) {
+		return false;
+	}
+
+	for (let index = 0; index < left.length; index += 1) {
+		if (left[index] !== right[index]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+async function syncDesktopWindowSize(
+	panelView: PanelView,
+	setActionMessage: (value: string | null) => void,
+): Promise<void> {
+	if (!isDesktopRuntime()) {
+		return;
+	}
+
+	try {
+		const { LogicalSize, getCurrentWindow } = await import(
+			"@tauri-apps/api/window"
+		);
+		const appWindow = getCurrentWindow();
+		const nextSize =
+			panelView === "menu" ? COMPACT_PANEL_SIZE : EXPANDED_PANEL_SIZE;
+		await appWindow.setSize(new LogicalSize(nextSize.width, nextSize.height));
+	} catch (error) {
+		setActionMessage(`Panel resize failed: ${toErrorMessage(error)}`);
+	}
 }

@@ -1,6 +1,6 @@
 export const HISTORY_SCHEMA_VERSION = 1;
 
-export const DEFAULT_HISTORY_MAX_ITEMS = 200;
+export const DEFAULT_HISTORY_MAX_ITEMS = 30;
 export const MIN_HISTORY_MAX_ITEMS = 10;
 export const MAX_HISTORY_MAX_ITEMS = 5000;
 

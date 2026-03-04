@@ -366,3 +366,29 @@ This file is append-only. Add one entry after each completed iteration.
   - Windows installer artifact generation evidence is still pending until workflow execution on `windows-latest`.
   - Interactive install/first-run/uninstall verification is still pending for macOS and Windows.
   - Local runtime is still Node `v25.2.1`; project target remains Node 22.
+
+## 2026-03-04 - clipy-style compact popup menu and editor split baseline
+
+- Commit: `pending`
+- Summary:
+  - Reworked panel UX from tri-mode tabs into Clipy-style compact popup hierarchy with root entries: `History`, `Snippets`, `Edit Snippets...`, and `Preferences...` (`src/App.tsx`).
+  - Added popup menu model module for history range grouping (`1-10`, `11-20`, `21-30`), snippet folder submenus, and breadcrumb path resolution (`src/features/menu/popupMenuModel.ts`).
+  - Added popup keyboard navigation parity baseline: `↑/↓` selection, `←/→` submenu traversal, and `Enter` select/paste action (`src/App.tsx`).
+  - Split compact popup and expanded editor/preferences layouts; added runtime window-size switching and updated base desktop window size to compact defaults (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
+  - Changed default history capacity to 30 to match popup baseline expectations (`src/features/history/history.constants.ts`).
+  - Added unit tests for popup hierarchy and history grouping logic (`tests/popupMenuModel.test.ts`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass
+  - typecheck: pass
+  - test: pass (68 tests)
+  - test:e2e: skip (Playwright not configured)
+  - build: pass
+  - test:coverage: pass (statements 87.62%, branches 86.77%, funcs 87.25%, lines 87.62%)
+  - cargo:check: pass
+  - qa: pass (`npm run qa`)
+  - dev:desktop smoke: pass (log: `/tmp/klip-dev-desktop-menu-rework-20260304.log`, reached `Running target/debug/klip-tauri`)
+- Risks / Follow-ups:
+  - Clipy-style popup/menu behavior still needs interactive hands-on verification (submenu traversal, paste hide, focus return) on macOS and Windows.
+  - Expanded `Edit Snippets...` and `Preferences...` transition flows need manual UX verification in desktop runtime.
+  - Local runtime is still Node `v25.2.1`; project target remains Node 22.
