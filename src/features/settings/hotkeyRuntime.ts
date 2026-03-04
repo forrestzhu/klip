@@ -28,3 +28,11 @@ export async function registerDesktopPanelHotkey(
 export async function hideDesktopPanelWindow(): Promise<void> {
 	await invoke("hide_panel_window");
 }
+
+export async function openDesktopSnippetEditorWindow(): Promise<void> {
+	await invoke("open_snippet_editor_window");
+}
+
+export async function openDesktopPreferencesWindow(): Promise<void> {
+	await invoke("open_preferences_window");
+}

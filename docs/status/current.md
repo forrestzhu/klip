@@ -2,14 +2,14 @@
 
 - Last Updated: 2026-03-04
 - Branch: `main`
-- Latest Commit: `b2284b4` (`fix(ci): harden npm ci install reliability`)
-- Working Tree: dirty (`.github/workflows/ci.yml` + `src-tauri/icons/*` + `docs/status/*`)
+- Latest Commit: `ddd706d` (`fix(ci): satisfy cargo check deps on ubuntu and windows`)
+- Working Tree: dirty (`src/App.tsx` + `src/features/settings/*` + `src-tauri/src/*` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
 - Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy and editor/preferences split.
-- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections, cascading submenu columns, and popup-only quick paste behavior while snippet editing/preferences remain in separate in-app views.
+- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` now open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle.
 
 ## Completed Highlights
 
@@ -48,6 +48,7 @@
 - Popup shell/chrome follow-up updated: runtime decoration toggle is removed from resize path to avoid blocking popup `setSize`; popup sizing now follows rendered content changes via `ResizeObserver` (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
 - Added Tauri capability file for main window to explicitly allow runtime window operations used by popup flow (`src-tauri/capabilities/default.json`).
 - Added local popup badcase screenshot artifacts for visual debugging and manual verification traceability (`docs/klip-test-ui/*.png`).
+- Three-window runtime baseline implemented: popup actions now open/focus standalone `snippet-editor` and `preferences` windows (reused by label), then hide popup; frontend role-aware initialization avoids duplicate hotkey registration/clipboard monitor startup in auxiliary windows, and focus/visibility sync reloads shared local state across windows (`src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`, `src/App.tsx`, `src/features/settings/hotkeyRuntime.ts`).
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
@@ -61,7 +62,7 @@
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
 - US-011 packaging baseline now exists, but Windows installer artifact evidence and install/uninstall interactive checks are still pending.
-- Three-window model is still incomplete: `编辑片断...` / `偏好设置...` still switch current webview content instead of opening dedicated `snippet-editor` / `preferences` windows.
+- Three-window runtime split is implemented, but interactive verification evidence is still pending for popup-to-window transition, reuse/focus lifecycle, and close/reopen behavior on macOS/Windows.
 - Popup is now screenshot-driven, but snippet editor/preferences windows are still not visually aligned to `snippet_edit.png` and `settings*.png`.
 - Popup badcase behavior still requires hands-on verification against newly added local screenshots (`docs/klip-test-ui`).
 - Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
@@ -69,9 +70,9 @@
 
 ## Next Focus
 
-1. Implement standalone `snippet-editor` and `preferences` windows with window reuse/focus lifecycle.
-2. Align snippet editor and preferences UI to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
-3. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions.
+1. Align snippet editor and preferences UI to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
+2. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions (including window reuse/focus behavior).
+3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
 ## Last Validation Snapshot
 
@@ -111,6 +112,8 @@
 - 2026-03-04: CI registry hardening iteration validated via `npm run lint` and `npm ci --ignore-scripts` after lockfile registry normalization.
 - 2026-03-04: CI cross-platform hardening follow-up validated via `npm run lint` and `npm run cargo:check` after LF normalization and Rust `1.85.0` bump.
 - 2026-03-04: CI cargo follow-up validated via `npm run lint` and `npm run cargo:check` after Linux dependency install step and Windows icon asset update.
+- 2026-03-04: three-window runtime split iteration validated via `npm run format`, `npm run qa` (`test` 71 tests; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`), and `cargo test --manifest-path src-tauri/Cargo.toml` (25 tests).
+- 2026-03-04: `npm run dev:desktop` smoke rechecked after three-window split (reached `Running target/debug/klip-tauri`; Vite switched to `5174` because `5173` was occupied; command timed out at 45s as expected for long-running dev process).
 
 ## Quick Resume Steps
 
@@ -120,4 +123,4 @@
 4. Read `docs/status/packaging-verification-us011.md`.
 5. Read latest entries in `docs/status/progress-log.md`.
 6. Run `git log --oneline -n 10`.
-7. Run `npm run qa`, then `npm run dev:desktop` to verify compact popup defaults and keyboard submenu navigation.
+7. Run `npm run qa`, then `npm run dev:desktop` to verify compact popup defaults, keyboard submenu navigation, and `编辑片断...` / `偏好设置...` standalone-window transitions.

@@ -569,3 +569,19 @@ This file is append-only. Add one entry after each completed iteration.
     - Windows cargo failure details indicated missing `icons/icon.ico`.
 - Risks / Follow-ups:
   - Re-run CI on this follow-up commit is required to confirm Ubuntu/Windows `cargo:check` are green with the new packages/icon.
+
+## 2026-03-04 - strict three-window runtime split (popup + snippet-editor + preferences)
+
+- Commit: `pending`
+- Summary:
+  - Added Tauri commands to open/focus independent `snippet-editor` and `preferences` windows with deterministic sizing (`800x600` and `480x374`) and popup-hide handoff (`src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`).
+  - Updated popup action flow so `编辑片断...` / `偏好设置...` open dedicated windows on desktop runtime; browser preview keeps inline fallback (`src/App.tsx`, `src/features/settings/hotkeyRuntime.ts`, `src/features/settings/index.ts`).
+  - Added frontend window-role bootstrap (`main`/`snippet-editor`/`preferences` via URL query), restricted hotkey registration + clipboard monitor startup to popup main window, and added focus/visibility sync reload to reduce cross-window state drift (`src/App.tsx`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+  - cargo:test: pass (`cargo test --manifest-path src-tauri/Cargo.toml`, 25 tests)
+  - dev:desktop smoke: pass (`npm run dev:desktop` reached `Running target/debug/klip-tauri`; Vite auto-switched to 5174; command timed out at 45s because dev server is long-running)
+- Risks / Follow-ups:
+  - Interactive macOS/Windows GUI verification is still pending for popup->editor/preferences transition, reuse/focus lifecycle, and close/reopen behavior.
+  - Snippet editor and preferences visuals are still not aligned to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.

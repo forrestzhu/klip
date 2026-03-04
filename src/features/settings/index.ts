@@ -6,6 +6,8 @@ export { formatPanelHotkeyForDisplay } from "./hotkeyDisplay";
 export {
 	hideDesktopPanelWindow,
 	isDesktopRuntime,
+	openDesktopPreferencesWindow,
+	openDesktopSnippetEditorWindow,
 	registerDesktopPanelHotkey,
 } from "./hotkeyRuntime";
 export {

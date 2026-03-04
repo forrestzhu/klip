@@ -1,10 +1,10 @@
 pub mod clipboard;
 pub mod commands;
 pub mod direct_paste;
-pub mod hotkey;
 pub mod history_model;
 pub mod history_repository;
 pub mod history_storage;
+pub mod hotkey;
 pub mod startup_launch;
 pub mod tray;
 
@@ -36,6 +36,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::quit_app,
+            commands::open_snippet_editor_window,
+            commands::open_preferences_window,
             clipboard::read_clipboard_text,
             clipboard::write_clipboard_text,
             direct_paste::direct_paste_text,

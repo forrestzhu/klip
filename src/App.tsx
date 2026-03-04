@@ -25,6 +25,8 @@ import {
 	formatPanelHotkeyForDisplay,
 	hideDesktopPanelWindow,
 	isDesktopRuntime,
+	openDesktopPreferencesWindow,
+	openDesktopSnippetEditorWindow,
 	PASTE_MODE_CLIPBOARD_ONLY,
 	PASTE_MODE_DIRECT_WITH_FALLBACK,
 	type PasteMode,
@@ -56,12 +58,25 @@ interface RuntimeContext {
 
 type ListenerStatus = "starting" | "ready" | "error";
 type PanelView = "menu" | "snippet-editor" | "settings";
+type WindowRole = "main" | "snippet-editor" | "preferences";
 
 const ALL_SNIPPET_FOLDERS_VALUE = "__all_folders__";
 const COMPACT_PANEL_SIZE = { width: 340, height: 720 };
 const EXPANDED_PANEL_SIZE = { width: 1024, height: 720 };
+const WINDOW_ROLE_QUERY_KEY = "window";
 
 export function App() {
+	const windowRole = useMemo(resolveWindowRole, []);
+	const isMainPopupWindow = windowRole === "main";
+	const supportsInlineManagementViews =
+		!isDesktopRuntime() && isMainPopupWindow;
+	const initialPanelView =
+		windowRole === "snippet-editor"
+			? "snippet-editor"
+			: windowRole === "preferences"
+				? "settings"
+				: "menu";
+
 	const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 	const [maxItems, setMaxItems] = useState(200);
 	const [panelHotkey, setPanelHotkey] = useState(DEFAULT_PANEL_HOTKEY);
@@ -78,7 +93,7 @@ export function App() {
 	);
 	const [query, setQuery] = useState("");
 	const [selectedSnippetIndex, setSelectedSnippetIndex] = useState(0);
-	const [panelView, setPanelView] = useState<PanelView>("menu");
+	const [panelView, setPanelView] = useState<PanelView>(initialPanelView);
 	const [menuPath, setMenuPath] = useState<string[]>([]);
 	const [selectedMenuIndexes, setSelectedMenuIndexes] = useState<number[]>([0]);
 	const [listenerStatus, setListenerStatus] =
@@ -98,6 +113,7 @@ export function App() {
 		(entry: PopupMenuEntry, depth: number, index: number) => Promise<void>
 	>(async () => {});
 	const panelHotkeyDraftDisplay = canonicalizePanelHotkey(panelHotkeyDraft);
+	const canReturnToPopupMenu = supportsInlineManagementViews;
 
 	const filteredSnippetItems = useMemo(() => {
 		const keyword = query.trim().toLowerCase();
@@ -194,7 +210,7 @@ export function App() {
 	}, [popupColumns]);
 
 	useEffect(() => {
-		if (typeof document === "undefined") {
+		if (typeof document === "undefined" || !isMainPopupWindow) {
 			return;
 		}
 
@@ -211,10 +227,10 @@ export function App() {
 		return () => {
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};
-	}, []);
+	}, [isMainPopupWindow]);
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
+		if (typeof window === "undefined" || !isMainPopupWindow) {
 			return;
 		}
 
@@ -236,7 +252,7 @@ export function App() {
 		return () => {
 			window.removeEventListener("keydown", handleEscapeClose);
 		};
-	}, []);
+	}, [isMainPopupWindow]);
 
 	useEffect(() => {
 		let disposed = false;
@@ -259,30 +275,32 @@ export function App() {
 			setPasteMode(readPasteMode(window.localStorage));
 			setStartupLaunchEnabled(savedStartupLaunchEnabled);
 
-			if (!isDesktopRuntime()) {
-				return;
+			if (isDesktopRuntime() && isMainPopupWindow) {
+				try {
+					const registeredHotkey =
+						await registerDesktopPanelHotkey(savedPanelHotkey);
+					if (disposed) {
+						return;
+					}
+
+					const persistedHotkey = normalizePanelHotkeyValue(
+						writePanelHotkey(window.localStorage, registeredHotkey),
+					);
+					setPanelHotkey(persistedHotkey);
+					setPanelHotkeyDraft(persistedHotkey);
+				} catch (error) {
+					if (disposed) {
+						return;
+					}
+
+					setActionMessage(
+						`Global hotkey setup failed: ${toErrorMessage(error)}`,
+					);
+				}
 			}
 
-			try {
-				const registeredHotkey =
-					await registerDesktopPanelHotkey(savedPanelHotkey);
-				if (disposed) {
-					return;
-				}
-
-				const persistedHotkey = normalizePanelHotkeyValue(
-					writePanelHotkey(window.localStorage, registeredHotkey),
-				);
-				setPanelHotkey(persistedHotkey);
-				setPanelHotkeyDraft(persistedHotkey);
-			} catch (error) {
-				if (disposed) {
-					return;
-				}
-
-				setActionMessage(
-					`Global hotkey setup failed: ${toErrorMessage(error)}`,
-				);
+			if (!isDesktopRuntime()) {
+				return;
 			}
 
 			try {
@@ -356,19 +374,29 @@ export function App() {
 		const bootstrap = async () => {
 			try {
 				setListenerStatus("starting");
-				setListenerMessage("Starting clipboard listener...");
+				setListenerMessage(
+					isMainPopupWindow
+						? "Starting clipboard listener..."
+						: "Loading window state...",
+				);
 				await initializeSettings();
 				await Promise.all([historyRepository.load(), snippetRepository.load()]);
 				refreshAll();
-				monitor.start();
-				await monitor.whenReady();
+				if (isMainPopupWindow) {
+					monitor.start();
+					await monitor.whenReady();
+				}
 
 				if (disposed) {
 					return;
 				}
 
 				setListenerStatus("ready");
-				setListenerMessage("Clipboard listener is ready.");
+				setListenerMessage(
+					isMainPopupWindow
+						? "Clipboard listener is ready."
+						: "Window state is ready.",
+				);
 			} catch (error) {
 				if (disposed) {
 					return;
@@ -385,6 +413,56 @@ export function App() {
 			disposed = true;
 			monitor.stop();
 			runtimeRef.current = null;
+		};
+	}, [isMainPopupWindow]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const syncWindowStateFromStorage = async () => {
+			const runtime = runtimeRef.current;
+			if (!runtime) {
+				return;
+			}
+
+			await Promise.all([
+				runtime.historyRepository.load(),
+				runtime.snippetRepository.load(),
+			]);
+			setHistoryItems(runtime.historyRepository.getItems());
+			setMaxItems(runtime.historyRepository.getMaxItems());
+			setSnippetItems(runtime.snippetRepository.getSnippets());
+			setSnippetFolders(runtime.snippetRepository.getFolders());
+
+			const persistedPanelHotkey = normalizePanelHotkeyValue(
+				readPanelHotkey(window.localStorage),
+			);
+			setPanelHotkey(persistedPanelHotkey);
+			setPanelHotkeyDraft(persistedPanelHotkey);
+			setPasteMode(readPasteMode(window.localStorage));
+			setStartupLaunchEnabled(readStartupLaunchEnabled(window.localStorage));
+		};
+
+		const handleFocus = () => {
+			void syncWindowStateFromStorage().catch((error) => {
+				setActionMessage(`Window sync failed: ${toErrorMessage(error)}`);
+			});
+		};
+
+		const handleVisibilityChange = () => {
+			if (document.visibilityState !== "visible") {
+				return;
+			}
+			handleFocus();
+		};
+
+		window.addEventListener("focus", handleFocus);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => {
+			window.removeEventListener("focus", handleFocus);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};
 	}, []);
 
@@ -476,13 +554,21 @@ export function App() {
 	]);
 
 	useEffect(() => {
+		if (!isMainPopupWindow) {
+			return;
+		}
+
 		void syncDesktopWindowSize(panelView, {
 			popupPanelElement: popupPanelRef.current,
 		});
-	}, [panelView]);
+	}, [isMainPopupWindow, panelView]);
 
 	useEffect(() => {
-		if (typeof window === "undefined" || panelView !== "menu") {
+		if (
+			typeof window === "undefined" ||
+			!isMainPopupWindow ||
+			panelView !== "menu"
+		) {
 			return;
 		}
 
@@ -510,7 +596,7 @@ export function App() {
 			}
 			observer.disconnect();
 		};
-	}, [panelView]);
+	}, [isMainPopupWindow, panelView]);
 
 	const handleSnippetSearchKeyDown = async (
 		event: KeyboardEvent<HTMLInputElement>,
@@ -1016,12 +1102,34 @@ export function App() {
 			}
 
 			if (entry.action === "edit-snippets") {
-				setPanelView("snippet-editor");
+				if (supportsInlineManagementViews) {
+					setPanelView("snippet-editor");
+					return;
+				}
+
+				try {
+					await openDesktopSnippetEditorWindow();
+				} catch (error) {
+					setActionMessage(
+						`Failed to open snippet editor: ${toErrorMessage(error)}`,
+					);
+				}
 				return;
 			}
 
 			if (entry.action === "open-preferences") {
-				setPanelView("settings");
+				if (supportsInlineManagementViews) {
+					setPanelView("settings");
+					return;
+				}
+
+				try {
+					await openDesktopPreferencesWindow();
+				} catch (error) {
+					setActionMessage(
+						`Failed to open preferences: ${toErrorMessage(error)}`,
+					);
+				}
 				return;
 			}
 
@@ -1177,17 +1285,19 @@ export function App() {
 			<section className="editor-panel">
 				<div className="panel-title-row">
 					<h2>Snippet Editor</h2>
-					<button
-						className="ghost-button"
-						type="button"
-						onClick={() => {
-							setPanelView("menu");
-							setMenuPath([]);
-							setSelectedMenuIndexes([0]);
-						}}
-					>
-						Back to Menu
-					</button>
+					{canReturnToPopupMenu ? (
+						<button
+							className="ghost-button"
+							type="button"
+							onClick={() => {
+								setPanelView("menu");
+								setMenuPath([]);
+								setSelectedMenuIndexes([0]);
+							}}
+						>
+							Back to Menu
+						</button>
+					) : null}
 				</div>
 
 				<label className="search-field" htmlFor="snippet-search">
@@ -1376,17 +1486,19 @@ export function App() {
 			<section className="settings-panel">
 				<div className="panel-title-row">
 					<h2>Preferences</h2>
-					<button
-						className="ghost-button"
-						type="button"
-						onClick={() => {
-							setPanelView("menu");
-							setMenuPath([]);
-							setSelectedMenuIndexes([0]);
-						}}
-					>
-						Back to Menu
-					</button>
+					{canReturnToPopupMenu ? (
+						<button
+							className="ghost-button"
+							type="button"
+							onClick={() => {
+								setPanelView("menu");
+								setMenuPath([]);
+								setSelectedMenuIndexes([0]);
+							}}
+						>
+							Back to Menu
+						</button>
+					) : null}
 				</div>
 
 				<div className="settings-grid">
@@ -1515,6 +1627,23 @@ export function App() {
 			{actionMessage ? <p className="action-message">{actionMessage}</p> : null}
 		</main>
 	);
+}
+
+function resolveWindowRole(): WindowRole {
+	if (typeof window === "undefined") {
+		return "main";
+	}
+
+	const searchParams = new URLSearchParams(window.location.search);
+	const requestedRole = searchParams.get(WINDOW_ROLE_QUERY_KEY);
+	if (requestedRole === "snippet-editor") {
+		return "snippet-editor";
+	}
+	if (requestedRole === "preferences") {
+		return "preferences";
+	}
+
+	return "main";
 }
 
 function toErrorMessage(error: unknown): string {
