@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-05
 - Branch: `main`
-- Latest Commit: `a033086` (`fix: keep preferences primary tabs in a single row`)
-- Working Tree: dirty (`src/styles.css` + `docs/status/*`)
+- Latest Commit: `9fec23b` (`style: refine clipy visual scale for preferences and toolbar`)
+- Working Tree: dirty (`src/App.tsx` + `src/styles.css` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -53,6 +53,7 @@
 - Snippet editor and preferences visual baseline now aligned to Clipy screenshots: snippet editor uses toolbar + split-pane management layout, and preferences uses icon-tab navigation with Clipy-style tab content sections (`src/App.tsx`, `src/styles.css`).
 - Preferences top-level tab bar now enforces fixed single-row layout (7 primary tabs in one line) for Clipy parity in the `480x374` preferences window (`src/App.tsx`, `src/styles.css`).
 - Clipy visual convergence follow-up tuned preferences primary tab/icon sizes, content typography scale, and snippet toolbar button proportions for closer screenshot parity while keeping single-row constraints (`src/styles.css`).
+- UI consistency follow-up now unifies dropdown/select visuals across preferences and snippets (removing native metallic style), and further scales down preferences menu typography for closer screenshot parity (`src/App.tsx`, `src/styles.css`).
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
@@ -123,6 +124,7 @@
 - 2026-03-05: `npm run dev:desktop` smoke rechecked after Clipy-style editor/preferences UI refactor (reached `Running target/debug/klip-tauri`; command timed out at 45s as expected for long-running dev process).
 - 2026-03-05: preferences tab single-row follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-05: preferences/snippet visual-scale convergence follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
+- 2026-03-05: preferences/snippets typography + select-consistency follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 
 ## Quick Resume Steps
 

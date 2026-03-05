@@ -632,7 +632,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-05 - clipy visual-scale convergence (preferences tabs + snippet toolbar)
 
-- Commit: `pending`
+- Commit: `9fec23b`
 - Summary:
   - Refined preferences top-level tab visuals from equal-width stretch layout to fixed-size icon-tab buttons while keeping strict single-row behavior, matching Clipy screenshot proportions more closely (`src/styles.css`).
   - Tuned preferences content visual scale (section heading, row labels, checkbox size, hotkey/number input dimensions, and spacing) to reduce oversized rendering and align better with `settings*.png` baselines (`src/styles.css`).
@@ -643,3 +643,17 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - Pixel-perfect icon glyph style still differs from native macOS symbols; only spacing/scale alignment is addressed in this iteration.
+
+## 2026-03-05 - ui consistency follow-up (menu typography + select styling)
+
+- Commit: `pending`
+- Summary:
+  - Further reduced preferences menu-tab typography scale (section title, row labels, checkbox rows, inline notes, number/hotkey inputs) to address oversized text feedback and improve screenshot parity (`src/styles.css`).
+  - Added unified custom `select` control styling (`.clipy-select`) to remove native metallic gradient look and make dropdown visuals consistent with other form controls (`src/styles.css`).
+  - Applied unified select class to preferences and snippet-editor folder/paste/update dropdowns for cross-window UI consistency (`src/App.tsx`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Manual macOS visual verification is still required for final font-size parity and select popup behavior consistency.

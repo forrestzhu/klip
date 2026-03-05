@@ -1473,7 +1473,7 @@ export function App() {
 						</label>
 						<select
 							id="snippet-folder-select"
-							className="clipy-input"
+							className="clipy-input clipy-select"
 							value={selectedSnippetFolderId}
 							onChange={(event) => {
 								setSelectedSnippetFolderId(event.currentTarget.value);
@@ -1561,7 +1561,7 @@ export function App() {
 						</label>
 						<select
 							id="snippet-editor-folder"
-							className="clipy-input"
+							className="clipy-input clipy-select"
 							value={selectedSnippetFolderId}
 							onChange={(event) => {
 								setSelectedSnippetFolderId(event.currentTarget.value);
@@ -1696,7 +1696,7 @@ export function App() {
 								<span>选中菜单项后输入：</span>
 								<select
 									aria-label="Paste mode"
-									className="clipy-input clipy-compact-input"
+									className="clipy-input clipy-select clipy-compact-input"
 									value={pasteMode}
 									onChange={handleChangePasteMode}
 								>
@@ -1842,7 +1842,7 @@ export function App() {
 							<label className="clipy-form-row">
 								<span>检查频率：</span>
 								<select
-									className="clipy-input clipy-compact-input"
+									className="clipy-input clipy-select clipy-compact-input"
 									value={updateSchedule}
 									onChange={(event) => {
 										setUpdateSchedule(event.currentTarget.value);
