@@ -216,207 +216,419 @@ body {
 	word-break: break-word;
 }
 
-.editor-panel,
-.settings-panel {
-	padding: 14px;
-	border: 1px solid #e5e7eb;
-	border-radius: 12px;
-	background: #f9fafb;
-}
-
-.panel-title-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 10px;
-	margin-bottom: 10px;
-}
-
-.panel-title-row h2 {
+.clipy-management-shell {
 	margin: 0;
-	font-size: 20px;
-}
-
-.search-field {
-	display: inline-block;
-	margin-bottom: 6px;
-	font-size: 12px;
-	color: #4b5563;
-}
-
-.search-input {
-	width: 100%;
-	padding: 9px 10px;
-	border: 1px solid #cbd5e1;
-	border-radius: 8px;
-	font-size: 14px;
-	background: #ffffff;
-}
-
-.snippet-controls {
-	display: grid;
-	gap: 12px;
-	margin-top: 12px;
-}
-
-.snippet-folder-row,
-.snippet-editor {
-	display: grid;
-	gap: 8px;
-}
-
-.snippet-textarea {
-	width: 100%;
-	min-height: 88px;
-	resize: vertical;
-	padding: 10px;
-	border: 1px solid #cbd5e1;
-	border-radius: 8px;
-	font-size: 14px;
-	font-family: inherit;
-}
-
-.history-list {
-	list-style: none;
-	margin: 12px 0 0;
 	padding: 0;
-	display: grid;
-	gap: 8px;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background: #ebebed;
+	min-height: 100vh;
 }
 
-.snippet-row {
-	border: 1px solid #dbeafe;
-	border-radius: 8px;
-	background: #ffffff;
-	padding: 8px;
-}
-
-.snippet-row.selected {
-	border-color: #3b82f6;
-	background: #eff6ff;
-}
-
-.snippet-item {
-	width: 100%;
-	text-align: left;
-	padding: 8px;
+.clipy-subtle-link {
+	margin-left: auto;
+	padding: 0;
 	border: 0;
 	background: transparent;
+	font-size: 12px;
+	color: #5f6570;
 	cursor: pointer;
 }
 
-.snippet-preview {
-	margin-top: 6px;
-	font-size: 13px;
-	color: #334155;
+.clipy-subtle-link:hover {
+	color: #2f8ad6;
 }
 
-.inline-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.history-main {
-	font-size: 14px;
-	color: #0f172a;
-}
-
-.history-meta {
-	margin-top: 4px;
-	font-size: 12px;
-	color: #64748b;
-}
-
-.empty-row {
-	padding: 12px;
-	border: 1px dashed #cbd5e1;
-	border-radius: 8px;
-	font-size: 13px;
-	color: #64748b;
-	background: #ffffff;
-}
-
-.settings-grid {
-	display: grid;
-	gap: 12px;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.max-items-field,
-.paste-mode-field,
-.startup-launch-field,
-.hotkey-field {
+.clipy-editor-window {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	font-size: 13px;
-	color: #475569;
+	min-height: 100vh;
+	background: #ebebed;
 }
 
-.max-items-field input,
-.hotkey-input {
-	width: 100%;
-	padding: 8px 10px;
-	border: 1px solid #cbd5e1;
-	border-radius: 8px;
-	font-size: 14px;
-	background: #ffffff;
-}
-
-.startup-launch-row {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 8px 10px;
-	border: 1px solid #cbd5e1;
-	border-radius: 8px;
-	background: #ffffff;
-	font-size: 14px;
-	color: #0f172a;
-}
-
-.startup-launch-row input {
-	width: 16px;
-	height: 16px;
-	margin: 0;
-}
-
-.hotkey-row {
+.clipy-editor-toolbar {
 	display: flex;
-	gap: 8px;
 	align-items: center;
+	gap: 10px;
+	padding: 12px 18px 10px;
+	border-bottom: 1px solid #c6c8cc;
+	background: #ebebed;
 }
 
-.hotkey-hint,
-.settings-note {
-	font-size: 12px;
-	color: #64748b;
-}
-
-.settings-note {
-	margin: 12px 0 0;
-}
-
-.ghost-button {
-	padding: 7px 10px;
-	border: 1px solid #bfdbfe;
-	border-radius: 8px;
-	background: #eff6ff;
-	color: #1d4ed8;
-	font-size: 13px;
+.clipy-toolbar-button {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	min-width: 74px;
+	padding: 6px 9px;
+	border: 1px solid #b8bcc2;
+	border-radius: 5px;
+	background: #ebebed;
+	color: #525866;
+	font-size: 11px;
 	font-weight: 600;
 	cursor: pointer;
 }
 
-.ghost-button:hover {
-	background: #dbeafe;
+.clipy-toolbar-button:hover {
+	background: #dfe2e8;
 }
 
-.ghost-button.danger {
-	border-color: #fecaca;
-	background: #fef2f2;
-	color: #b91c1c;
+.clipy-toolbar-icon {
+	font-size: 19px;
+	line-height: 1;
+	font-weight: 400;
+}
+
+.clipy-editor-layout {
+	display: grid;
+	grid-template-columns: 306px 1fr;
+	flex: 1;
+	min-height: 0;
+}
+
+.clipy-editor-sidebar {
+	border-right: 1px solid #c6c8cc;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	min-height: 0;
+}
+
+.clipy-field-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #525763;
+}
+
+.clipy-input,
+.clipy-textarea {
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid #b7b9be;
+	border-radius: 7px;
+	background: #f3f3f5;
+	font-size: 14px;
+	color: #3f434a;
+}
+
+.clipy-input:focus,
+.clipy-textarea:focus {
+	outline: 1px solid #5f9ddf;
+	outline-offset: 0;
+}
+
+.clipy-folder-draft-row {
+	display: grid;
+	gap: 6px;
+	margin-bottom: 4px;
+}
+
+.clipy-inline-actions {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.clipy-inline-button,
+.clipy-secondary-button {
+	border: 1px solid #b6bac2;
+	background: #efeff1;
+	color: #4f5662;
+	border-radius: 6px;
+	padding: 6px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.clipy-inline-button:hover,
+.clipy-secondary-button:hover {
+	background: #e1e4ea;
+}
+
+.clipy-inline-button.danger {
+	border-color: #d0a6a6;
+	color: #9f3b3b;
+}
+
+.clipy-snippet-list {
+	list-style: none;
+	margin: 4px 0 0;
+	padding: 0;
+	display: grid;
+	gap: 2px;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.clipy-empty-row {
+	padding: 12px;
+	color: #6f7580;
+	font-size: 13px;
+}
+
+.clipy-snippet-list-item {
+	width: 100%;
+	text-align: left;
+	border: 0;
+	padding: 7px 8px;
+	background: transparent;
+	border-radius: 4px;
+	cursor: pointer;
+	color: #4a515d;
+}
+
+.clipy-snippet-list-item:hover {
+	background: #dde4f0;
+}
+
+.clipy-snippet-list-item.selected {
+	background: #2f84d5;
+	color: #ffffff;
+}
+
+.clipy-snippet-title {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.clipy-snippet-meta {
+	margin-top: 3px;
+	font-size: 11px;
+	color: #727a87;
+}
+
+.clipy-snippet-preview {
+	margin-top: 4px;
+	font-size: 12px;
+	line-height: 1.35;
+	color: #5a6270;
+}
+
+.clipy-snippet-list-item.selected .clipy-snippet-meta,
+.clipy-snippet-list-item.selected .clipy-snippet-preview {
+	color: rgba(255, 255, 255, 0.88);
+}
+
+.clipy-editor-detail {
+	padding: 34px clamp(22px, 4vw, 56px);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	color: #525763;
+	overflow-y: auto;
+}
+
+.clipy-editor-detail h3 {
+	margin: 0 0 6px;
+	font-size: 33px;
+	line-height: 1.1;
+	color: #5f6670;
+	font-weight: 700;
+}
+
+.clipy-textarea {
+	min-height: 210px;
+	resize: vertical;
+	font-family: inherit;
+}
+
+.clipy-detail-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 6px;
+}
+
+.clipy-primary-button {
+	border: 1px solid #2f8ad6;
+	background: #2f8ad6;
+	color: #ffffff;
+	border-radius: 7px;
+	padding: 8px 14px;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.clipy-primary-button:hover {
+	background: #2377c5;
+}
+
+.clipy-preferences-window {
+	min-height: 100vh;
+	background: #ebebed;
+	padding: 12px 14px 18px;
+}
+
+.clipy-preferences-tabs {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.clipy-preferences-tab {
+	border: 0;
+	background: transparent;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	font-size: 14px;
+	font-weight: 700;
+	color: #9b9ca0;
+	cursor: pointer;
+}
+
+.clipy-preferences-tab:hover {
+	color: #7c7f86;
+}
+
+.clipy-preferences-tab-icon {
+	width: 74px;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid #b8bcc2;
+	border-radius: 6px;
+	background: #efeff1;
+	font-size: 31px;
+	line-height: 1;
+	font-weight: 400;
+	color: #9b9ca0;
+}
+
+.clipy-preferences-tab.active {
+	color: #2f8ad6;
+}
+
+.clipy-preferences-tab.active .clipy-preferences-tab-icon {
+	background: #2f8ad6;
+	border-color: #2f8ad6;
+	color: #ffffff;
+}
+
+.clipy-preferences-content {
+	margin: 24px 0 0 96px;
+	max-width: 860px;
+}
+
+.clipy-preferences-section {
+	display: flex;
+	flex-direction: column;
+	gap: 11px;
+	color: #4f5561;
+}
+
+.clipy-preferences-section h3 {
+	margin: 0 0 4px;
+	font-size: 44px;
+	line-height: 1.05;
+	font-weight: 700;
+	color: #5a616c;
+}
+
+.clipy-checkbox-row {
+	display: inline-flex;
+	align-items: center;
+	gap: 11px;
+	font-size: 20px;
+	font-weight: 600;
+	color: #4f5560;
+}
+
+.clipy-checkbox-row input {
+	width: 24px;
+	height: 24px;
+}
+
+.clipy-form-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+	font-size: 20px;
+	font-weight: 600;
+	color: #4f5661;
+}
+
+.clipy-compact-input {
+	max-width: 420px;
+}
+
+.clipy-number-input {
+	max-width: 130px;
+	text-align: right;
+	font-size: 40px;
+	line-height: 1;
+	padding: 2px 8px;
+	height: 56px;
+}
+
+.clipy-inline-note {
+	margin: 0;
+	font-size: 15px;
+	color: #6a707b;
+}
+
+.clipy-types-panel {
+	display: grid;
+	gap: 10px;
+	padding: 18px 26px;
+	border: 1px solid #d8d9dc;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.12);
+	max-width: 680px;
+}
+
+.clipy-empty-table {
+	width: min(740px, 100%);
+	border: 1px solid #ceced0;
+	background: #f3f3f4;
+}
+
+.clipy-empty-table-row {
+	height: 48px;
+	border-top: 1px solid #dedee0;
+}
+
+.clipy-empty-table-row:nth-child(2n) {
+	background: #e8e9eb;
+}
+
+.clipy-empty-table-row:first-child {
+	border-top: 0;
+}
+
+.clipy-table-actions {
+	display: flex;
+	gap: 0;
+}
+
+.clipy-table-actions .clipy-secondary-button {
+	min-width: 42px;
+	border-radius: 0;
+}
+
+.clipy-hotkey-input {
+	max-width: 500px;
+	font-size: 26px;
+	letter-spacing: 0.4px;
+	border-radius: 999px;
+	padding: 8px 18px;
+}
+
+.clipy-check-update-button {
+	max-width: 320px;
 }
 
 .action-message {
@@ -426,18 +638,47 @@ body {
 }
 
 @media (max-width: 760px) {
-	.app-shell {
+	.app-shell:not(.clipy-management-shell) {
 		margin: 12px;
 		padding: 12px;
 	}
 
-	.panel-title-row,
-	.hotkey-row {
-		flex-direction: column;
-		align-items: flex-start;
+	.clipy-editor-toolbar {
+		flex-wrap: wrap;
 	}
 
 	.popup-entry {
 		padding: 8px;
+	}
+
+	.clipy-editor-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.clipy-editor-sidebar {
+		border-right: 0;
+		border-bottom: 1px solid #c6c8cc;
+		max-height: 360px;
+	}
+
+	.clipy-editor-detail {
+		padding: 18px;
+	}
+
+	.clipy-preferences-content {
+		margin-left: 0;
+	}
+
+	.clipy-preferences-section h3 {
+		font-size: 34px;
+	}
+
+	.clipy-form-row,
+	.clipy-checkbox-row {
+		font-size: 16px;
+	}
+
+	.clipy-hotkey-input {
+		font-size: 20px;
 	}
 }

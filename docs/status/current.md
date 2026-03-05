@@ -1,9 +1,9 @@
 # Project Status Snapshot
 
-- Last Updated: 2026-03-04
+- Last Updated: 2026-03-05
 - Branch: `main`
-- Latest Commit: `8d860eb` (`feat: split settings flows into dedicated desktop windows`)
-- Working Tree: dirty (`AGENTS.md` + `.commitlintrc.json` + `docs/status/*`)
+- Latest Commit: `4fff718` (`docs: clarify commit body line length governance`)
+- Working Tree: dirty (`src/App.tsx` + `src/styles.css` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -50,6 +50,7 @@
 - Added Tauri capability file for main window to explicitly allow runtime window operations used by popup flow (`src-tauri/capabilities/default.json`).
 - Added local popup badcase screenshot artifacts for visual debugging and manual verification traceability (`docs/klip-test-ui/*.png`).
 - Three-window runtime baseline implemented: popup actions now open/focus standalone `snippet-editor` and `preferences` windows (reused by label), then hide popup; frontend role-aware initialization avoids duplicate hotkey registration/clipboard monitor startup in auxiliary windows, and focus/visibility sync reloads shared local state across windows (`src-tauri/src/commands.rs`, `src-tauri/src/lib.rs`, `src/App.tsx`, `src/features/settings/hotkeyRuntime.ts`).
+- Snippet editor and preferences visual baseline now aligned to Clipy screenshots: snippet editor uses toolbar + split-pane management layout, and preferences uses icon-tab navigation with Clipy-style tab content sections (`src/App.tsx`, `src/styles.css`).
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
@@ -64,15 +65,15 @@
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
 - US-011 packaging baseline now exists, but Windows installer artifact evidence and install/uninstall interactive checks are still pending.
 - Three-window runtime split is implemented, but interactive verification evidence is still pending for popup-to-window transition, reuse/focus lifecycle, and close/reopen behavior on macOS/Windows.
-- Popup is now screenshot-driven, but snippet editor/preferences windows are still not visually aligned to `snippet_edit.png` and `settings*.png`.
+- Snippet editor/preferences now have Clipy-style baseline layout, but pixel-level spacing/typography and full interaction parity still need manual screenshot verification.
 - Popup badcase behavior still requires hands-on verification against newly added local screenshots (`docs/klip-test-ui`).
 - Local machine is still running Node `v25.2.1`; project target is Node 22 and runtime alignment is still pending.
 - Manual matrix exists, but interactive GUI step execution evidence is still pending for both macOS and Windows.
 
 ## Next Focus
 
-1. Align snippet editor and preferences UI to `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
-2. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions (including window reuse/focus behavior).
+1. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions (including window reuse/focus behavior).
+2. Run screenshot-by-screenshot parity review for `snippet_edit.png` and `settings*.png` and capture remaining pixel diffs.
 3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
 ## Last Validation Snapshot
@@ -116,6 +117,8 @@
 - 2026-03-04: three-window runtime split iteration validated via `npm run format`, `npm run qa` (`test` 71 tests; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`), and `cargo test --manifest-path src-tauri/Cargo.toml` (25 tests).
 - 2026-03-04: `npm run dev:desktop` smoke rechecked after three-window split (reached `Running target/debug/klip-tauri`; Vite switched to `5174` because `5173` was occupied; command timed out at 45s as expected for long-running dev process).
 - 2026-03-04: commit rule clarity follow-up validated via `npm run lint` after adding explicit `body-max-line-length` governance/config entries.
+- 2026-03-05: snippet editor/preferences UI alignment iteration validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
+- 2026-03-05: `npm run dev:desktop` smoke rechecked after Clipy-style editor/preferences UI refactor (reached `Running target/debug/klip-tauri`; command timed out at 45s as expected for long-running dev process).
 
 ## Quick Resume Steps
 

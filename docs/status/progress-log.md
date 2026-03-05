@@ -588,7 +588,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-04 - commit rule clarity for body line length
 
-- Commit: `pending`
+- Commit: `4fff718`
 - Summary:
   - Added explicit repository guideline that commit body lines must stay within 100 characters to match commitlint enforcement (`AGENTS.md`).
   - Made commitlint body line-length enforcement explicit in local config with `body-max-line-length: 100` for clearer, self-documenting rules (`.commitlintrc.json`).
@@ -600,3 +600,19 @@ This file is append-only. Add one entry after each completed iteration.
   - cargo:check: skip (commit-rule/docs-only change)
 - Risks / Follow-ups:
   - Contributors still need to manually wrap long bullet text in commit bodies; this iteration clarifies rules but does not auto-wrap commit messages.
+
+## 2026-03-05 - clipy-style UI alignment for snippet editor and preferences
+
+- Commit: `pending`
+- Summary:
+  - Rebuilt snippet editor window into Clipy-style layout with top tool buttons, left navigation/list pane, and right detail editor pane while preserving snippet/folder CRUD and paste workflow integration (`src/App.tsx`, `src/styles.css`).
+  - Reworked preferences window into icon-tab navigation (`通用/菜单/类型/排除/快捷键/更新/Beta测试`) and migrated existing Klip settings controls into tabbed content sections with Clipy-like visual hierarchy (`src/App.tsx`, `src/styles.css`).
+  - Updated management-window shell styling for dedicated desktop windows so snippet editor/preferences no longer render as the generic white card panel and better match screenshot baselines (`src/App.tsx`, `src/styles.css`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+  - dev:desktop smoke: pass (`npm run dev:desktop` reached `Running target/debug/klip-tauri`; command timed out at 45s as expected for long-running dev process)
+- Risks / Follow-ups:
+  - Screenshot-level manual parity checks are still required for spacing/typography/icon fidelity against `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
+  - Interactive macOS/Windows verification remains pending for popup -> editor/preferences transitions and window reuse/focus behavior.

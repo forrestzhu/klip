@@ -59,11 +59,51 @@ interface RuntimeContext {
 type ListenerStatus = "starting" | "ready" | "error";
 type PanelView = "menu" | "snippet-editor" | "settings";
 type WindowRole = "main" | "snippet-editor" | "preferences";
+type PreferencesTab =
+	| "general"
+	| "menu"
+	| "types"
+	| "exclude"
+	| "hotkey"
+	| "update"
+	| "beta";
 
 const ALL_SNIPPET_FOLDERS_VALUE = "__all_folders__";
 const COMPACT_PANEL_SIZE = { width: 340, height: 720 };
 const EXPANDED_PANEL_SIZE = { width: 1024, height: 720 };
 const WINDOW_ROLE_QUERY_KEY = "window";
+const CLIPBOARD_TYPE_TAB_OPTIONS = [
+	{ id: "plain-text", label: "纯文本" },
+	{ id: "rich-text", label: "多信息文本格式 (RTF)" },
+	{ id: "rich-text-doc", label: "多信息文本格式 (RTFD)" },
+	{ id: "pdf", label: "PDF" },
+	{ id: "file-name", label: "文件名" },
+	{ id: "url", label: "URL" },
+	{ id: "tiff-image", label: "TIFF 图像" },
+] as const;
+const PREFERENCES_TABS: Array<{
+	id: PreferencesTab;
+	label: string;
+	icon: string;
+}> = [
+	{ id: "general", label: "通用", icon: "◍" },
+	{ id: "menu", label: "菜单", icon: "≡" },
+	{ id: "types", label: "类型", icon: "◻" },
+	{ id: "exclude", label: "排除", icon: "⊘" },
+	{ id: "hotkey", label: "快捷键", icon: "⌘" },
+	{ id: "update", label: "更新", icon: "↻" },
+	{ id: "beta", label: "Beta测试", icon: "β" },
+];
+const EXCLUDE_PLACEHOLDER_ROWS = [
+	"exclude-row-1",
+	"exclude-row-2",
+	"exclude-row-3",
+	"exclude-row-4",
+	"exclude-row-5",
+	"exclude-row-6",
+	"exclude-row-7",
+	"exclude-row-8",
+];
 
 export function App() {
 	const windowRole = useMemo(resolveWindowRole, []);
@@ -106,6 +146,24 @@ export function App() {
 	const [snippetTitleDraft, setSnippetTitleDraft] = useState("");
 	const [snippetTextDraft, setSnippetTextDraft] = useState("");
 	const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
+	const [preferencesTab, setPreferencesTab] =
+		useState<PreferencesTab>("general");
+	const [supportedClipboardTypes, setSupportedClipboardTypes] = useState<
+		Record<string, boolean>
+	>(() =>
+		CLIPBOARD_TYPE_TAB_OPTIONS.reduce<Record<string, boolean>>(
+			(accumulator, option) => {
+				accumulator[option.id] = true;
+				return accumulator;
+			},
+			{},
+		),
+	);
+	const [autoCheckUpdates, setAutoCheckUpdates] = useState(true);
+	const [updateSchedule, setUpdateSchedule] = useState("weekly");
+	const [lastUpdateCheckAt, setLastUpdateCheckAt] = useState(() =>
+		new Date().toLocaleString(),
+	);
 
 	const runtimeRef = useRef<RuntimeContext | null>(null);
 	const popupPanelRef = useRef<HTMLElement | null>(null);
@@ -172,6 +230,8 @@ export function App() {
 	const activePopupEntry = activePopupEntries[activeSelectedMenuIndex];
 	const selectedSnippetPreview =
 		activePopupEntry?.kind === "snippet-item" ? activePopupEntry.text : null;
+	const selectedSnippetItem =
+		filteredSnippetItems[selectedSnippetIndex] ?? null;
 
 	useEffect(() => {
 		setSelectedSnippetIndex((current) => {
@@ -598,7 +658,7 @@ export function App() {
 		};
 	}, [isMainPopupWindow, panelView]);
 
-	const handleSnippetSearchKeyDown = async (
+	const handleSnippetSearchKeyDown = (
 		event: KeyboardEvent<HTMLInputElement>,
 	) => {
 		if (event.key === "ArrowDown") {
@@ -617,7 +677,11 @@ export function App() {
 
 		if (event.key === "Enter") {
 			event.preventDefault();
-			await pasteSelectedSnippet();
+			const selectedSnippet = filteredSnippetItems[selectedSnippetIndex];
+			if (!selectedSnippet) {
+				return;
+			}
+			handleEditSnippet(selectedSnippet);
 		}
 	};
 
@@ -827,21 +891,6 @@ export function App() {
 				);
 			}
 		}
-	};
-
-	const pasteSelectedSnippet = async () => {
-		const selectedSnippet = filteredSnippetItems[selectedSnippetIndex];
-		if (!selectedSnippet) {
-			return;
-		}
-
-		await pasteTextWithFallback({
-			text: selectedSnippet.text,
-			directSuccessMessage: "Snippet pasted into active app.",
-			fallbackSuccessMessage:
-				"Direct paste unavailable. Snippet copied to clipboard.",
-			hideAfterSuccess: false,
-		});
 	};
 
 	const handleSaveSnippet = async () => {
@@ -1280,60 +1329,158 @@ export function App() {
 		);
 	};
 
+	const handleBackToPopupMenu = () => {
+		setPanelView("menu");
+		setMenuPath([]);
+		setSelectedMenuIndexes([0]);
+	};
+
+	const renderBackToMenuButton = () => {
+		if (!canReturnToPopupMenu) {
+			return null;
+		}
+
+		return (
+			<button
+				className="clipy-subtle-link"
+				type="button"
+				onClick={handleBackToPopupMenu}
+			>
+				返回菜单
+			</button>
+		);
+	};
+
 	const renderSnippetEditorPanel = () => {
 		return (
-			<section className="editor-panel">
-				<div className="panel-title-row">
-					<h2>Snippet Editor</h2>
-					{canReturnToPopupMenu ? (
-						<button
-							className="ghost-button"
-							type="button"
-							onClick={() => {
-								setPanelView("menu");
-								setMenuPath([]);
-								setSelectedMenuIndexes([0]);
-							}}
-						>
-							Back to Menu
-						</button>
-					) : null}
+			<section className="clipy-editor-window">
+				<div
+					className="clipy-editor-toolbar"
+					role="toolbar"
+					aria-label="Snippet tools"
+				>
+					<button
+						type="button"
+						className="clipy-toolbar-button"
+						onClick={() => {
+							setEditingSnippetId(null);
+							setSnippetTitleDraft("");
+							setSnippetTextDraft("");
+						}}
+					>
+						<span aria-hidden="true" className="clipy-toolbar-icon">
+							＋
+						</span>
+						<span>添加片断</span>
+					</button>
+					<button
+						type="button"
+						className="clipy-toolbar-button"
+						onClick={() => {
+							void handleAddFolder();
+						}}
+					>
+						<span aria-hidden="true" className="clipy-toolbar-icon">
+							▣
+						</span>
+						<span>添加文件夹</span>
+					</button>
+					<button
+						type="button"
+						className="clipy-toolbar-button"
+						onClick={() => {
+							if (selectedSnippetItem) {
+								void handleDeleteSnippet(selectedSnippetItem);
+								return;
+							}
+							if (selectedSnippetFolderId !== ALL_SNIPPET_FOLDERS_VALUE) {
+								void handleDeleteFolder();
+								return;
+							}
+							setActionMessage("请先选中一个片断或文件夹。");
+						}}
+					>
+						<span aria-hidden="true" className="clipy-toolbar-icon">
+							−
+						</span>
+						<span>删除</span>
+					</button>
+					<button
+						type="button"
+						className="clipy-toolbar-button"
+						onClick={() => {
+							setActionMessage("启用/禁用将在后续迭代接入。");
+						}}
+					>
+						<span aria-hidden="true" className="clipy-toolbar-icon">
+							◉
+						</span>
+						<span>启用/禁用</span>
+					</button>
+					<button
+						type="button"
+						className="clipy-toolbar-button"
+						onClick={() => {
+							setActionMessage("导入将在后续迭代接入。");
+						}}
+					>
+						<span aria-hidden="true" className="clipy-toolbar-icon">
+							↓
+						</span>
+						<span>导入</span>
+					</button>
+					<button
+						type="button"
+						className="clipy-toolbar-button"
+						onClick={() => {
+							setActionMessage("导出将在后续迭代接入。");
+						}}
+					>
+						<span aria-hidden="true" className="clipy-toolbar-icon">
+							↑
+						</span>
+						<span>导出</span>
+					</button>
+					{renderBackToMenuButton()}
 				</div>
 
-				<label className="search-field" htmlFor="snippet-search">
-					Search snippets
-				</label>
-				<input
-					id="snippet-search"
-					autoComplete="off"
-					className="search-input"
-					placeholder="Search snippets by title or text..."
-					type="text"
-					value={query}
-					onChange={(event) => {
-						setQuery(event.currentTarget.value);
-						setSelectedSnippetIndex(0);
-					}}
-					onKeyDown={(event) => {
-						void handleSnippetSearchKeyDown(event);
-					}}
-				/>
+				<div className="clipy-editor-layout">
+					<aside className="clipy-editor-sidebar">
+						<label className="clipy-field-label" htmlFor="snippet-search">
+							搜索片断
+						</label>
+						<input
+							id="snippet-search"
+							autoComplete="off"
+							className="clipy-input"
+							placeholder="按标题或内容搜索..."
+							type="text"
+							value={query}
+							onChange={(event) => {
+								setQuery(event.currentTarget.value);
+								setSelectedSnippetIndex(0);
+							}}
+							onKeyDown={(event) => {
+								void handleSnippetSearchKeyDown(event);
+							}}
+						/>
 
-				<section className="snippet-controls">
-					<div className="snippet-folder-row">
-						<label className="search-field" htmlFor="snippet-folder-select">
-							Folder
+						<label
+							className="clipy-field-label"
+							htmlFor="snippet-folder-select"
+						>
+							文件夹
 						</label>
 						<select
 							id="snippet-folder-select"
-							className="search-input"
+							className="clipy-input"
 							value={selectedSnippetFolderId}
 							onChange={(event) => {
 								setSelectedSnippetFolderId(event.currentTarget.value);
 								setSelectedSnippetIndex(0);
 							}}
 						>
-							<option value={ALL_SNIPPET_FOLDERS_VALUE}>All folders</option>
+							<option value={ALL_SNIPPET_FOLDERS_VALUE}>全部文件夹</option>
 							{snippetFolders.map((folder) => (
 								<option key={folder.id} value={folder.id}>
 									{folder.name}
@@ -1341,77 +1488,132 @@ export function App() {
 							))}
 						</select>
 
-						<input
-							className="search-input"
-							placeholder="Folder name"
-							type="text"
-							value={folderNameDraft}
-							onChange={(event) => {
-								setFolderNameDraft(event.currentTarget.value);
-							}}
-						/>
-
-						<div className="inline-actions">
-							<button
-								className="ghost-button"
-								type="button"
-								onClick={() => {
-									void handleAddFolder();
+						<div className="clipy-folder-draft-row">
+							<input
+								className="clipy-input"
+								placeholder="文件夹名称"
+								type="text"
+								value={folderNameDraft}
+								onChange={(event) => {
+									setFolderNameDraft(event.currentTarget.value);
 								}}
-							>
-								Add Folder
-							</button>
-							<button
-								className="ghost-button"
-								type="button"
-								onClick={() => {
-									void handleRenameFolder();
-								}}
-							>
-								Rename
-							</button>
-							<button
-								className="ghost-button danger"
-								type="button"
-								onClick={() => {
-									void handleDeleteFolder();
-								}}
-							>
-								Delete
-							</button>
+							/>
+							<div className="clipy-inline-actions">
+								<button
+									className="clipy-inline-button"
+									type="button"
+									onClick={() => {
+										void handleRenameFolder();
+									}}
+								>
+									重命名
+								</button>
+								<button
+									className="clipy-inline-button danger"
+									type="button"
+									onClick={() => {
+										void handleDeleteFolder();
+									}}
+								>
+									删除文件夹
+								</button>
+							</div>
 						</div>
-					</div>
 
-					<div className="snippet-editor">
+						<ul className="clipy-snippet-list" aria-label="Snippet list">
+							{filteredSnippetItems.length === 0 ? (
+								<li className="clipy-empty-row">暂无片断。</li>
+							) : (
+								filteredSnippetItems.map((item, index) => (
+									<li key={item.id}>
+										<button
+											type="button"
+											className={`clipy-snippet-list-item ${
+												index === selectedSnippetIndex ? "selected" : ""
+											}`}
+											onClick={() => {
+												setSelectedSnippetIndex(index);
+												handleEditSnippet(item);
+											}}
+										>
+											<div className="clipy-snippet-title">{item.title}</div>
+											<div className="clipy-snippet-meta">
+												{folderNameById.get(item.folderId) ?? "General"} ·{" "}
+												{new Date(item.updatedAt).toLocaleString()}
+											</div>
+											<div className="clipy-snippet-preview">
+												{toClipboardPreview(item.text, 80)}
+											</div>
+										</button>
+									</li>
+								))
+							)}
+						</ul>
+					</aside>
+
+					<section className="clipy-editor-detail">
+						<h3>{editingSnippetId === null ? "新建片断" : "片断详情"}</h3>
+						<label
+							className="clipy-field-label"
+							htmlFor="snippet-editor-folder"
+						>
+							归属文件夹
+						</label>
+						<select
+							id="snippet-editor-folder"
+							className="clipy-input"
+							value={selectedSnippetFolderId}
+							onChange={(event) => {
+								setSelectedSnippetFolderId(event.currentTarget.value);
+							}}
+						>
+							<option value={ALL_SNIPPET_FOLDERS_VALUE}>General</option>
+							{snippetFolders.map((folder) => (
+								<option key={folder.id} value={folder.id}>
+									{folder.name}
+								</option>
+							))}
+						</select>
+
+						<label className="clipy-field-label" htmlFor="snippet-title-input">
+							标题
+						</label>
 						<input
-							className="search-input"
-							placeholder="Snippet title (optional)"
+							id="snippet-title-input"
+							className="clipy-input"
+							placeholder="片断标题（可选）"
 							type="text"
 							value={snippetTitleDraft}
 							onChange={(event) => {
 								setSnippetTitleDraft(event.currentTarget.value);
 							}}
 						/>
+
+						<label className="clipy-field-label" htmlFor="snippet-text-input">
+							内容
+						</label>
 						<textarea
-							className="snippet-textarea"
-							placeholder="Snippet text"
+							id="snippet-text-input"
+							className="clipy-textarea"
+							placeholder="输入片断内容"
 							value={snippetTextDraft}
 							onChange={(event) => {
 								setSnippetTextDraft(event.currentTarget.value);
 							}}
 						/>
-						<div className="inline-actions">
+
+						<div className="clipy-detail-actions">
 							<button
-								className="ghost-button"
+								className="clipy-primary-button"
 								type="button"
 								onClick={() => {
 									void handleSaveSnippet();
 								}}
 							>
-								{editingSnippetId === null ? "Create Snippet" : "Save Changes"}
+								{editingSnippetId === null ? "创建片断" : "保存修改"}
 							</button>
 							<button
-								className="ghost-button"
+								className="clipy-secondary-button"
 								type="button"
 								onClick={() => {
 									setEditingSnippetId(null);
@@ -1419,178 +1621,264 @@ export function App() {
 									setSnippetTextDraft("");
 								}}
 							>
-								Clear
+								清空
 							</button>
-						</div>
-					</div>
-				</section>
-
-				<ul className="history-list">
-					{filteredSnippetItems.length === 0 ? (
-						<li className="empty-row">No snippets found.</li>
-					) : (
-						filteredSnippetItems.map((item, index) => (
-							<li
-								key={item.id}
-								className={`snippet-row ${
-									index === selectedSnippetIndex ? "selected" : ""
-								}`}
-							>
+							{selectedSnippetItem ? (
 								<button
+									className="clipy-secondary-button"
 									type="button"
-									className="snippet-item"
 									onClick={() => {
-										setSelectedSnippetIndex(index);
-										void pasteSelectedSnippet();
+										void pasteTextWithFallback({
+											text: selectedSnippetItem.text,
+											directSuccessMessage: "片断已粘贴到前台应用。",
+											fallbackSuccessMessage:
+												"直接粘贴不可用，已复制到剪贴板。",
+										});
 									}}
 								>
-									<div className="history-main">{item.title}</div>
-									<div className="history-meta">
-										{folderNameById.get(item.folderId) ?? "General"} ·{" "}
-										{new Date(item.updatedAt).toLocaleString()}
-									</div>
-									<div className="snippet-preview">
-										{toClipboardPreview(item.text, 120)}
-									</div>
+									粘贴选中
 								</button>
-								<div className="inline-actions">
-									<button
-										className="ghost-button"
-										type="button"
-										onClick={() => {
-											handleEditSnippet(item);
-										}}
-									>
-										Edit
-									</button>
-									<button
-										className="ghost-button danger"
-										type="button"
-										onClick={() => {
-											void handleDeleteSnippet(item);
-										}}
-									>
-										Delete
-									</button>
-								</div>
-							</li>
-						))
-					)}
-				</ul>
+							) : null}
+						</div>
+					</section>
+				</div>
 			</section>
 		);
 	};
 
 	const renderSettingsPanel = () => {
 		return (
-			<section className="settings-panel">
-				<div className="panel-title-row">
-					<h2>Preferences</h2>
-					{canReturnToPopupMenu ? (
-						<button
-							className="ghost-button"
-							type="button"
-							onClick={() => {
-								setPanelView("menu");
-								setMenuPath([]);
-								setSelectedMenuIndexes([0]);
-							}}
-						>
-							Back to Menu
-						</button>
+			<section className="clipy-preferences-window">
+				<div
+					className="clipy-preferences-tabs"
+					role="tablist"
+					aria-label="Preferences tabs"
+				>
+					{PREFERENCES_TABS.map((tab) => {
+						const active = preferencesTab === tab.id;
+						return (
+							<button
+								key={tab.id}
+								role="tab"
+								aria-selected={active}
+								type="button"
+								className={`clipy-preferences-tab ${active ? "active" : ""}`}
+								onClick={() => {
+									setPreferencesTab(tab.id);
+								}}
+							>
+								<span className="clipy-preferences-tab-icon" aria-hidden="true">
+									{tab.icon}
+								</span>
+								<span>{tab.label}</span>
+							</button>
+						);
+					})}
+					{renderBackToMenuButton()}
+				</div>
+
+				<div className="clipy-preferences-content">
+					{preferencesTab === "general" ? (
+						<section className="clipy-preferences-section">
+							<h3>行为</h3>
+							<label className="clipy-checkbox-row">
+								<input
+									aria-label="Launch on login"
+									checked={startupLaunchEnabled}
+									type="checkbox"
+									onChange={(event) => {
+										void handleChangeStartupLaunch(event);
+									}}
+								/>
+								<span>登录时打开</span>
+							</label>
+							<label className="clipy-form-row">
+								<span>选中菜单项后输入：</span>
+								<select
+									aria-label="Paste mode"
+									className="clipy-input clipy-compact-input"
+									value={pasteMode}
+									onChange={handleChangePasteMode}
+								>
+									<option value={PASTE_MODE_DIRECT_WITH_FALLBACK}>
+										直接粘贴（失败回退剪贴板）
+									</option>
+									<option value={PASTE_MODE_CLIPBOARD_ONLY}>
+										仅复制到剪贴板
+									</option>
+								</select>
+							</label>
+							<p className="clipy-inline-note">
+								{isDesktopRuntime()
+									? "桌面运行时下将即时应用系统登录项设置。"
+									: "浏览器预览模式仅保存本地偏好，不会修改系统登录项。"}
+							</p>
+						</section>
+					) : null}
+
+					{preferencesTab === "menu" ? (
+						<section className="clipy-preferences-section">
+							<h3>菜单</h3>
+							<label className="clipy-form-row">
+								<span>最大剪贴板历史：</span>
+								<input
+									aria-label="Max history items"
+									min={10}
+									max={5000}
+									className="clipy-input clipy-number-input"
+									type="number"
+									value={maxItems}
+									onChange={(event) => {
+										void handleChangeMaxItems(event);
+									}}
+								/>
+								<span>项</span>
+							</label>
+							<p className="clipy-inline-note">
+								历史项按最近使用顺序展示，达到上限后将按 FIFO 淘汰。
+							</p>
+						</section>
+					) : null}
+
+					{preferencesTab === "types" ? (
+						<section className="clipy-preferences-section">
+							<h3>类型</h3>
+							<div className="clipy-types-panel">
+								{CLIPBOARD_TYPE_TAB_OPTIONS.map((option) => (
+									<label key={option.id} className="clipy-checkbox-row">
+										<input
+											type="checkbox"
+											checked={supportedClipboardTypes[option.id] ?? false}
+											onChange={(event) => {
+												setSupportedClipboardTypes((current) => ({
+													...current,
+													[option.id]: event.currentTarget.checked,
+												}));
+											}}
+										/>
+										<span>{option.label}</span>
+									</label>
+								))}
+							</div>
+						</section>
+					) : null}
+
+					{preferencesTab === "exclude" ? (
+						<section className="clipy-preferences-section">
+							<h3>排除这些程序：</h3>
+							<div className="clipy-empty-table">
+								{EXCLUDE_PLACEHOLDER_ROWS.map((rowKey) => (
+									<div key={rowKey} className="clipy-empty-table-row" />
+								))}
+							</div>
+							<div className="clipy-table-actions">
+								<button type="button" className="clipy-secondary-button">
+									+
+								</button>
+								<button type="button" className="clipy-secondary-button">
+									−
+								</button>
+							</div>
+						</section>
+					) : null}
+
+					{preferencesTab === "hotkey" ? (
+						<section className="clipy-preferences-section">
+							<h3>快捷键</h3>
+							<label className="clipy-form-row">
+								<span>主体：</span>
+								<input
+									aria-label="Panel hotkey"
+									className="clipy-input clipy-hotkey-input"
+									placeholder="CommandOrControl+Shift+V"
+									type="text"
+									value={panelHotkeyDraftDisplay}
+									onChange={(event) => {
+										setPanelHotkeyDraft(
+											canonicalizePanelHotkey(event.currentTarget.value),
+										);
+									}}
+									onKeyDown={(event) => {
+										if (event.key === "Enter") {
+											event.preventDefault();
+											void handleApplyPanelHotkey();
+										}
+									}}
+								/>
+								<button
+									className="clipy-primary-button"
+									type="button"
+									onClick={() => {
+										void handleApplyPanelHotkey();
+									}}
+								>
+									应用
+								</button>
+							</label>
+							<p className="clipy-inline-note">
+								当前快捷键：{formatPanelHotkeyForDisplay(panelHotkey)}
+							</p>
+							<p className="clipy-inline-note">
+								{isDesktopRuntime()
+									? "桌面运行时中全局快捷键注册已启用。"
+									: "浏览器预览模式仅持久化快捷键字符串，不会注册系统热键。"}
+							</p>
+						</section>
+					) : null}
+
+					{preferencesTab === "update" ? (
+						<section className="clipy-preferences-section">
+							<h3>更新</h3>
+							<label className="clipy-checkbox-row">
+								<input
+									type="checkbox"
+									checked={autoCheckUpdates}
+									onChange={(event) => {
+										setAutoCheckUpdates(event.currentTarget.checked);
+									}}
+								/>
+								<span>自动检查更新</span>
+							</label>
+							<label className="clipy-form-row">
+								<span>检查频率：</span>
+								<select
+									className="clipy-input clipy-compact-input"
+									value={updateSchedule}
+									onChange={(event) => {
+										setUpdateSchedule(event.currentTarget.value);
+									}}
+								>
+									<option value="daily">每天</option>
+									<option value="weekly">每周</option>
+									<option value="monthly">每月</option>
+								</select>
+							</label>
+							<button
+								type="button"
+								className="clipy-primary-button clipy-check-update-button"
+								onClick={() => {
+									setLastUpdateCheckAt(new Date().toLocaleString());
+									setActionMessage("已执行更新检查（当前为本地示意流程）。");
+								}}
+							>
+								现在检查
+							</button>
+							<p className="clipy-inline-note">
+								最近检查时间：{lastUpdateCheckAt}
+							</p>
+							<p className="clipy-inline-note">当前版本：v0.1.0</p>
+						</section>
+					) : null}
+
+					{preferencesTab === "beta" ? (
+						<section className="clipy-preferences-section">
+							<h3>Beta测试</h3>
+							<p className="clipy-inline-note">
+								该分区将用于后续实验功能开关与灰度发布策略。
+							</p>
+						</section>
 					) : null}
 				</div>
-
-				<div className="settings-grid">
-					<label className="max-items-field">
-						Max history
-						<input
-							aria-label="Max history items"
-							min={10}
-							max={5000}
-							type="number"
-							value={maxItems}
-							onChange={(event) => {
-								void handleChangeMaxItems(event);
-							}}
-						/>
-					</label>
-					<label className="paste-mode-field">
-						Paste mode
-						<select
-							aria-label="Paste mode"
-							className="search-input"
-							value={pasteMode}
-							onChange={handleChangePasteMode}
-						>
-							<option value={PASTE_MODE_DIRECT_WITH_FALLBACK}>
-								Direct paste + clipboard fallback
-							</option>
-							<option value={PASTE_MODE_CLIPBOARD_ONLY}>Clipboard only</option>
-						</select>
-					</label>
-					<label className="startup-launch-field">
-						Launch on login
-						<span className="startup-launch-row">
-							<input
-								aria-label="Launch on login"
-								checked={startupLaunchEnabled}
-								type="checkbox"
-								onChange={(event) => {
-									void handleChangeStartupLaunch(event);
-								}}
-							/>
-							<span>{startupLaunchEnabled ? "Enabled" : "Disabled"}</span>
-						</span>
-					</label>
-				</div>
-
-				<label className="hotkey-field">
-					Panel hotkey
-					<div className="hotkey-row">
-						<input
-							aria-label="Panel hotkey"
-							className="hotkey-input"
-							placeholder="CommandOrControl+Shift+V"
-							type="text"
-							value={panelHotkeyDraftDisplay}
-							onChange={(event) => {
-								setPanelHotkeyDraft(
-									canonicalizePanelHotkey(event.currentTarget.value),
-								);
-							}}
-							onKeyDown={(event) => {
-								if (event.key === "Enter") {
-									event.preventDefault();
-									void handleApplyPanelHotkey();
-								}
-							}}
-						/>
-						<button
-							className="ghost-button"
-							type="button"
-							onClick={() => {
-								void handleApplyPanelHotkey();
-							}}
-						>
-							Apply
-						</button>
-					</div>
-					<span className="hotkey-hint">
-						Current: {formatPanelHotkeyForDisplay(panelHotkey)}
-					</span>
-					<span className="hotkey-hint">
-						{isDesktopRuntime()
-							? "Hotkey registration is active in desktop runtime."
-							: "Browser preview only persists settings; desktop runtime is needed for global hotkey registration."}
-					</span>
-				</label>
-
-				<p className="settings-note">
-					{isDesktopRuntime()
-						? "Startup launch changes apply to OS login items immediately."
-						: "Browser preview only saves startup preference locally; desktop runtime is required to configure OS login items."}
-				</p>
 			</section>
 		);
 	};
@@ -1606,20 +1894,27 @@ export function App() {
 		);
 	}
 
+	const showInlineTopbar = canReturnToPopupMenu;
+	const shellClassName = showInlineTopbar
+		? "app-shell app-shell-expanded"
+		: "app-shell clipy-management-shell";
+
 	return (
-		<main className="app-shell app-shell-expanded">
-			<header className="topbar">
-				<div>
-					<h1>Klip</h1>
-					<p className="status-line">
-						Status:{" "}
-						<span className={`status-pill status-${listenerStatus}`}>
-							{listenerStatus}
-						</span>{" "}
-						{listenerMessage}
-					</p>
-				</div>
-			</header>
+		<main className={shellClassName}>
+			{showInlineTopbar ? (
+				<header className="topbar">
+					<div>
+						<h1>Klip</h1>
+						<p className="status-line">
+							Status:{" "}
+							<span className={`status-pill status-${listenerStatus}`}>
+								{listenerStatus}
+							</span>{" "}
+							{listenerMessage}
+						</p>
+					</div>
+				</header>
+			) : null}
 
 			{panelView === "snippet-editor"
 				? renderSnippetEditorPanel()
