@@ -1674,8 +1674,8 @@ export function App() {
 							</button>
 						);
 					})}
-					{renderBackToMenuButton()}
 				</div>
+				{renderBackToMenuButton()}
 
 				<div className="clipy-preferences-content">
 					{preferencesTab === "general" ? (

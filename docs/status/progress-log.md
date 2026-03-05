@@ -603,7 +603,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-05 - clipy-style UI alignment for snippet editor and preferences
 
-- Commit: `pending`
+- Commit: `d64e98e`
 - Summary:
   - Rebuilt snippet editor window into Clipy-style layout with top tool buttons, left navigation/list pane, and right detail editor pane while preserving snippet/folder CRUD and paste workflow integration (`src/App.tsx`, `src/styles.css`).
   - Reworked preferences window into icon-tab navigation (`通用/菜单/类型/排除/快捷键/更新/Beta测试`) and migrated existing Klip settings controls into tabbed content sections with Clipy-like visual hierarchy (`src/App.tsx`, `src/styles.css`).
@@ -616,3 +616,16 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Screenshot-level manual parity checks are still required for spacing/typography/icon fidelity against `docs/clipy_ui/snippet_edit.png` and `docs/clipy_ui/settings*.png`.
   - Interactive macOS/Windows verification remains pending for popup -> editor/preferences transitions and window reuse/focus behavior.
+
+## 2026-03-05 - preferences top-level tab single-row fix
+
+- Commit: `pending`
+- Summary:
+  - Fixed preferences top-level menu wrapping issue by enforcing a fixed single-row 7-column tab layout so all primary tabs stay on one line in the standalone preferences window (`src/styles.css`).
+  - Moved the inline fallback "返回菜单" action outside the tab container to avoid occupying one tab slot and causing row wrapping in preview mode (`src/App.tsx`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Pixel-level icon/button spacing still needs manual review against `docs/clipy_ui/settings*.png` on macOS runtime.
