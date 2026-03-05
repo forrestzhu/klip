@@ -2,7 +2,7 @@
 	font-family:
 		"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	color: #222222;
-	--popup-column-height: 318px;
+	--popup-column-height: 640px;
 }
 
 * {
@@ -574,7 +574,7 @@ body {
 
 .clipy-preferences-section h3 {
 	margin: 0 0 4px;
-	font-size: 19px;
+	font-size: 17px;
 	line-height: 1.05;
 	font-weight: 700;
 	color: #5a616c;

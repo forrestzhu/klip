@@ -2,7 +2,7 @@
 
 - Last Updated: 2026-03-05
 - Branch: `main`
-- Latest Commit: `af7fa48` (`style: unify select controls and reduce menu typography scale`)
+- Latest Commit: `ea2165f` (`fix: stabilize popup panel height and reduce menu title size`)
 - Working Tree: dirty (`src/styles.css` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
@@ -55,6 +55,7 @@
 - Clipy visual convergence follow-up tuned preferences primary tab/icon sizes, content typography scale, and snippet toolbar button proportions for closer screenshot parity while keeping single-row constraints (`src/styles.css`).
 - UI consistency follow-up now unifies dropdown/select visuals across preferences and snippets (removing native metallic style), and further scales down preferences menu typography for closer screenshot parity (`src/App.tsx`, `src/styles.css`).
 - Popup panel height behavior follow-up now locks menu-column heights to a stable baseline and keeps preview/list scroll gutters stable, preventing left-panel length jumps when hovering different snippet/menu entries (`src/styles.css`).
+- Popup snippet-hover follow-up raises fixed popup column baseline to prevent internal content compression/truncation when snippet preview opens, while keeping panel height stable (`src/styles.css`).
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
@@ -127,6 +128,7 @@
 - 2026-03-05: preferences/snippet visual-scale convergence follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-05: preferences/snippets typography + select-consistency follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-05: popup left-panel stability + menu-title size follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
+- 2026-03-05: popup snippet-hover truncation follow-up (raised fixed popup column baseline + menu title downscale) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 
 ## Quick Resume Steps
 

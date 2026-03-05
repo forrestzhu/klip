@@ -660,7 +660,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-05 - popup hover stability and menu-title downscale follow-up
 
-- Commit: `pending`
+- Commit: `ea2165f`
 - Summary:
   - Stabilized popup menu column heights by introducing a fixed column-height baseline and matching preview-pane height, so left-panel length no longer changes when hovering different menu/snippet entries (`src/styles.css`).
   - Added stable scrollbar gutter behavior for popup columns and snippet list to prevent hover-triggered layout jitter (`src/styles.css`).
@@ -671,3 +671,17 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - Final visual parity still depends on manual side-by-side verification in macOS runtime.
+
+## 2026-03-05 - popup snippet-hover truncation fix and title downscale follow-up
+
+- Commit: `pending`
+- Summary:
+  - Raised fixed popup column-height baseline from `318px` to `640px` to prevent internal content compression/truncation when snippet preview opens on hover (`src/styles.css`).
+  - Kept fixed-height model to preserve stable outer popup dimensions while avoiding per-entry visual clipping (`src/styles.css`).
+  - Reduced preferences section title size one more step to address remaining oversized "菜单" title feedback (`src/styles.css`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - If popup still appears over-tall in specific data sets, next step should switch from static height constant to runtime-measured baseline per popup content.
