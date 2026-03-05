@@ -250,8 +250,8 @@ body {
 .clipy-editor-toolbar {
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 12px 18px 10px;
+	gap: 8px;
+	padding: 10px 14px 8px;
 	border-bottom: 1px solid #c6c8cc;
 	background: #ebebed;
 }
@@ -261,14 +261,14 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 4px;
-	min-width: 74px;
-	padding: 6px 9px;
+	gap: 2px;
+	min-width: 54px;
+	padding: 4px 5px;
 	border: 1px solid #b8bcc2;
 	border-radius: 5px;
 	background: #ebebed;
 	color: #525866;
-	font-size: 11px;
+	font-size: 10px;
 	font-weight: 600;
 	cursor: pointer;
 }
@@ -278,7 +278,7 @@ body {
 }
 
 .clipy-toolbar-icon {
-	font-size: 19px;
+	font-size: 15px;
 	line-height: 1;
 	font-weight: 400;
 }
@@ -468,10 +468,12 @@ body {
 }
 
 .clipy-preferences-tabs {
-	display: grid;
-	grid-template-columns: repeat(7, minmax(0, 1fr));
+	display: flex;
 	align-items: flex-start;
-	gap: 8px;
+	flex-wrap: nowrap;
+	gap: 12px;
+	overflow-x: auto;
+	padding-bottom: 2px;
 }
 
 .clipy-preferences-tab {
@@ -482,11 +484,13 @@ body {
 	flex-direction: column;
 	align-items: center;
 	gap: 4px;
-	font-size: 12px;
+	width: 44px;
+	flex: 0 0 44px;
+	font-size: 10px;
 	font-weight: 700;
 	color: #9b9ca0;
 	cursor: pointer;
-	min-width: 0;
+	white-space: nowrap;
 }
 
 .clipy-preferences-tab:hover {
@@ -494,15 +498,15 @@ body {
 }
 
 .clipy-preferences-tab-icon {
-	width: 100%;
-	height: 38px;
+	width: 44px;
+	height: 32px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	border: 1px solid #b8bcc2;
 	border-radius: 6px;
 	background: #efeff1;
-	font-size: 24px;
+	font-size: 20px;
 	line-height: 1;
 	font-weight: 400;
 	color: #9b9ca0;
@@ -519,7 +523,7 @@ body {
 }
 
 .clipy-preferences-content {
-	margin: 24px 0 0 96px;
+	margin: 18px 0 0 54px;
 	max-width: 860px;
 }
 
@@ -532,7 +536,7 @@ body {
 
 .clipy-preferences-section h3 {
 	margin: 0 0 4px;
-	font-size: 44px;
+	font-size: 30px;
 	line-height: 1.05;
 	font-weight: 700;
 	color: #5a616c;
@@ -541,23 +545,23 @@ body {
 .clipy-checkbox-row {
 	display: inline-flex;
 	align-items: center;
-	gap: 11px;
-	font-size: 20px;
+	gap: 8px;
+	font-size: 13px;
 	font-weight: 600;
 	color: #4f5560;
 }
 
 .clipy-checkbox-row input {
-	width: 24px;
-	height: 24px;
+	width: 16px;
+	height: 16px;
 }
 
 .clipy-form-row {
 	display: flex;
 	align-items: center;
-	gap: 14px;
+	gap: 10px;
 	flex-wrap: wrap;
-	font-size: 20px;
+	font-size: 13px;
 	font-weight: 600;
 	color: #4f5661;
 }
@@ -567,17 +571,17 @@ body {
 }
 
 .clipy-number-input {
-	max-width: 130px;
+	max-width: 74px;
 	text-align: right;
-	font-size: 40px;
+	font-size: 20px;
 	line-height: 1;
-	padding: 2px 8px;
-	height: 56px;
+	padding: 2px 6px;
+	height: 32px;
 }
 
 .clipy-inline-note {
 	margin: 0;
-	font-size: 15px;
+	font-size: 12px;
 	color: #6a707b;
 }
 
@@ -621,11 +625,11 @@ body {
 }
 
 .clipy-hotkey-input {
-	max-width: 500px;
-	font-size: 26px;
+	max-width: 360px;
+	font-size: 15px;
 	letter-spacing: 0.4px;
 	border-radius: 999px;
-	padding: 8px 18px;
+	padding: 7px 14px;
 }
 
 .clipy-check-update-button {
@@ -671,12 +675,12 @@ body {
 	}
 
 	.clipy-preferences-section h3 {
-		font-size: 34px;
+		font-size: 26px;
 	}
 
 	.clipy-form-row,
 	.clipy-checkbox-row {
-		font-size: 16px;
+		font-size: 14px;
 	}
 
 	.clipy-hotkey-input {

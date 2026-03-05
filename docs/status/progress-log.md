@@ -619,7 +619,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-05 - preferences top-level tab single-row fix
 
-- Commit: `pending`
+- Commit: `a033086`
 - Summary:
   - Fixed preferences top-level menu wrapping issue by enforcing a fixed single-row 7-column tab layout so all primary tabs stay on one line in the standalone preferences window (`src/styles.css`).
   - Moved the inline fallback "返回菜单" action outside the tab container to avoid occupying one tab slot and causing row wrapping in preview mode (`src/App.tsx`).
@@ -629,3 +629,17 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - Pixel-level icon/button spacing still needs manual review against `docs/clipy_ui/settings*.png` on macOS runtime.
+
+## 2026-03-05 - clipy visual-scale convergence (preferences tabs + snippet toolbar)
+
+- Commit: `pending`
+- Summary:
+  - Refined preferences top-level tab visuals from equal-width stretch layout to fixed-size icon-tab buttons while keeping strict single-row behavior, matching Clipy screenshot proportions more closely (`src/styles.css`).
+  - Tuned preferences content visual scale (section heading, row labels, checkbox size, hotkey/number input dimensions, and spacing) to reduce oversized rendering and align better with `settings*.png` baselines (`src/styles.css`).
+  - Tuned snippet editor toolbar button/icon sizing and spacing to better match `snippet_edit.png` top toolbar proportions (`src/styles.css`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Pixel-perfect icon glyph style still differs from native macOS symbols; only spacing/scale alignment is addressed in this iteration.
