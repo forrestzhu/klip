@@ -646,7 +646,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-05 - ui consistency follow-up (menu typography + select styling)
 
-- Commit: `pending`
+- Commit: `af7fa48`
 - Summary:
   - Further reduced preferences menu-tab typography scale (section title, row labels, checkbox rows, inline notes, number/hotkey inputs) to address oversized text feedback and improve screenshot parity (`src/styles.css`).
   - Added unified custom `select` control styling (`.clipy-select`) to remove native metallic gradient look and make dropdown visuals consistent with other form controls (`src/styles.css`).
@@ -657,3 +657,17 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - Manual macOS visual verification is still required for final font-size parity and select popup behavior consistency.
+
+## 2026-03-05 - popup hover stability and menu-title downscale follow-up
+
+- Commit: `pending`
+- Summary:
+  - Stabilized popup menu column heights by introducing a fixed column-height baseline and matching preview-pane height, so left-panel length no longer changes when hovering different menu/snippet entries (`src/styles.css`).
+  - Added stable scrollbar gutter behavior for popup columns and snippet list to prevent hover-triggered layout jitter (`src/styles.css`).
+  - Reduced preferences section title size again to address "菜单" title oversizing feedback (`src/styles.css`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Final visual parity still depends on manual side-by-side verification in macOS runtime.
