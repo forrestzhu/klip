@@ -146,6 +146,9 @@ export function App() {
 	const [snippetTitleDraft, setSnippetTitleDraft] = useState("");
 	const [snippetTextDraft, setSnippetTextDraft] = useState("");
 	const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
+	const [popupStableColumnHeight, setPopupStableColumnHeight] = useState<
+		number | null
+	>(null);
 	const [preferencesTab, setPreferencesTab] =
 		useState<PreferencesTab>("general");
 	const [supportedClipboardTypes, setSupportedClipboardTypes] = useState<
@@ -622,6 +625,65 @@ export function App() {
 			popupPanelElement: popupPanelRef.current,
 		});
 	}, [isMainPopupWindow, panelView]);
+
+	useEffect(() => {
+		if (panelView !== "menu") {
+			setPopupStableColumnHeight(null);
+		}
+	}, [panelView]);
+
+	useEffect(() => {
+		if (panelView !== "menu") {
+			return;
+		}
+		if (popupColumns.length === 0) {
+			return;
+		}
+
+		const panelElement = popupPanelRef.current;
+		if (!panelElement) {
+			return;
+		}
+
+		const measurePopupColumnHeight = () => {
+			const popupLists = Array.from(
+				panelElement.querySelectorAll<HTMLElement>(".popup-list"),
+			);
+			const popupPreview = panelElement.querySelector<HTMLElement>(
+				".popup-preview-panel",
+			);
+			const measuredHeights = popupLists.map((element) =>
+				Math.ceil(element.scrollHeight),
+			);
+
+			if (popupPreview) {
+				measuredHeights.push(Math.ceil(popupPreview.scrollHeight));
+			}
+
+			const measuredMax = Math.max(0, ...measuredHeights);
+			if (measuredMax <= 0) {
+				return;
+			}
+
+			const boundedHeight = clampNumber(measuredMax, 260, 760);
+			setPopupStableColumnHeight((current) => {
+				if (current === null) {
+					return boundedHeight;
+				}
+				return Math.max(current, boundedHeight);
+			});
+		};
+
+		measurePopupColumnHeight();
+		const timer = setTimeout(
+			measurePopupColumnHeight,
+			selectedSnippetPreview ? 16 : 0,
+		);
+
+		return () => {
+			clearTimeout(timer);
+		};
+	}, [panelView, popupColumns, selectedSnippetPreview]);
 
 	useEffect(() => {
 		if (
@@ -1234,6 +1296,13 @@ export function App() {
 	};
 
 	const renderPopupPanel = () => {
+		const popupColumnStyle =
+			popupStableColumnHeight === null
+				? undefined
+				: {
+						height: `${popupStableColumnHeight}px`,
+					};
+
 		return (
 			<section
 				className="popup-panel"
@@ -1251,6 +1320,7 @@ export function App() {
 										: `popup-column-${popupContext.path.slice(0, depth).join(".")}`
 								}
 								className="popup-list"
+								style={popupColumnStyle}
 							>
 								{entries.map((entry, index) => {
 									if (entry.kind === "separator") {
@@ -1320,7 +1390,7 @@ export function App() {
 						);
 					})}
 					{selectedSnippetPreview ? (
-						<aside className="popup-preview-panel">
+						<aside className="popup-preview-panel" style={popupColumnStyle}>
 							{selectedSnippetPreview}
 						</aside>
 					) : null}
@@ -2064,8 +2134,9 @@ async function syncDesktopWindowSize(
 		if (panelView === "menu") {
 			const panelElement = options?.popupPanelElement;
 			if (panelElement) {
-				const measuredWidth = Math.ceil(panelElement.scrollWidth);
-				const measuredHeight = Math.ceil(panelElement.scrollHeight);
+				const panelRect = panelElement.getBoundingClientRect();
+				const measuredWidth = Math.ceil(panelRect.width);
+				const measuredHeight = Math.ceil(panelRect.height);
 				if (measuredWidth > 0 && measuredHeight > 0) {
 					nextSize = {
 						width: clampNumber(measuredWidth + 2, 200, 1400),

@@ -2,7 +2,6 @@
 	font-family:
 		"SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 	color: #222222;
-	--popup-column-height: 640px;
 }
 
 * {
@@ -89,7 +88,7 @@ body {
 
 .popup-columns {
 	display: inline-flex;
-	align-items: stretch;
+	align-items: flex-start;
 	gap: 0;
 }
 
@@ -99,8 +98,6 @@ body {
 	padding: 4px;
 	min-width: 286px;
 	max-width: 286px;
-	min-height: var(--popup-column-height);
-	max-height: var(--popup-column-height);
 	background: rgba(246, 246, 246, 0.97);
 	border: 1px solid #c6c6c6;
 	border-radius: 10px;
@@ -198,8 +195,6 @@ body {
 .popup-preview-panel {
 	min-width: 306px;
 	max-width: 340px;
-	min-height: var(--popup-column-height);
-	max-height: var(--popup-column-height);
 	padding: 10px 12px;
 	background: rgba(244, 244, 244, 0.96);
 	border: 1px solid #cfcfcf;
@@ -574,7 +569,7 @@ body {
 
 .clipy-preferences-section h3 {
 	margin: 0 0 4px;
-	font-size: 17px;
+	font-size: 15px;
 	line-height: 1.05;
 	font-weight: 700;
 	color: #5a616c;

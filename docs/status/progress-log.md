@@ -674,7 +674,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-05 - popup snippet-hover truncation fix and title downscale follow-up
 
-- Commit: `pending`
+- Commit: `2a6fd45`
 - Summary:
   - Raised fixed popup column-height baseline from `318px` to `640px` to prevent internal content compression/truncation when snippet preview opens on hover (`src/styles.css`).
   - Kept fixed-height model to preserve stable outer popup dimensions while avoiding per-entry visual clipping (`src/styles.css`).
@@ -685,3 +685,17 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - If popup still appears over-tall in specific data sets, next step should switch from static height constant to runtime-measured baseline per popup content.
+
+## 2026-03-06 - popup root-cause stabilization (runtime measure + visible resize)
+
+- Commit: `pending`
+- Summary:
+  - Replaced static popup height constant strategy with runtime-measured stable popup column height (session max), then applied the measured height consistently to popup lists and preview panel (`src/App.tsx`).
+  - Updated desktop popup window sizing to use visible panel bounding-box measurements (`getBoundingClientRect`) instead of `scrollHeight`, avoiding overflow-content-driven resize distortion (`src/App.tsx`).
+  - Removed static CSS popup height variable and conflicting fixed-height constraints to let runtime measurement control column sizing without internal clipping regressions (`src/styles.css`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Need manual desktop verification for extreme long-preview samples to decide whether session-max height should be capped lower for ergonomics.
