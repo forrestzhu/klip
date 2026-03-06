@@ -1,4 +1,5 @@
 import {
+	DEFAULT_SNIPPET_ALIAS_MAX_LENGTH,
 	DEFAULT_SNIPPET_TITLE_MAX_LENGTH,
 	DEFAULT_SNIPPETS_FOLDER_NAME,
 } from "./snippet.constants";
@@ -50,6 +51,35 @@ export function normalizeSnippetText(
 
 	const trimmed = value.trim();
 	return trimmed.length > 0 ? value : null;
+}
+
+export function normalizeSnippetAlias(
+	value: string | null | undefined,
+): string | null {
+	if (typeof value !== "string") {
+		return null;
+	}
+
+	let alias = value.trim().toLowerCase();
+	if (alias.startsWith(";")) {
+		alias = alias.slice(1).trim();
+	}
+	if (alias.length === 0) {
+		return null;
+	}
+
+	const normalizedAlias = alias
+		.replace(/\s+/g, "-")
+		.replace(/[^a-z0-9_-]/g, "");
+	if (normalizedAlias.length === 0) {
+		return null;
+	}
+
+	if (normalizedAlias.length > DEFAULT_SNIPPET_ALIAS_MAX_LENGTH) {
+		return normalizedAlias.slice(0, DEFAULT_SNIPPET_ALIAS_MAX_LENGTH);
+	}
+
+	return normalizedAlias;
 }
 
 export function createSnippetId(): string {

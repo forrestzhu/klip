@@ -4,6 +4,7 @@ import {
 	deriveSnippetTitle,
 	isNonEmptyText,
 	normalizeFolderName,
+	normalizeSnippetAlias,
 	normalizeSnippetText,
 	normalizeSnippetTitle,
 } from "../src/features/snippets";
@@ -31,6 +32,12 @@ describe("snippetUtils", () => {
 	it("keeps original snippet text when capturable", () => {
 		expect(normalizeSnippetText("  keep me  ")).toBe("  keep me  ");
 		expect(normalizeSnippetText("   ")).toBeNull();
+	});
+
+	it("normalizes snippet alias values", () => {
+		expect(normalizeSnippetAlias(" ;Team_Signature ")).toBe("team_signature");
+		expect(normalizeSnippetAlias("my alias!!")).toBe("my-alias");
+		expect(normalizeSnippetAlias(" ; ")).toBeNull();
 	});
 
 	it("derives a bounded title from long text", () => {

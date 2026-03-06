@@ -847,3 +847,36 @@ This file is append-only. Add one entry after each completed iteration.
     keyboard usability (`↑/↓/Enter`) in real popup windows.
   - Query-mode snippet ranking is currently insertion-order match; alias/exact
     ranking can be added later if UX feedback requires tighter prioritization.
+
+## 2026-03-06 - snippet alias trigger baseline for popup quick paste
+
+- Commit: `pending`
+- Summary:
+  - Added optional snippet alias support in domain model and normalization
+    utilities, including canonical lowercase alias parsing and `;`-prefix
+    handling (`src/features/snippets/snippet.types.ts`,
+    `src/features/snippets/snippetUtils.ts`,
+    `src/features/snippets/snippetRepository.ts`).
+  - Added snippet editor alias input and save-time validation/conflict feedback,
+    and extended snippet search fields to include alias lookup
+    (`src/App.tsx`).
+  - Extended popup query mode to support `;alias` search semantics and alias
+    relevance ordering for flattened snippet results
+    (`src/features/menu/popupMenuModel.ts`).
+  - Added/updated tests for alias normalization, repository behavior, storage
+    persistence, and popup alias-query behavior
+    (`tests/snippetUtils.test.ts`, `tests/snippetRepository.test.ts`,
+    `tests/snippetStorage.test.ts`, `tests/popupMenuModel.test.ts`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - typecheck: pass (`npm run typecheck`)
+  - test: pass (`npm run test`, 81 tests)
+  - build: pass (`npm run build`)
+  - cargo:check: skip (frontend-only scope)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Alias trigger currently relies on popup search (`;alias`) and does not yet
+    provide a standalone global alias command path.
+  - Interactive desktop verification is still required for alias-search UX and
+    direct-paste reliability across macOS/Windows foreground apps.

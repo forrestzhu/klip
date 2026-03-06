@@ -43,6 +43,7 @@ import {
 import {
 	createBrowserSnippetsStorage,
 	DEFAULT_SNIPPETS_FOLDER_ID,
+	normalizeSnippetAlias,
 	type SnippetFolder,
 	type SnippetItem,
 	SnippetRepository,
@@ -145,6 +146,7 @@ export function App() {
 	const [actionMessage, setActionMessage] = useState<string | null>(null);
 	const [folderNameDraft, setFolderNameDraft] = useState("");
 	const [snippetTitleDraft, setSnippetTitleDraft] = useState("");
+	const [snippetAliasDraft, setSnippetAliasDraft] = useState("");
 	const [snippetTextDraft, setSnippetTextDraft] = useState("");
 	const [editingSnippetId, setEditingSnippetId] = useState<string | null>(null);
 	const [popupStableColumnHeight, setPopupStableColumnHeight] = useState<
@@ -193,6 +195,7 @@ export function App() {
 			}
 
 			return (
+				(item.alias ?? "").toLowerCase().includes(keyword) ||
 				item.title.toLowerCase().includes(keyword) ||
 				item.text.toLowerCase().includes(keyword)
 			);
@@ -1017,6 +1020,29 @@ export function App() {
 			return;
 		}
 
+		const hasAliasInput = snippetAliasDraft.trim().length > 0;
+		const normalizedAlias = normalizeSnippetAlias(snippetAliasDraft);
+		if (hasAliasInput && normalizedAlias === null) {
+			setActionMessage(
+				"Invalid snippet alias. Use letters, numbers, '_' or '-'.",
+			);
+			return;
+		}
+		if (normalizedAlias !== null) {
+			const aliasConflict = snippetItems.find((snippet) => {
+				return (
+					(snippet.alias ?? null) === normalizedAlias &&
+					snippet.id !== editingSnippetId
+				);
+			});
+			if (aliasConflict) {
+				setActionMessage(
+					`Alias ;${normalizedAlias} is already used by "${aliasConflict.title}".`,
+				);
+				return;
+			}
+		}
+
 		const folderId =
 			selectedSnippetFolderId === ALL_SNIPPET_FOLDERS_VALUE
 				? DEFAULT_SNIPPETS_FOLDER_ID
@@ -1027,6 +1053,7 @@ export function App() {
 				id: editingSnippetId,
 				text: snippetTextDraft,
 				title: snippetTitleDraft,
+				alias: snippetAliasDraft,
 				folderId,
 			});
 			if (updated === null) {
@@ -1039,6 +1066,7 @@ export function App() {
 			const created = await runtime.snippetRepository.addSnippet({
 				text: snippetTextDraft,
 				title: snippetTitleDraft,
+				alias: snippetAliasDraft,
 				folderId,
 			});
 			if (created === null) {
@@ -1052,6 +1080,7 @@ export function App() {
 		setSnippetItems(runtime.snippetRepository.getSnippets());
 		setSnippetFolders(runtime.snippetRepository.getFolders());
 		setSnippetTitleDraft("");
+		setSnippetAliasDraft("");
 		setSnippetTextDraft("");
 		setEditingSnippetId(null);
 	};
@@ -1060,6 +1089,7 @@ export function App() {
 		setPanelView("snippet-editor");
 		setEditingSnippetId(snippet.id);
 		setSnippetTitleDraft(snippet.title);
+		setSnippetAliasDraft(snippet.alias ?? "");
 		setSnippetTextDraft(snippet.text);
 		setSelectedSnippetFolderId(snippet.folderId);
 	};
@@ -1088,6 +1118,7 @@ export function App() {
 		if (editingSnippetId === snippet.id) {
 			setEditingSnippetId(null);
 			setSnippetTitleDraft("");
+			setSnippetAliasDraft("");
 			setSnippetTextDraft("");
 		}
 
@@ -1370,7 +1401,7 @@ export function App() {
 						aria-label="搜索历史和片断"
 						autoComplete="off"
 						className="popup-search-input"
-						placeholder="搜索历史和片断..."
+						placeholder="搜索历史和片断（;别名）..."
 						type="text"
 						value={popupQuery}
 						onChange={(event) => {
@@ -1508,6 +1539,7 @@ export function App() {
 						onClick={() => {
 							setEditingSnippetId(null);
 							setSnippetTitleDraft("");
+							setSnippetAliasDraft("");
 							setSnippetTextDraft("");
 						}}
 					>
@@ -1596,7 +1628,7 @@ export function App() {
 							id="snippet-search"
 							autoComplete="off"
 							className="clipy-input"
-							placeholder="按标题或内容搜索..."
+							placeholder="按标题、内容或 ;别名 搜索..."
 							type="text"
 							value={snippetQuery}
 							onChange={(event) => {
@@ -1681,6 +1713,7 @@ export function App() {
 										>
 											<div className="clipy-snippet-title">{item.title}</div>
 											<div className="clipy-snippet-meta">
+												{item.alias ? `;${item.alias} · ` : ""}
 												{folderNameById.get(item.folderId) ?? "General"} ·{" "}
 												{new Date(item.updatedAt).toLocaleString()}
 											</div>
@@ -1732,6 +1765,20 @@ export function App() {
 							}}
 						/>
 
+						<label className="clipy-field-label" htmlFor="snippet-alias-input">
+							别名（可选）
+						</label>
+						<input
+							id="snippet-alias-input"
+							className="clipy-input"
+							placeholder="例如：sig（可用 ;sig 快速搜索）"
+							type="text"
+							value={snippetAliasDraft}
+							onChange={(event) => {
+								setSnippetAliasDraft(event.currentTarget.value);
+							}}
+						/>
+
 						<label className="clipy-field-label" htmlFor="snippet-text-input">
 							内容
 						</label>
@@ -1761,6 +1808,7 @@ export function App() {
 								onClick={() => {
 									setEditingSnippetId(null);
 									setSnippetTitleDraft("");
+									setSnippetAliasDraft("");
 									setSnippetTextDraft("");
 								}}
 							>

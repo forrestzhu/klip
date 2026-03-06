@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-06
 - Branch: `main`
-- Latest Commit: `7aac9e1` (`feat: add desktop event-driven clipboard listener baseline`)
-- Working Tree: dirty (popup search baseline and status docs update in progress)
+- Latest Commit: `939f5e0` (`feat: improve popup search flow and flatten query results`)
+- Working Tree: dirty (snippet alias-trigger baseline and status docs update in progress)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -44,6 +44,7 @@
 - Clipy-style popup hierarchy baseline added: compact menu now shows `History`/`Snippets` submenu structure plus `Edit Snippets...` and `Preferences...`, with history default capped to 30 and grouped as `1-10`, `11-20`, `21-30` (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/features/history/history.constants.ts`).
 - Popup keyboard navigation now supports `↑/↓` selection and `←/→` hierarchical navigation, with `Enter` selecting/pasting at leaf items (`src/App.tsx`).
 - Popup search baseline added: compact menu now includes a real-time search input, with query-mode flattened history/snippet results (directly selectable without entering submenus), keyboard navigation from the search box (`↑/↓/←/→/Enter`), and explicit empty-state labels for unmatched history/snippet queries (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/styles.css`, `tests/popupMenuModel.test.ts`).
+- Snippet alias trigger baseline added: snippets now support optional normalized alias metadata, editor UI supports alias input/validation/conflict feedback, and popup/snippet search supports `;alias` lookup with query-mode ranking for faster direct paste (`src/features/snippets`, `src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `tests/snippet*.test.ts`, `tests/popupMenuModel.test.ts`).
 - Editor/preferences split baseline added: popup stays compact by default; snippet editing and settings move to expanded panels and runtime window resize targets (`src/App.tsx`, `src/styles.css`, `src-tauri/tauri.conf.json`).
 - Added three-window Clipy parity design spec for next implementation iteration (`docs/plans/2026-03-04-three-window-clipy-parity-design.md`).
 - Popup parity follow-up implemented: removed `History/Snippets` wrapper nodes, added section headers + separators + `清除历史/编辑片断.../偏好设置.../退出 Klip`, and added multi-column cascading submenu with snippet preview pane (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/styles.css`).
@@ -72,6 +73,7 @@
 - Direct paste path is best-effort and still needs manual verification for reliability/permissions on macOS and Windows foreground apps (US-006/US-008 hardening gap).
 - History capture now has desktop event-driven listener + polling fallback, but interactive macOS/Windows reliability verification evidence is still pending (US-001 hardening gap).
 - Popup search (including query-mode flattened direct-paste flow) is now implemented, but interactive latency/usability verification evidence is still pending for larger history datasets on desktop runtime (US-005 hardening gap).
+- Snippet alias lookup baseline is implemented in popup search, but global alias trigger path and cross-platform interactive verification evidence are still pending (US-008 remaining gap).
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
@@ -84,7 +86,7 @@
 
 ## Next Focus
 
-1. Run macOS interactive verification for popup hierarchy + popup search flow, paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
+1. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) flow, paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
 2. Run screenshot-by-screenshot parity review for `snippet_edit.png` and `settings*.png` and capture remaining pixel diffs.
 3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
@@ -143,6 +145,7 @@
 - 2026-03-06: desktop smoke preflight rechecked on event-driven listener baseline via `npm run dev:desktop` (log: `/tmp/klip-dev-desktop-event-listener-20260306.log`, includes `VITE v7.3.1` and `Running target/debug/klip-tauri`).
 - 2026-03-06: popup search baseline follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (78 tests), and `npm run build`.
 - 2026-03-06: popup search flatten follow-up (query-mode direct selectable results) validated via `npm run format`, `npm run lint`, `npm run test` (79 tests), and `npm run build`.
+- 2026-03-06: snippet alias-trigger baseline follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (81 tests), and `npm run build`.
 
 ## Quick Resume Steps
 

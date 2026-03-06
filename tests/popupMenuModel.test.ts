@@ -157,6 +157,7 @@ describe("popup menu model", () => {
 					id: "snippet-2",
 					title: "Work update",
 					text: "Status update",
+					alias: "wup",
 					folderId: "folder-work",
 					createdAt: "2026-03-04T10:00:00.000Z",
 					updatedAt: "2026-03-04T10:00:00.000Z",
@@ -178,6 +179,56 @@ describe("popup menu model", () => {
 					entry.id === "snippet-search-item-snippet-2",
 			),
 		).toBe(true);
+	});
+
+	it("supports alias-only lookup with ;prefix in popup query mode", () => {
+		const rootEntries = buildPopupMenuRootEntries({
+			historyItems: buildHistoryItems(3),
+			snippetFolders: [
+				{
+					id: "folder-general",
+					name: "General",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+			],
+			snippetItems: [
+				{
+					id: "snippet-a",
+					title: "Alpha",
+					text: "alpha text",
+					alias: "sig-a",
+					folderId: "folder-general",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+				{
+					id: "snippet-b",
+					title: "Beta",
+					text: "beta text",
+					alias: "sig-b",
+					folderId: "folder-general",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+			],
+			query: ";sig-b",
+		});
+
+		expect(
+			rootEntries.some(
+				(entry) =>
+					entry.kind === "snippet-item" &&
+					entry.id === "snippet-search-item-snippet-b",
+			),
+		).toBe(true);
+		expect(
+			rootEntries.some(
+				(entry) =>
+					entry.kind === "snippet-item" &&
+					entry.id === "snippet-search-item-snippet-a",
+			),
+		).toBe(false);
 	});
 
 	it("shows empty labels when popup query has no history/snippet match", () => {

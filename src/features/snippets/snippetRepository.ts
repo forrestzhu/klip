@@ -13,6 +13,7 @@ import {
 	createSnippetId,
 	deriveSnippetTitle,
 	normalizeFolderName,
+	normalizeSnippetAlias,
 	normalizeSnippetText,
 	normalizeSnippetTitle,
 } from "./snippetUtils";
@@ -26,6 +27,7 @@ interface SnippetRepositoryOptions {
 interface AddSnippetInput {
 	text: string;
 	title?: string | null;
+	alias?: string | null;
 	folderId?: string | null;
 }
 
@@ -33,6 +35,7 @@ interface UpdateSnippetInput {
 	id: string;
 	text?: string | null;
 	title?: string | null;
+	alias?: string | null;
 	folderId?: string | null;
 }
 
@@ -111,6 +114,7 @@ export class SnippetRepository {
 				}
 
 				return (
+					(snippet.alias ?? "").toLowerCase().includes(keyword) ||
 					snippet.title.toLowerCase().includes(keyword) ||
 					snippet.text.toLowerCase().includes(keyword)
 				);
@@ -217,6 +221,7 @@ export class SnippetRepository {
 			id: this.createId(),
 			title: normalizeSnippetTitle(input.title, normalizedText),
 			text: input.text,
+			alias: normalizeSnippetAlias(input.alias),
 			folderId:
 				this.resolveFolderId(input.folderId) ?? DEFAULT_SNIPPETS_FOLDER_ID,
 			createdAt: nowIso,
@@ -259,9 +264,14 @@ export class SnippetRepository {
 				nextTitle = deriveSnippetTitle(nextText);
 			}
 		}
+		let nextAlias = snippet.alias ?? null;
+		if (typeof input.alias !== "undefined") {
+			nextAlias = normalizeSnippetAlias(input.alias);
+		}
 
 		snippet.text = nextText;
 		snippet.title = nextTitle;
+		snippet.alias = nextAlias;
 		snippet.folderId = nextFolderId;
 		snippet.updatedAt = this.now().toISOString();
 
@@ -382,6 +392,7 @@ export class SnippetRepository {
 				id: snippet.id,
 				title: normalizeSnippetTitle(snippet.title, text),
 				text: snippet.text,
+				alias: normalizeSnippetAlias(snippet.alias),
 				folderId: folderIds.has(snippet.folderId)
 					? snippet.folderId
 					: DEFAULT_SNIPPETS_FOLDER_ID,

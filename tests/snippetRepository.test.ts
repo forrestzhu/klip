@@ -55,11 +55,13 @@ describe("SnippetRepository", () => {
 		const folder = await repository.addFolder("Engineering");
 		const snippet = await repository.addSnippet({
 			text: "hello world",
+			alias: ";hello",
 			folderId: folder.id,
 		});
 
 		expect(snippet?.folderId).toBe(folder.id);
 		expect(snippet?.title).toBe("hello world");
+		expect(snippet?.alias).toBe("hello");
 
 		const reloaded = new SnippetRepository({ storage });
 		await reloaded.load();
@@ -109,19 +111,26 @@ describe("SnippetRepository", () => {
 		});
 
 		await repository.load();
-		const snippet = await repository.addSnippet({ text: "deploy checklist" });
+		const snippet = await repository.addSnippet({
+			text: "deploy checklist",
+			alias: " ;Deploy_Tag ",
+		});
 		expect(snippet).not.toBeNull();
 		if (!snippet) {
 			throw new Error("Expected snippet to be created");
 		}
+		expect(snippet.alias).toBe("deploy_tag");
 
 		const updated = await repository.updateSnippet({
 			id: snippet.id,
 			text: "deploy checklist v2",
+			alias: "release-v2",
 		});
 		expect(updated?.text).toBe("deploy checklist v2");
+		expect(updated?.alias).toBe("release-v2");
 
 		expect(repository.searchSnippets("v2")).toHaveLength(1);
+		expect(repository.searchSnippets("release-v2")).toHaveLength(1);
 		expect(repository.searchSnippets("missing")).toHaveLength(0);
 
 		expect(await repository.deleteSnippet(snippet.id)).toBe(true);
@@ -189,6 +198,7 @@ describe("SnippetRepository", () => {
 					id: "snippet-1",
 					title: " ",
 					text: "runbook",
+					alias: " ;TEAM_RUNBOOK ",
 					folderId: "missing-folder",
 					createdAt: "2026-03-03T00:00:00.000Z",
 					updatedAt: "2026-03-03T00:00:00.000Z",
@@ -206,6 +216,7 @@ describe("SnippetRepository", () => {
 		).toBe(true);
 		expect(snippets[0]?.folderId).toBe(DEFAULT_SNIPPETS_FOLDER_ID);
 		expect(snippets[0]?.title).toBe("runbook");
+		expect(snippets[0]?.alias).toBe("team_runbook");
 	});
 });
 

@@ -1,6 +1,10 @@
 import { toClipboardPreview } from "../../utils/toClipboardPreview";
 import type { HistoryItem } from "../history";
-import type { SnippetFolder, SnippetItem } from "../snippets";
+import {
+	normalizeSnippetAlias,
+	type SnippetFolder,
+	type SnippetItem,
+} from "../snippets";
 
 export const POPUP_HISTORY_LIMIT = 30;
 export const POPUP_HISTORY_GROUP_SIZE = 10;
@@ -121,6 +125,7 @@ function buildSearchPopupMenuEntries(
 	const snippetEntries = buildSnippetSearchEntries(
 		input.snippetFolders,
 		filterSnippetItemsByQuery(input.snippetItems, query),
+		query,
 	);
 
 	const entries: PopupMenuEntry[] = [
@@ -292,6 +297,7 @@ function buildSnippetFolderEntries(
 function buildSnippetSearchEntries(
 	snippetFolders: SnippetFolder[],
 	snippetItems: SnippetItem[],
+	query: string,
 ): PopupMenuEntry[] {
 	if (snippetItems.length === 0) {
 		return [];
@@ -302,15 +308,26 @@ function buildSnippetSearchEntries(
 		folderNameById.set(folder.id, folder.name);
 	}
 
-	const limitedSnippetItems = snippetItems.slice(0, POPUP_HISTORY_LIMIT);
+	const aliasQueryToken = extractAliasQueryToken(query);
+	const rankedSnippetItems = [...snippetItems].sort((left, right) => {
+		return (
+			getAliasMatchScore(right.alias ?? null, aliasQueryToken) -
+			getAliasMatchScore(left.alias ?? null, aliasQueryToken)
+		);
+	});
+	const limitedSnippetItems = rankedSnippetItems.slice(0, POPUP_HISTORY_LIMIT);
 	return limitedSnippetItems.map((snippet, index) => {
 		const folderName = folderNameById.get(snippet.folderId) ?? "General";
+		const aliasDetail =
+			typeof snippet.alias === "string" && snippet.alias.length > 0
+				? `;${snippet.alias} · `
+				: "";
 		return {
 			id: `snippet-search-item-${snippet.id}`,
 			kind: "snippet-item",
 			label: `${index + 1}. ${toClipboardPreview(snippet.title, 54)}`,
 			text: snippet.text,
-			detail: `${folderName} · ${toClipboardPreview(snippet.text, 64)}`,
+			detail: `${aliasDetail}${folderName} · ${toClipboardPreview(snippet.text, 64)}`,
 		} satisfies PopupSnippetItemEntry;
 	});
 }
@@ -334,12 +351,50 @@ function filterSnippetItemsByQuery(
 	snippetItems: SnippetItem[],
 	query: string,
 ): SnippetItem[] {
+	const aliasQueryToken = extractAliasQueryToken(query);
+	if (aliasQueryToken !== null) {
+		return snippetItems.filter((item) => {
+			const alias = item.alias ?? "";
+			return alias.includes(aliasQueryToken);
+		});
+	}
+
 	return snippetItems.filter((item) => {
 		return (
+			(item.alias ?? "").toLowerCase().includes(query) ||
 			item.title.toLowerCase().includes(query) ||
 			item.text.toLowerCase().includes(query)
 		);
 	});
+}
+
+function extractAliasQueryToken(query: string): string | null {
+	if (!query.startsWith(";")) {
+		return null;
+	}
+
+	return normalizeSnippetAlias(query);
+}
+
+function getAliasMatchScore(
+	rawAlias: string | null,
+	aliasQueryToken: string | null,
+): number {
+	if (aliasQueryToken === null || typeof rawAlias !== "string") {
+		return 0;
+	}
+
+	if (rawAlias === aliasQueryToken) {
+		return 3;
+	}
+	if (rawAlias.startsWith(aliasQueryToken)) {
+		return 2;
+	}
+	if (rawAlias.includes(aliasQueryToken)) {
+		return 1;
+	}
+
+	return 0;
 }
 
 function createSectionEntry(id: string, label: string): PopupSectionEntry {

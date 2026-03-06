@@ -1,4 +1,5 @@
 export {
+	DEFAULT_SNIPPET_ALIAS_MAX_LENGTH,
 	DEFAULT_SNIPPET_TITLE_MAX_LENGTH,
 	DEFAULT_SNIPPETS_FOLDER_ID,
 	DEFAULT_SNIPPETS_FOLDER_NAME,
@@ -20,6 +21,7 @@ export {
 	deriveSnippetTitle,
 	isNonEmptyText,
 	normalizeFolderName,
+	normalizeSnippetAlias,
 	normalizeSnippetText,
 	normalizeSnippetTitle,
 } from "./snippetUtils";

@@ -9,6 +9,7 @@ export interface SnippetItem {
 	id: string;
 	title: string;
 	text: string;
+	alias?: string | null;
 	folderId: string;
 	createdAt: string;
 	updatedAt: string;
