@@ -77,6 +77,15 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          if [ "${RUNNER_OS}" = "Linux" ]; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install chromium
+          fi
+
       - name: E2E
         run: npm run test:e2e
 

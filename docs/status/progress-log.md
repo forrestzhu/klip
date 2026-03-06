@@ -932,3 +932,35 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Interactive desktop verification is still required for alias-hotkey
     trigger flow in macOS/Windows foreground-app scenarios.
+
+## 2026-03-06 - browser Playwright E2E baseline for preview regression
+
+- Commit: `pending`
+- Summary:
+  - Added Playwright browser E2E baseline with a dedicated config, Chromium
+    project, local Chrome-channel fallback for non-CI runs, and repo artifact
+    ignore rules (`playwright.config.ts`, `.gitignore`).
+  - Added preview-mode E2E fixtures that seed browser localStorage and replace
+    `navigator.clipboard` with a deterministic in-memory test clipboard so
+    tests do not depend on real OS clipboard permissions
+    (`tests/e2e/fixtures.ts`).
+  - Added four browser-preview scenarios covering popup/menu navigation,
+    history query `Enter`-to-copy fallback, snippet create + `;alias` search
+    + copy flow, and settings persistence across reloads
+    (`tests/e2e/browser-preview.spec.ts`).
+  - Updated CI to install Playwright Chromium before `npm run test:e2e`
+    (`.github/workflows/ci.yml`) and added `@playwright/test` to dev
+    dependencies (`package.json`, `package-lock.json`).
+- Validation:
+  - format: pass (`npm run format`)
+  - typecheck: pass (`npm run typecheck`)
+  - test: pass (`npm run test`, 85 tests)
+  - test:e2e: pass (`npm run test:e2e`, 4 tests)
+  - qa: pass (`npm run qa`; `lint`/`typecheck`/`test`/`test:e2e`/`build`/`test:coverage`/`cargo:check`)
+- Risks / Follow-ups:
+  - Browser E2E currently protects preview-mode regressions only; Tauri-only
+    tray/global-hotkey/direct-paste/independent-window behavior still requires
+    manual desktop verification.
+  - Local runtime is still Node `v25.2.1` while the repo target remains Node
+    22; `npm install` emitted an `EBADENGINE` warning because `nvm` is not
+    available in this environment.

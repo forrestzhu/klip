@@ -2,14 +2,14 @@
 
 - Last Updated: 2026-03-06
 - Branch: `main`
-- Latest Commit: `f13f390` (`feat: add snippet alias quick-search baseline`)
-- Working Tree: dirty (global snippet alias hotkey trigger + status artifacts update in progress)
+- Latest Commit: `020b2bf` (`feat: add global snippet alias hotkey trigger flow`)
+- Working Tree: dirty (Playwright browser E2E baseline + status artifacts update in progress)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
-- Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy and editor/preferences split.
-- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` now open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle.
+- Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy/editor/preferences split, with browser-side Playwright E2E regression baseline now being established ahead of manual desktop verification.
+- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle, and browser preview now has Playwright coverage for popup search, inline management views, `;alias` lookup, and settings persistence.
 
 ## Completed Highlights
 
@@ -69,6 +69,7 @@
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
 - CI cargo follow-up hardening added: install required Linux GTK/WebKit dependencies on Ubuntu runners before Rust checks, and add a real Windows `.ico` app icon for Tauri build-script requirements (`.github/workflows/ci.yml`, `src-tauri/icons/icon.png`, `src-tauri/icons/icon.ico`).
+- Browser Playwright E2E baseline added for preview-mode regression: repo now includes `playwright.config.ts`, seeded browser fixtures with stub clipboard/localStorage control, four Chromium browser-preview scenarios under `tests/e2e`, CI browser install wiring, and artifact ignore rules (`playwright.config.ts`, `tests/e2e/browser-preview.spec.ts`, `tests/e2e/fixtures.ts`, `.github/workflows/ci.yml`, `.gitignore`).
 
 ## In Progress / Gaps
 
@@ -76,6 +77,7 @@
 - History capture now has desktop event-driven listener + polling fallback, but interactive macOS/Windows reliability verification evidence is still pending (US-001 hardening gap).
 - Popup search (including query-mode flattened direct-paste flow) is now implemented, but interactive latency/usability verification evidence is still pending for larger history datasets on desktop runtime (US-005 hardening gap).
 - Snippet alias lookup and global alias hotkey trigger are implemented, but cross-platform interactive verification evidence is still pending (US-008 remaining gap).
+- Browser Playwright coverage now protects preview-mode popup/history/snippet/settings regressions, but it does not cover Tauri-only tray/hotkey/direct-paste/independent-window behavior.
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
@@ -88,23 +90,23 @@
 
 ## Next Focus
 
-1. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) and alias-hotkey-trigger flow (auto `;` focus), paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
-2. Run screenshot-by-screenshot parity review for `snippet_edit.png` and `settings*.png` and capture remaining pixel diffs.
+1. Expand Playwright browser E2E beyond the initial four-scenario baseline (for example clear-history confirm flow, alias-conflict validation, and additional popup keyboard paths).
+2. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) and alias-hotkey-trigger flow (auto `;` focus), paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
 3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
 ## Last Validation Snapshot
 
-- 2026-03-04: `npm run lint` passed.
-- 2026-03-04: `npm run typecheck` passed.
-- 2026-03-04: `npm run test` passed (51 tests).
-- 2026-03-04: `npm run test:coverage` passed (statements 89.97%, branches 87.26%, funcs 89.41%, lines 89.97%).
-- 2026-03-04: `npm run test:e2e` skipped (no Playwright setup).
-- 2026-03-04: `npm run build` passed.
-- 2026-03-04: `npm run cargo:check` passed.
+- 2026-03-06: `npm run lint` passed.
+- 2026-03-06: `npm run typecheck` passed.
+- 2026-03-06: `npm run test` passed (85 tests).
+- 2026-03-06: `npm run test:e2e` passed (4 browser-preview Chromium scenarios).
+- 2026-03-06: `npm run build` passed.
+- 2026-03-06: `npm run test:coverage` passed (statements 85.24%, branches 86.94%, funcs 84.67%, lines 85.24%).
+- 2026-03-06: `npm run cargo:check` passed.
 - 2026-03-04: `cargo test --manifest-path src-tauri/Cargo.toml` passed (23 tests).
 - 2026-03-04: `npm run tauri:info` completed (warning: Xcode not installed, command exited successfully).
 - 2026-03-04: `npm run dev:desktop` smoke passed (process reached `Running target/debug/klip-tauri`).
-- 2026-03-04: `npm run qa` passed (`lint`/`typecheck`/`test`/`test:e2e` skip/`build`/`test:coverage`/`cargo:check`).
+- 2026-03-06: `npm run qa` passed (`lint`/`typecheck`/`test`/`test:e2e`/`build`/`test:coverage`/`cargo:check`).
 - 2026-03-04: `npm run dev:desktop` smoke passed again on latest commit (`9fa6085`), with Vite auto-switching to port `5174` because `5173` was occupied.
 - 2026-03-04: `npm run dev:desktop` startup preflight rechecked and logged at `/tmp/klip-dev-desktop-20260304.log` (includes `Running target/debug/klip-tauri`).
 - 2026-03-04: `cargo test --manifest-path src-tauri/Cargo.toml` passed again (23 tests).
