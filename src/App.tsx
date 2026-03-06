@@ -131,7 +131,8 @@ export function App() {
 	const [selectedSnippetFolderId, setSelectedSnippetFolderId] = useState(
 		ALL_SNIPPET_FOLDERS_VALUE,
 	);
-	const [query, setQuery] = useState("");
+	const [snippetQuery, setSnippetQuery] = useState("");
+	const [popupQuery, setPopupQuery] = useState("");
 	const [selectedSnippetIndex, setSelectedSnippetIndex] = useState(0);
 	const [panelView, setPanelView] = useState<PanelView>(initialPanelView);
 	const [menuPath, setMenuPath] = useState<string[]>([]);
@@ -177,7 +178,7 @@ export function App() {
 	const canReturnToPopupMenu = supportsInlineManagementViews;
 
 	const filteredSnippetItems = useMemo(() => {
-		const keyword = query.trim().toLowerCase();
+		const keyword = snippetQuery.trim().toLowerCase();
 		const folderFilter =
 			selectedSnippetFolderId === ALL_SNIPPET_FOLDERS_VALUE
 				? null
@@ -196,7 +197,7 @@ export function App() {
 				item.text.toLowerCase().includes(keyword)
 			);
 		});
-	}, [snippetItems, query, selectedSnippetFolderId]);
+	}, [selectedSnippetFolderId, snippetItems, snippetQuery]);
 
 	const folderNameById = useMemo(() => {
 		return new Map(snippetFolders.map((folder) => [folder.id, folder.name]));
@@ -207,8 +208,9 @@ export function App() {
 			historyItems,
 			snippetFolders,
 			snippetItems,
+			query: popupQuery,
 		});
-	}, [historyItems, snippetFolders, snippetItems]);
+	}, [historyItems, popupQuery, snippetFolders, snippetItems]);
 
 	const popupContext = useMemo(
 		() => resolvePopupMenuContext(popupRootEntries, menuPath),
@@ -283,6 +285,7 @@ export function App() {
 				return;
 			}
 			setPanelView("menu");
+			setPopupQuery("");
 			setMenuPath([]);
 			setSelectedMenuIndexes([0]);
 		};
@@ -305,6 +308,7 @@ export function App() {
 
 			event.preventDefault();
 			setPanelView("menu");
+			setPopupQuery("");
 			setMenuPath([]);
 			setSelectedMenuIndexes([0]);
 			void hideDesktopPanelWindow().catch((error) => {
@@ -735,6 +739,67 @@ export function App() {
 			}
 			handleEditSnippet(selectedSnippet);
 		}
+	};
+
+	const handlePopupSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "ArrowDown") {
+			event.preventDefault();
+			setSelectedMenuIndexes((current) => {
+				const next = [...current];
+				const entries = popupColumns[activeMenuDepth] ?? [];
+				const currentIndex = next[activeMenuDepth] ?? 0;
+				next[activeMenuDepth] = findNextSelectableIndex(
+					entries,
+					currentIndex,
+					1,
+				);
+				return next;
+			});
+			return;
+		}
+
+		if (event.key === "ArrowUp") {
+			event.preventDefault();
+			setSelectedMenuIndexes((current) => {
+				const next = [...current];
+				const entries = popupColumns[activeMenuDepth] ?? [];
+				const currentIndex = next[activeMenuDepth] ?? 0;
+				next[activeMenuDepth] = findNextSelectableIndex(
+					entries,
+					currentIndex,
+					-1,
+				);
+				return next;
+			});
+			return;
+		}
+
+		if (event.key === "ArrowLeft") {
+			if (menuPath.length === 0) {
+				return;
+			}
+			event.preventDefault();
+			setMenuPath((current) => current.slice(0, current.length - 1));
+			setSelectedMenuIndexes((current) =>
+				current.slice(0, Math.max(1, current.length - 1)),
+			);
+			return;
+		}
+
+		if (event.key !== "ArrowRight" && event.key !== "Enter") {
+			return;
+		}
+
+		if (!activePopupEntry || !isPopupSelectableEntry(activePopupEntry)) {
+			return;
+		}
+
+		event.preventDefault();
+		void activatePopupEntryRef.current(
+			activePopupEntry,
+			activeMenuDepth,
+			activeSelectedMenuIndex,
+		);
 	};
 
 	const handleChangeMaxItems = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1300,6 +1365,24 @@ export function App() {
 					popupPanelRef.current = element;
 				}}
 			>
+				<div className="popup-search-row">
+					<input
+						aria-label="搜索历史和片断"
+						autoComplete="off"
+						className="popup-search-input"
+						placeholder="搜索历史和片断..."
+						type="text"
+						value={popupQuery}
+						onChange={(event) => {
+							setPopupQuery(event.currentTarget.value);
+							setMenuPath([]);
+							setSelectedMenuIndexes([0]);
+						}}
+						onKeyDown={(event) => {
+							void handlePopupSearchKeyDown(event);
+						}}
+					/>
+				</div>
 				<div className="popup-columns">
 					{popupColumns.map((entries, depth) => {
 						return (
@@ -1515,9 +1598,9 @@ export function App() {
 							className="clipy-input"
 							placeholder="按标题或内容搜索..."
 							type="text"
-							value={query}
+							value={snippetQuery}
 							onChange={(event) => {
-								setQuery(event.currentTarget.value);
+								setSnippetQuery(event.currentTarget.value);
 								setSelectedSnippetIndex(0);
 							}}
 							onKeyDown={(event) => {

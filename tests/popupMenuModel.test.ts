@@ -105,6 +105,120 @@ describe("popup menu model", () => {
 		});
 	});
 
+	it("flattens history results when popup query is present", () => {
+		const rootEntries = buildPopupMenuRootEntries({
+			historyItems: buildHistoryItems(15),
+			snippetFolders: [],
+			snippetItems: [],
+			query: "line 12",
+		});
+
+		const historyItems = rootEntries.filter((entry) => {
+			return (
+				entry.kind === "history-item" &&
+				entry.id.startsWith("history-search-item-")
+			);
+		});
+		expect(historyItems).toHaveLength(1);
+		expect(historyItems[0]).toMatchObject({
+			kind: "history-item",
+			label: "1. history line 12",
+			text: "history line 12",
+		});
+	});
+
+	it("flattens snippet results when popup query is present", () => {
+		const rootEntries = buildPopupMenuRootEntries({
+			historyItems: [],
+			snippetFolders: [
+				{
+					id: "folder-general",
+					name: "General",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+				{
+					id: "folder-work",
+					name: "Work",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+			],
+			snippetItems: [
+				{
+					id: "snippet-1",
+					title: "Greeting",
+					text: "Hello there",
+					folderId: "folder-general",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+				{
+					id: "snippet-2",
+					title: "Work update",
+					text: "Status update",
+					folderId: "folder-work",
+					createdAt: "2026-03-04T10:00:00.000Z",
+					updatedAt: "2026-03-04T10:00:00.000Z",
+				},
+			],
+			query: "update",
+		});
+
+		expect(
+			rootEntries.some(
+				(entry) =>
+					entry.kind === "submenu" && entry.id.startsWith("snippet-folder-"),
+			),
+		).toBe(false);
+		expect(
+			rootEntries.some(
+				(entry) =>
+					entry.kind === "snippet-item" &&
+					entry.id === "snippet-search-item-snippet-2",
+			),
+		).toBe(true);
+	});
+
+	it("shows empty labels when popup query has no history/snippet match", () => {
+		const folders: SnippetFolder[] = [
+			{
+				id: "folder-general",
+				name: "General",
+				createdAt: "2026-03-04T10:00:00.000Z",
+				updatedAt: "2026-03-04T10:00:00.000Z",
+			},
+		];
+		const snippets: SnippetItem[] = [
+			{
+				id: "snippet-1",
+				title: "Greeting",
+				text: "Hello there",
+				folderId: "folder-general",
+				createdAt: "2026-03-04T10:00:00.000Z",
+				updatedAt: "2026-03-04T10:00:00.000Z",
+			},
+		];
+		const rootEntries = buildPopupMenuRootEntries({
+			historyItems: buildHistoryItems(5),
+			snippetFolders: folders,
+			snippetItems: snippets,
+			query: "not-found",
+		});
+
+		expect(
+			rootEntries.some(
+				(entry) =>
+					entry.kind === "empty" && entry.label === "未找到匹配的历史记录",
+			),
+		).toBe(true);
+		expect(
+			rootEntries.some(
+				(entry) => entry.kind === "empty" && entry.label === "未找到匹配的片断",
+			),
+		).toBe(true);
+	});
+
 	it("adds required popup actions in root menu", () => {
 		const rootEntries = buildPopupMenuRootEntries({
 			historyItems: buildHistoryItems(1),

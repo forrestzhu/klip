@@ -789,3 +789,61 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Matrix entries remain `pending` until hands-on macOS/Windows interactive
     execution is completed.
+
+## 2026-03-06 - popup realtime search baseline for compact menu
+
+- Commit: `pending`
+- Summary:
+  - Added popup search input and split popup/snippet query state, so compact
+    menu search no longer reuses snippet-editor query state (`src/App.tsx`).
+  - Added search-box keyboard navigation support (`↑/↓/←/→/Enter`) and
+    reset-to-root behavior on query updates (`src/App.tsx`).
+  - Extended popup menu model to accept optional query filtering for
+    history/snippets with explicit empty-state labels for unmatched queries
+    (`src/features/menu/popupMenuModel.ts`).
+  - Added popup query regression tests and synced Biome schema version to
+    current CLI (`tests/popupMenuModel.test.ts`, `biome.json`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - typecheck: pass (`npm run typecheck`)
+  - test: pass (`npm run test`, 78 tests)
+  - build: pass (`npm run build`)
+  - cargo:check: skip (frontend-only scope)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Need desktop interactive verification for popup search latency and keyboard
+    behavior in real Tauri windows.
+  - If product scope wants history-only filtering, split snippet filtering from
+    popup query in a follow-up iteration.
+
+## 2026-03-06 - popup query-mode flatten for direct enter paste
+
+- Commit: `pending`
+- Summary:
+  - Refactored popup menu model into two rendering modes: default Clipy-style
+    hierarchy for empty query, and query-mode flattened results for history and
+    snippets to reduce key depth (`src/features/menu/popupMenuModel.ts`).
+  - In query mode, history/snippet rows are now directly selectable root
+    entries (no submenu drilldown), enabling `Enter` from search navigation to
+    trigger direct paste faster (`src/features/menu/popupMenuModel.ts`,
+    `src/App.tsx` existing key handling path).
+  - Kept action rows (`清除历史/编辑片断.../偏好设置.../退出 Klip`) shared across both
+    modes by consolidating action entry assembly helper
+    (`src/features/menu/popupMenuModel.ts`).
+  - Expanded popup menu tests to assert flattened history/snippet query results
+    and no snippet-folder submenu emission in query mode
+    (`tests/popupMenuModel.test.ts`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - typecheck: pass (`npm run typecheck`)
+  - test: pass (`npm run test`, 79 tests)
+  - build: pass (`npm run build`)
+  - cargo:check: skip (frontend-only scope)
+  - test:e2e: skip (Playwright not configured)
+- Risks / Follow-ups:
+  - Desktop manual verification is still required to validate query-mode
+    keyboard usability (`↑/↓/Enter`) in real popup windows.
+  - Query-mode snippet ranking is currently insertion-order match; alias/exact
+    ranking can be added later if UX feedback requires tighter prioritization.
