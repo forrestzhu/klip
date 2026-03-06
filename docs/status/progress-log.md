@@ -935,7 +935,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-06 - browser Playwright E2E baseline for preview regression
 
-- Commit: `pending`
+- Commit: `0fa148c`
 - Summary:
   - Added Playwright browser E2E baseline with a dedicated config, Chromium
     project, local Chrome-channel fallback for non-CI runs, and repo artifact
@@ -964,3 +964,29 @@ This file is append-only. Add one entry after each completed iteration.
   - Local runtime is still Node `v25.2.1` while the repo target remains Node
     22; `npm install` emitted an `EBADENGINE` warning because `nvm` is not
     available in this environment.
+
+## 2026-03-07 - second-batch Playwright popup regression scenarios
+
+- Commit: `pending`
+- Summary:
+  - Extended browser-preview Playwright coverage from 4 to 7 scenarios by
+    adding clear-history confirm/accept validation, snippet alias-conflict
+    rejection, and popup submenu keyboard traversal coverage
+    (`tests/e2e/browser-preview.spec.ts`).
+  - Reused the existing preview fixtures so new scenarios continue to run with
+    deterministic browser localStorage and in-memory clipboard behavior
+    (`tests/e2e/fixtures.ts`).
+  - Refreshed status artifacts so PRD evidence and current snapshot now reflect
+    the expanded browser-side E2E safety net
+    (`docs/status/current.md`, `docs/status/prd-tracker.md`).
+- Validation:
+  - format: pass (`npm run format`)
+  - typecheck: pass (`npm run typecheck`)
+  - test:e2e: pass (`npm run test:e2e`, 7 tests)
+  - qa: pass (`npm run qa`; `lint`/`typecheck`/`test`/`test:e2e`/`build`/`test:coverage`/`cargo:check`)
+- Risks / Follow-ups:
+  - Browser E2E still does not exercise Tauri-only tray/global-hotkey/
+    direct-paste/independent-window behavior, so manual desktop verification
+    remains required.
+  - Candidate next browser scenarios are folder CRUD, invalid-alias handling,
+    and additional popup action/error paths.

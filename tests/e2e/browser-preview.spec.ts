@@ -141,3 +141,139 @@ test("persists browser settings changes across reloads", async ({ page }) => {
 		PASTE_MODE_CLIPBOARD_ONLY,
 	);
 });
+
+test("clears history only after confirm acceptance", async ({ page }) => {
+	await seedBrowserPreview(page, {
+		historyItems: [
+			{
+				id: "history-clear-2",
+				text: "Second clearable history item",
+				createdAt: "2026-03-06T12:02:00.000Z",
+				sourceApp: null,
+			},
+			{
+				id: "history-clear-1",
+				text: "First clearable history item",
+				createdAt: "2026-03-06T12:01:00.000Z",
+				sourceApp: null,
+			},
+		],
+	});
+
+	await page.goto("/");
+
+	page.once("dialog", async (dialog) => {
+		expect(dialog.type()).toBe("confirm");
+		expect(dialog.message()).toBe("确认清除所有历史记录吗？");
+		await dialog.dismiss();
+	});
+
+	await page.getByRole("button", { name: "清除历史" }).click();
+	await expect(page.getByRole("button", { name: "1 - 2" })).toBeVisible();
+
+	page.once("dialog", async (dialog) => {
+		expect(dialog.type()).toBe("confirm");
+		expect(dialog.message()).toBe("确认清除所有历史记录吗？");
+		await dialog.accept();
+	});
+
+	await page.getByRole("button", { name: "清除历史" }).click();
+
+	await expect(page.getByText("历史记录已清除。")).toBeVisible();
+	await expect(page.getByText("暂无历史记录")).toBeVisible();
+	await expect(page.getByRole("button", { name: "1 - 2" })).toHaveCount(0);
+});
+
+test("blocks snippet creation when alias conflicts with existing snippet", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page, {
+		snippetItems: [
+			{
+				id: "snippet-existing-signature",
+				title: "Team signature",
+				alias: "sig",
+				text: "Existing signature text",
+				folderId: "folder-general",
+				createdAt: "2026-03-06T12:00:00.000Z",
+				updatedAt: "2026-03-06T12:00:00.000Z",
+			},
+		],
+	});
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "编辑片断..." }).click();
+
+	await page.getByLabel("标题").fill("Another signature");
+	await page.getByLabel("别名（可选）").fill("sig");
+	await page.getByLabel("内容").fill("New conflicting signature");
+	await page.getByRole("button", { name: "创建片断" }).click();
+
+	await expect(
+		page.getByText('Alias ;sig is already used by "Team signature".'),
+	).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: /Team signature/ }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: /Another signature/ }),
+	).toHaveCount(0);
+});
+
+test("supports popup keyboard navigation across submenu open and close", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page, {
+		historyItems: [
+			{
+				id: "history-keyboard-3",
+				text: "Third keyboard history entry",
+				createdAt: "2026-03-06T12:03:00.000Z",
+				sourceApp: null,
+			},
+			{
+				id: "history-keyboard-2",
+				text: "Second keyboard history entry",
+				createdAt: "2026-03-06T12:02:00.000Z",
+				sourceApp: null,
+			},
+			{
+				id: "history-keyboard-1",
+				text: "First keyboard history entry",
+				createdAt: "2026-03-06T12:01:00.000Z",
+				sourceApp: null,
+			},
+		],
+	});
+
+	await page.goto("/");
+
+	const popupSearch = page.getByRole("textbox", { name: "搜索历史和片断" });
+	await page.getByRole("button", { name: "1 - 3" }).click();
+
+	const firstHistoryButton = page.getByRole("button", {
+		name: /1\. Third keyboard history entry/,
+	});
+	await expect(firstHistoryButton).toBeVisible();
+
+	await popupSearch.focus();
+	await popupSearch.press("ArrowLeft");
+	await expect(firstHistoryButton).toHaveCount(0);
+
+	await popupSearch.press("ArrowRight");
+	await expect(
+		page.getByRole("button", { name: /1\. Third keyboard history entry/ }),
+	).toBeVisible();
+
+	await popupSearch.press("ArrowDown");
+	await popupSearch.press("Enter");
+
+	await expect(
+		page.getByText(
+			"Direct paste unavailable. Selected history text copied to clipboard.",
+		),
+	).toBeVisible();
+	await expect
+		.poll(async () => readBrowserPreviewClipboard(page))
+		.toBe("Second keyboard history entry");
+});
