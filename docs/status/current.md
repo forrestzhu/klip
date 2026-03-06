@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-06
 - Branch: `main`
-- Latest Commit: `a466d07` (`fix: decouple popup stable-height measurement from hover paths`)
-- Working Tree: dirty (`src/styles.css` + `tests/popupResponsiveScope.test.ts` + `docs/status/*`)
+- Latest Commit: `9e9eed1` (`fix: scope popup responsive rules away from menu rows`)
+- Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase

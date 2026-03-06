@@ -716,7 +716,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-06 - popup responsive-scope root-cause guard follow-up
 
-- Commit: `pending`
+- Commit: `9e9eed1`
 - Summary:
   - Scoped `@media (max-width: 760px)` management rules to `.app-shell-expanded`
     only, and removed popup row padding override so popup row metrics no longer
