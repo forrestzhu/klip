@@ -675,48 +675,48 @@ body {
 	color: #1d4ed8;
 }
 
+/* Keep mobile-style tweaks scoped to inline expanded shell only.
+ * Popup menu windows can cross width breakpoints during hover navigation,
+ * so popup row metrics must stay width-invariant.
+ */
 @media (max-width: 760px) {
 	.app-shell:not(.clipy-management-shell) {
 		margin: 12px;
 		padding: 12px;
 	}
 
-	.clipy-editor-toolbar {
+	.app-shell-expanded .clipy-editor-toolbar {
 		flex-wrap: wrap;
 	}
 
-	.popup-entry {
-		padding: 8px;
-	}
-
-	.clipy-editor-layout {
+	.app-shell-expanded .clipy-editor-layout {
 		grid-template-columns: 1fr;
 	}
 
-	.clipy-editor-sidebar {
+	.app-shell-expanded .clipy-editor-sidebar {
 		border-right: 0;
 		border-bottom: 1px solid #c6c8cc;
 		max-height: 360px;
 	}
 
-	.clipy-editor-detail {
+	.app-shell-expanded .clipy-editor-detail {
 		padding: 18px;
 	}
 
-	.clipy-preferences-content {
+	.app-shell-expanded .clipy-preferences-content {
 		margin-left: 0;
 	}
 
-	.clipy-preferences-section h3 {
+	.app-shell-expanded .clipy-preferences-section h3 {
 		font-size: 26px;
 	}
 
-	.clipy-form-row,
-	.clipy-checkbox-row {
+	.app-shell-expanded .clipy-form-row,
+	.app-shell-expanded .clipy-checkbox-row {
 		font-size: 14px;
 	}
 
-	.clipy-hotkey-input {
+	.app-shell-expanded .clipy-hotkey-input {
 		font-size: 20px;
 	}
 }

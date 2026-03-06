@@ -702,7 +702,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-06 - popup hover-decoupled stable-height measurement follow-up
 
-- Commit: `pending`
+- Commit: `a466d07`
 - Summary:
   - Refined popup stable-height measurement to track root-column content only, instead of re-measuring on hover-specific submenu/preview transitions (`src/App.tsx`).
   - Limited stable-height recomputation trigger to root-entry count changes, preventing hover-path changes from feeding back into row-height behavior (`src/App.tsx`).
@@ -713,3 +713,27 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - Requires manual hover-path verification on macOS desktop runtime to confirm history-range row height remains invariant across snippet-hover states.
+
+## 2026-03-06 - popup responsive-scope root-cause guard follow-up
+
+- Commit: `pending`
+- Summary:
+  - Scoped `@media (max-width: 760px)` management rules to `.app-shell-expanded`
+    only, and removed popup row padding override so popup row metrics no longer
+    change when hover-driven desktop resize crosses responsive breakpoints
+    (`src/styles.css`).
+  - Added a regression test that parses the responsive media block and asserts:
+    no `.popup-*` selectors exist there, and `clipy` selectors remain limited
+    to approved management-shell prefixes (`tests/popupResponsiveScope.test.ts`).
+  - Added explicit CSS note documenting why popup rows must stay
+    width-invariant even when hover navigation changes popup width.
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via
+    `npm run qa` (`test` 73; `test:e2e` skipped; coverage statements 87.08%,
+    branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Needs interactive desktop verification on macOS/Windows to confirm
+    hover-driven submenu navigation no longer changes visible history-row
+    metrics in actual Tauri windows.
