@@ -351,6 +351,114 @@ test("rejects invalid snippet alias input before save", async ({ page }) => {
 	).toHaveCount(0);
 });
 
+test("deletes selected snippet only after confirm acceptance", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page, {
+		snippetItems: [
+			{
+				id: "snippet-delete-me",
+				title: "Delete me",
+				alias: "gone",
+				text: "Temporary snippet text",
+				folderId: DEFAULT_SNIPPETS_FOLDER_ID,
+				createdAt: "2026-03-06T12:00:00.000Z",
+				updatedAt: "2026-03-06T12:00:00.000Z",
+			},
+		],
+	});
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "编辑片断..." }).click();
+
+	const snippetItem = page.getByRole("button", { name: /Delete me/ });
+	await snippetItem.click();
+
+	await expect(page.getByRole("heading", { name: "片断详情" })).toBeVisible();
+
+	page.once("dialog", async (dialog) => {
+		expect(dialog.type()).toBe("confirm");
+		expect(dialog.message()).toBe('Delete snippet "Delete me"?');
+		await dialog.dismiss();
+	});
+
+	await page.getByRole("button", { name: /^删除$/ }).click();
+	await expect(snippetItem).toBeVisible();
+
+	page.once("dialog", async (dialog) => {
+		expect(dialog.type()).toBe("confirm");
+		expect(dialog.message()).toBe('Delete snippet "Delete me"?');
+		await dialog.accept();
+	});
+
+	await page.getByRole("button", { name: /^删除$/ }).click();
+
+	await expect(page.getByText("Snippet deleted.")).toBeVisible();
+	await expect(page.getByRole("button", { name: /Delete me/ })).toHaveCount(0);
+	await expect(page.getByText("暂无片断。")).toBeVisible();
+	await expect(page.getByRole("heading", { name: "新建片断" })).toBeVisible();
+});
+
+test("rejects folder rename when target name already exists", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page, {
+		snippetFolders: [
+			{
+				id: "folder-work",
+				name: "Work",
+				createdAt: "2026-03-06T12:00:00.000Z",
+				updatedAt: "2026-03-06T12:00:00.000Z",
+			},
+			{
+				id: "folder-personal",
+				name: "Personal",
+				createdAt: "2026-03-06T12:01:00.000Z",
+				updatedAt: "2026-03-06T12:01:00.000Z",
+			},
+		],
+	});
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "编辑片断..." }).click();
+
+	await page.locator("#snippet-folder-select").selectOption("folder-work");
+	await expect(page.locator("#snippet-editor-folder")).toHaveValue(
+		"folder-work",
+	);
+
+	await page.getByPlaceholder("文件夹名称").fill("Personal");
+	await page.getByRole("button", { name: "重命名" }).click();
+
+	await expect(
+		page.getByText("Folder rename failed. Name might conflict."),
+	).toBeVisible();
+	await expect(page.locator("#snippet-editor-folder")).toHaveValue(
+		"folder-work",
+	);
+	await expect(
+		page.locator('#snippet-editor-folder option[value="folder-work"]'),
+	).toHaveText("Work");
+	await expect(
+		page.locator('#snippet-editor-folder option[value="folder-personal"]'),
+	).toHaveText("Personal");
+});
+
+test("shows popup message when clear history is triggered on empty history", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page);
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "清除历史" }).click();
+
+	await expect(page.getByText("当前没有可清除的历史记录。")).toBeVisible();
+	await expect(page.getByText("暂无历史记录")).toBeVisible();
+	await expect(
+		page.getByRole("textbox", { name: "搜索历史和片断" }),
+	).toBeVisible();
+});
+
 test("keeps browser preview alive when quit action is triggered", async ({
 	page,
 }) => {
