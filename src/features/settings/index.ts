@@ -1,6 +1,9 @@
 export {
 	DEFAULT_PANEL_HOTKEY,
+	DEFAULT_SNIPPET_ALIAS_HOTKEY,
 	PANEL_HOTKEY_STORAGE_KEY,
+	SNIPPET_ALIAS_HOTKEY_STORAGE_KEY,
+	SNIPPET_ALIAS_HOTKEY_TRIGGER_EVENT,
 } from "./hotkey.constants";
 export { formatPanelHotkeyForDisplay } from "./hotkeyDisplay";
 export {
@@ -9,11 +12,14 @@ export {
 	openDesktopPreferencesWindow,
 	openDesktopSnippetEditorWindow,
 	registerDesktopPanelHotkey,
+	registerDesktopSnippetAliasHotkey,
 } from "./hotkeyRuntime";
 export {
 	canonicalizePanelHotkey,
 	readPanelHotkey,
+	readSnippetAliasHotkey,
 	writePanelHotkey,
+	writeSnippetAliasHotkey,
 } from "./hotkeyStorage";
 export {
 	DEFAULT_PASTE_MODE,

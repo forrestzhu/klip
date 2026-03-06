@@ -25,6 +25,20 @@ export async function registerDesktopPanelHotkey(
 	return canonical.length > 0 ? canonical : response.shortcut;
 }
 
+export async function registerDesktopSnippetAliasHotkey(
+	shortcut: string,
+): Promise<string> {
+	const payload: RegisterPanelHotkeyPayload = { shortcut };
+	const response = await invoke<{ shortcut: string }>(
+		"register_snippet_alias_hotkey",
+		{
+			shortcut: payload.shortcut,
+		},
+	);
+	const canonical = canonicalizePanelHotkey(response.shortcut);
+	return canonical.length > 0 ? canonical : "";
+}
+
 export async function hideDesktopPanelWindow(): Promise<void> {
 	await invoke("hide_panel_window");
 }

@@ -13,8 +13,8 @@ enum ClipboardRuntimeError {
 
 #[tauri::command]
 pub fn read_clipboard_text() -> Result<Option<String>, String> {
-    let mut clipboard =
-        arboard::Clipboard::new().map_err(|error| ClipboardRuntimeError::Access(error.to_string()).to_string())?;
+    let mut clipboard = arboard::Clipboard::new()
+        .map_err(|error| ClipboardRuntimeError::Access(error.to_string()).to_string())?;
 
     match clipboard.get_text() {
         Ok(text) => Ok(Some(text)),
@@ -25,8 +25,8 @@ pub fn read_clipboard_text() -> Result<Option<String>, String> {
 
 #[tauri::command]
 pub fn write_clipboard_text(text: String) -> Result<(), String> {
-    let mut clipboard =
-        arboard::Clipboard::new().map_err(|error| ClipboardRuntimeError::Access(error.to_string()).to_string())?;
+    let mut clipboard = arboard::Clipboard::new()
+        .map_err(|error| ClipboardRuntimeError::Access(error.to_string()).to_string())?;
 
     clipboard
         .set_text(text)

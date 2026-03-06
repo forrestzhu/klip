@@ -13,13 +13,12 @@ pub mod tray;
 pub fn run() {
     tauri::Builder::default()
         .manage(hotkey::PanelHotkeyState::default())
+        .manage(hotkey::SnippetAliasHotkeyState::default())
         .manage(clipboard_listener::ClipboardListenerState::default())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, _shortcut, event| {
-                    if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
-                        let _ = tray::show_main_window(app);
-                    }
+                .with_handler(|app, shortcut, event| {
+                    hotkey::handle_global_shortcut_event(app, shortcut, event.state);
                 })
                 .build(),
         )
@@ -46,6 +45,7 @@ pub fn run() {
             clipboard_listener::stop_clipboard_listener,
             direct_paste::direct_paste_text,
             hotkey::register_panel_hotkey,
+            hotkey::register_snippet_alias_hotkey,
             hotkey::hide_panel_window,
             startup_launch::get_startup_launch_enabled,
             startup_launch::set_startup_launch_enabled

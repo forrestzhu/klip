@@ -21,6 +21,7 @@ import {
 	canonicalizePanelHotkey,
 	DEFAULT_PANEL_HOTKEY,
 	DEFAULT_PASTE_MODE,
+	DEFAULT_SNIPPET_ALIAS_HOTKEY,
 	DEFAULT_STARTUP_LAUNCH_ENABLED,
 	formatPanelHotkeyForDisplay,
 	hideDesktopPanelWindow,
@@ -33,11 +34,15 @@ import {
 	readDesktopStartupLaunchEnabled,
 	readPanelHotkey,
 	readPasteMode,
+	readSnippetAliasHotkey,
 	readStartupLaunchEnabled,
 	registerDesktopPanelHotkey,
+	registerDesktopSnippetAliasHotkey,
+	SNIPPET_ALIAS_HOTKEY_TRIGGER_EVENT,
 	writeDesktopStartupLaunchEnabled,
 	writePanelHotkey,
 	writePasteMode,
+	writeSnippetAliasHotkey,
 	writeStartupLaunchEnabled,
 } from "./features/settings";
 import {
@@ -123,6 +128,12 @@ export function App() {
 	const [panelHotkey, setPanelHotkey] = useState(DEFAULT_PANEL_HOTKEY);
 	const [panelHotkeyDraft, setPanelHotkeyDraft] =
 		useState(DEFAULT_PANEL_HOTKEY);
+	const [snippetAliasHotkey, setSnippetAliasHotkey] = useState(
+		DEFAULT_SNIPPET_ALIAS_HOTKEY,
+	);
+	const [snippetAliasHotkeyDraft, setSnippetAliasHotkeyDraft] = useState(
+		DEFAULT_SNIPPET_ALIAS_HOTKEY,
+	);
 	const [pasteMode, setPasteMode] = useState<PasteMode>(DEFAULT_PASTE_MODE);
 	const [startupLaunchEnabled, setStartupLaunchEnabled] = useState(
 		DEFAULT_STARTUP_LAUNCH_ENABLED,
@@ -173,10 +184,14 @@ export function App() {
 
 	const runtimeRef = useRef<RuntimeContext | null>(null);
 	const popupPanelRef = useRef<HTMLElement | null>(null);
+	const popupSearchInputRef = useRef<HTMLInputElement | null>(null);
 	const activatePopupEntryRef = useRef<
 		(entry: PopupMenuEntry, depth: number, index: number) => Promise<void>
 	>(async () => {});
 	const panelHotkeyDraftDisplay = canonicalizePanelHotkey(panelHotkeyDraft);
+	const snippetAliasHotkeyDraftDisplay = canonicalizePanelHotkey(
+		snippetAliasHotkeyDraft,
+	);
 	const canReturnToPopupMenu = supportsInlineManagementViews;
 
 	const filteredSnippetItems = useMemo(() => {
@@ -326,6 +341,59 @@ export function App() {
 	}, [isMainPopupWindow]);
 
 	useEffect(() => {
+		if (!isMainPopupWindow || !isDesktopRuntime()) {
+			return;
+		}
+
+		let disposed = false;
+		let unlisten: (() => void) | null = null;
+
+		const registerSnippetAliasListener = async () => {
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			unlisten = await getCurrentWindow().listen(
+				SNIPPET_ALIAS_HOTKEY_TRIGGER_EVENT,
+				() => {
+					setPanelView("menu");
+					setPopupQuery(";");
+					setMenuPath([]);
+					setSelectedMenuIndexes([0]);
+
+					setTimeout(() => {
+						if (disposed) {
+							return;
+						}
+
+						const inputElement = popupSearchInputRef.current;
+						if (!inputElement) {
+							return;
+						}
+
+						inputElement.focus();
+						const cursorPosition = inputElement.value.length;
+						inputElement.setSelectionRange(cursorPosition, cursorPosition);
+					}, 0);
+				},
+			);
+		};
+
+		void registerSnippetAliasListener().catch((error) => {
+			if (disposed) {
+				return;
+			}
+			setActionMessage(
+				`Snippet alias hotkey listener setup failed: ${toErrorMessage(error)}`,
+			);
+		});
+
+		return () => {
+			disposed = true;
+			if (unlisten) {
+				unlisten();
+			}
+		};
+	}, [isMainPopupWindow]);
+
+	useEffect(() => {
 		let disposed = false;
 
 		if (typeof window === "undefined") {
@@ -338,11 +406,16 @@ export function App() {
 			const savedPanelHotkey = normalizePanelHotkeyValue(
 				readPanelHotkey(window.localStorage),
 			);
+			const savedSnippetAliasHotkey = normalizeOptionalHotkeyValue(
+				readSnippetAliasHotkey(window.localStorage),
+			);
 			const savedStartupLaunchEnabled = readStartupLaunchEnabled(
 				window.localStorage,
 			);
 			setPanelHotkey(savedPanelHotkey);
 			setPanelHotkeyDraft(savedPanelHotkey);
+			setSnippetAliasHotkey(savedSnippetAliasHotkey);
+			setSnippetAliasHotkeyDraft(savedSnippetAliasHotkey);
 			setPasteMode(readPasteMode(window.localStorage));
 			setStartupLaunchEnabled(savedStartupLaunchEnabled);
 
@@ -366,6 +439,31 @@ export function App() {
 
 					setActionMessage(
 						`Global hotkey setup failed: ${toErrorMessage(error)}`,
+					);
+				}
+
+				try {
+					const registeredSnippetAliasHotkey =
+						await registerDesktopSnippetAliasHotkey(savedSnippetAliasHotkey);
+					if (disposed) {
+						return;
+					}
+
+					const persistedSnippetAliasHotkey = normalizeOptionalHotkeyValue(
+						writeSnippetAliasHotkey(
+							window.localStorage,
+							registeredSnippetAliasHotkey,
+						),
+					);
+					setSnippetAliasHotkey(persistedSnippetAliasHotkey);
+					setSnippetAliasHotkeyDraft(persistedSnippetAliasHotkey);
+				} catch (error) {
+					if (disposed) {
+						return;
+					}
+
+					setActionMessage(
+						`Snippet alias hotkey setup failed: ${toErrorMessage(error)}`,
 					);
 				}
 			}
@@ -511,8 +609,13 @@ export function App() {
 			const persistedPanelHotkey = normalizePanelHotkeyValue(
 				readPanelHotkey(window.localStorage),
 			);
+			const persistedSnippetAliasHotkey = normalizeOptionalHotkeyValue(
+				readSnippetAliasHotkey(window.localStorage),
+			);
 			setPanelHotkey(persistedPanelHotkey);
 			setPanelHotkeyDraft(persistedPanelHotkey);
+			setSnippetAliasHotkey(persistedSnippetAliasHotkey);
+			setSnippetAliasHotkeyDraft(persistedSnippetAliasHotkey);
 			setPasteMode(readPasteMode(window.localStorage));
 			setStartupLaunchEnabled(readStartupLaunchEnabled(window.localStorage));
 		};
@@ -862,6 +965,51 @@ export function App() {
 			);
 		} catch (error) {
 			setActionMessage(`Panel hotkey update failed: ${toErrorMessage(error)}`);
+		}
+	};
+
+	const handleApplySnippetAliasHotkey = async () => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const normalizedCandidateHotkey = canonicalizePanelHotkey(
+			snippetAliasHotkeyDraft,
+		);
+		if (!isDesktopRuntime()) {
+			const persisted = normalizeOptionalHotkeyValue(
+				writeSnippetAliasHotkey(window.localStorage, normalizedCandidateHotkey),
+			);
+			setSnippetAliasHotkey(persisted);
+			setSnippetAliasHotkeyDraft(persisted);
+			setActionMessage(
+				persisted.length === 0
+					? "Snippet alias hotkey disabled in browser preview."
+					: "Snippet alias hotkey saved in browser preview. Desktop runtime is required to activate global hotkey.",
+			);
+			return;
+		}
+
+		try {
+			const registered = await registerDesktopSnippetAliasHotkey(
+				normalizedCandidateHotkey,
+			);
+			const persisted = normalizeOptionalHotkeyValue(
+				writeSnippetAliasHotkey(window.localStorage, registered),
+			);
+			setSnippetAliasHotkey(persisted);
+			setSnippetAliasHotkeyDraft(persisted);
+			setActionMessage(
+				persisted.length === 0
+					? "Snippet alias hotkey disabled."
+					: `Snippet alias hotkey updated to ${formatPanelHotkeyForDisplay(
+							persisted,
+						)}.`,
+			);
+		} catch (error) {
+			setActionMessage(
+				`Snippet alias hotkey update failed: ${toErrorMessage(error)}`,
+			);
 		}
 	};
 
@@ -1402,6 +1550,7 @@ export function App() {
 						autoComplete="off"
 						className="popup-search-input"
 						placeholder="搜索历史和片断（;别名）..."
+						ref={popupSearchInputRef}
 						type="text"
 						value={popupQuery}
 						onChange={(event) => {
@@ -2009,6 +2158,45 @@ export function App() {
 							<p className="clipy-inline-note">
 								当前快捷键：{formatPanelHotkeyForDisplay(panelHotkey)}
 							</p>
+							<label className="clipy-form-row">
+								<span>片断别名：</span>
+								<input
+									aria-label="Snippet alias hotkey"
+									className="clipy-input clipy-hotkey-input"
+									placeholder="留空表示禁用（例如 CommandOrControl+Shift+;）"
+									type="text"
+									value={snippetAliasHotkeyDraftDisplay}
+									onChange={(event) => {
+										setSnippetAliasHotkeyDraft(
+											canonicalizePanelHotkey(event.currentTarget.value),
+										);
+									}}
+									onKeyDown={(event) => {
+										if (event.key === "Enter") {
+											event.preventDefault();
+											void handleApplySnippetAliasHotkey();
+										}
+									}}
+								/>
+								<button
+									className="clipy-primary-button"
+									type="button"
+									onClick={() => {
+										void handleApplySnippetAliasHotkey();
+									}}
+								>
+									应用
+								</button>
+							</label>
+							<p className="clipy-inline-note">
+								片断别名快捷键：
+								{snippetAliasHotkey.length > 0
+									? formatPanelHotkeyForDisplay(snippetAliasHotkey)
+									: "已禁用"}
+							</p>
+							<p className="clipy-inline-note">
+								触发后会打开弹窗并预填 `;`，可直接输入别名检索片断。
+							</p>
 							<p className="clipy-inline-note">
 								{isDesktopRuntime()
 									? "桌面运行时中全局快捷键注册已启用。"
@@ -2159,6 +2347,10 @@ function toErrorMessage(error: unknown): string {
 function normalizePanelHotkeyValue(value: string): string {
 	const normalized = canonicalizePanelHotkey(value);
 	return normalized.length > 0 ? normalized : DEFAULT_PANEL_HOTKEY;
+}
+
+function normalizeOptionalHotkeyValue(value: string): string {
+	return canonicalizePanelHotkey(value);
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

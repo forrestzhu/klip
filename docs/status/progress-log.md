@@ -901,3 +901,34 @@ This file is append-only. Add one entry after each completed iteration.
 - Risks / Follow-ups:
   - Interactive GUI rows remain `pending`; this terminal session can only
     complete startup/preflight evidence, not hands-on popup/tray interactions.
+
+## 2026-03-06 - global snippet alias hotkey trigger baseline
+
+- Commit: `pending`
+- Summary:
+  - Added independent snippet-alias hotkey settings persistence/runtime bridge,
+    including disable-by-empty behavior and canonical hotkey normalization
+    (`src/features/settings/hotkey.constants.ts`,
+    `src/features/settings/hotkeyStorage.ts`,
+    `src/features/settings/hotkeyRuntime.ts`,
+    `src/features/settings/index.ts`).
+  - Extended Tauri hotkey runtime with a second shortcut state/command
+    (`register_snippet_alias_hotkey`) and global shortcut event routing that
+    emits `klip://snippet-alias-hotkey-triggered` to the main window
+    (`src-tauri/src/hotkey.rs`, `src-tauri/src/lib.rs`).
+  - Updated popup runtime behavior so alias-hotkey trigger opens menu mode,
+    pre-fills search with `;`, resets menu path, and focuses the popup search
+    input for direct alias typing (`src/App.tsx`).
+  - Added regression coverage for snippet-alias hotkey storage default,
+    normalization, runtime-format readback, and disable flow
+    (`tests/snippetAliasHotkeyStorage.test.ts`).
+- Validation:
+  - format: pass (`npm run format`, plus `cargo fmt --manifest-path src-tauri/Cargo.toml`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via
+    `npm run qa` (`test` 85; `test:e2e` skipped; coverage statements 85.24%,
+    branches 86.94%, funcs 84.67%, lines 85.24%)
+  - cargo:test: pass (`cargo test --manifest-path src-tauri/Cargo.toml`,
+    25 tests)
+- Risks / Follow-ups:
+  - Interactive desktop verification is still required for alias-hotkey
+    trigger flow in macOS/Windows foreground-app scenarios.

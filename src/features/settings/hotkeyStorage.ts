@@ -1,6 +1,8 @@
 import {
 	DEFAULT_PANEL_HOTKEY,
+	DEFAULT_SNIPPET_ALIAS_HOTKEY,
 	PANEL_HOTKEY_STORAGE_KEY,
+	SNIPPET_ALIAS_HOTKEY_STORAGE_KEY,
 } from "./hotkey.constants";
 
 export function readPanelHotkey(storage: Storage): string {
@@ -34,6 +36,28 @@ export function writePanelHotkey(storage: Storage, value: string): string {
 
 	storage.setItem(PANEL_HOTKEY_STORAGE_KEY, persistedValue);
 	return persistedValue;
+}
+
+export function readSnippetAliasHotkey(storage: Storage): string {
+	const rawValue = storage.getItem(SNIPPET_ALIAS_HOTKEY_STORAGE_KEY);
+	if (rawValue === null) {
+		return DEFAULT_SNIPPET_ALIAS_HOTKEY;
+	}
+
+	const normalized = canonicalizePanelHotkey(rawValue);
+	if (rawValue !== normalized) {
+		storage.setItem(SNIPPET_ALIAS_HOTKEY_STORAGE_KEY, normalized);
+	}
+	return normalized;
+}
+
+export function writeSnippetAliasHotkey(
+	storage: Storage,
+	value: string,
+): string {
+	const normalized = canonicalizePanelHotkey(value);
+	storage.setItem(SNIPPET_ALIAS_HOTKEY_STORAGE_KEY, normalized);
+	return normalized;
 }
 
 export function canonicalizePanelHotkey(value: string): string {

@@ -3,7 +3,7 @@
 - Last Updated: 2026-03-06
 - Branch: `main`
 - Latest Commit: `f13f390` (`feat: add snippet alias quick-search baseline`)
-- Working Tree: dirty (manual verification matrix refresh for alias scenarios in progress)
+- Working Tree: dirty (global snippet alias hotkey trigger + status artifacts update in progress)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -39,6 +39,7 @@
 - Panel hotkey draft field now canonicalizes on user input and on apply flow, preventing runtime-formatted strings from reappearing in the input box (`src/App.tsx`, `src/features/settings/hotkeyStorage.ts`).
 - Panel hotkey runtime bridge now canonicalizes backend return values before they reach UI state, removing remaining `shift+super+KeyV` leakage in restart scenarios (`src/features/settings/hotkeyRuntime.ts`, `src/App.tsx`).
 - Panel hotkey parser now canonicalizes by extracted tokens instead of relying on `+` separators, so runtime variants like `shift super KeyV` or `shift+super+KeyV` map to `CommandOrControl+Shift+V` consistently (`src/features/settings/hotkeyStorage.ts`).
+- Global snippet alias hotkey trigger baseline added: settings now support independent alias hotkey persistence/apply/disable, Tauri can register/unregister a second shortcut, and alias-hotkey press opens popup then pre-fills `;` with focused search input for direct alias typing (`src/features/settings`, `src-tauri/src/hotkey.rs`, `src-tauri/src/lib.rs`, `src/App.tsx`, `tests/snippetAliasHotkeyStorage.test.ts`).
 - Desktop packaging baseline added: bundle build scripts and CI matrix workflow for macOS/Windows artifact generation (`package.json`, `src-tauri/tauri.conf.json`, `.github/workflows/desktop-packaging.yml`).
 - US-011 packaging verification document added with artifact checklist, install/run/uninstall matrix, and release-note permission/limitation draft (`docs/status/packaging-verification-us011.md`).
 - Local macOS packaging preflight now produced unsigned `.app` and `.dmg` artifacts (`src-tauri/target/release/bundle/macos/Klip.app`, `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`).
@@ -74,7 +75,7 @@
 - Direct paste path is best-effort and still needs manual verification for reliability/permissions on macOS and Windows foreground apps (US-006/US-008 hardening gap).
 - History capture now has desktop event-driven listener + polling fallback, but interactive macOS/Windows reliability verification evidence is still pending (US-001 hardening gap).
 - Popup search (including query-mode flattened direct-paste flow) is now implemented, but interactive latency/usability verification evidence is still pending for larger history datasets on desktop runtime (US-005 hardening gap).
-- Snippet alias lookup baseline is implemented in popup search, but global alias trigger path and cross-platform interactive verification evidence are still pending (US-008 remaining gap).
+- Snippet alias lookup and global alias hotkey trigger are implemented, but cross-platform interactive verification evidence is still pending (US-008 remaining gap).
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
@@ -87,7 +88,7 @@
 
 ## Next Focus
 
-1. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) flow, paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
+1. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) and alias-hotkey-trigger flow (auto `;` focus), paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
 2. Run screenshot-by-screenshot parity review for `snippet_edit.png` and `settings*.png` and capture remaining pixel diffs.
 3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
@@ -148,6 +149,7 @@
 - 2026-03-06: popup search flatten follow-up (query-mode direct selectable results) validated via `npm run format`, `npm run lint`, `npm run test` (79 tests), and `npm run build`.
 - 2026-03-06: snippet alias-trigger baseline follow-up validated via `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test` (81 tests), and `npm run build`.
 - 2026-03-06: desktop smoke preflight rechecked after alias baseline via `npm run dev:desktop` (log: `/tmp/klip-dev-desktop-alias-20260306.log`, includes `VITE v7.3.1` and `Running target/debug/klip-tauri`).
+- 2026-03-06: global snippet alias hotkey trigger follow-up validated via `npm run qa` (`test` 85 tests; `test:e2e` skipped; coverage statements 85.24%, branches 86.94%, funcs 84.67%, lines 85.24%) and `cargo test --manifest-path src-tauri/Cargo.toml` (25 tests).
 
 ## Quick Resume Steps
 

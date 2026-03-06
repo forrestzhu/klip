@@ -62,12 +62,11 @@ fn normalize_input_text(raw_text: &str) -> Result<String, String> {
 }
 
 fn set_clipboard_text(text: &str) -> Result<(), String> {
-    let mut clipboard = arboard::Clipboard::new().map_err(|error| {
-        DirectPasteError::ClipboardWrite(error.to_string()).to_string()
-    })?;
-    clipboard.set_text(text.to_string()).map_err(|error| {
-        DirectPasteError::ClipboardWrite(error.to_string()).to_string()
-    })
+    let mut clipboard = arboard::Clipboard::new()
+        .map_err(|error| DirectPasteError::ClipboardWrite(error.to_string()).to_string())?;
+    clipboard
+        .set_text(text.to_string())
+        .map_err(|error| DirectPasteError::ClipboardWrite(error.to_string()).to_string())
 }
 
 fn trigger_system_paste() -> Result<(), String> {
