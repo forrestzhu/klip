@@ -766,3 +766,26 @@ This file is append-only. Add one entry after each completed iteration.
     watcher behavior across foreground app switches and permission edge cases.
   - Current frontend path keeps polling as fallback; future tuning may reduce
     poll frequency after broader desktop reliability validation.
+
+## 2026-03-06 - manual verification matrix refresh for event-driven listener
+
+- Commit: `pending`
+- Summary:
+  - Refreshed desktop manual verification matrix baseline commit/date and
+    switched startup-log evidence to the latest event-driven smoke run
+    (`docs/status/manual-verification-us001-us006.md`,
+    `/tmp/klip-dev-desktop-event-listener-20260306.log`).
+  - Added US-001 event-driven verification scenarios for low-latency capture
+    and hide/reopen continuity to tighten interactive checklist coverage
+    (`docs/status/manual-verification-us001-us006.md`).
+  - Synced status snapshots so `current.md` and `prd-tracker.md` reflect
+    refreshed verification evidence and latest baseline commit (`7aac9e1`).
+- Validation:
+  - dev:desktop smoke: pass (`npm run dev:desktop`; log includes
+    `VITE v7.3.1`, `http://localhost:5173/`, and `Running target/debug/klip-tauri`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via
+    `npm run qa` (`test` 76; `test:e2e` skipped; coverage statements 85.71%,
+    branches 86.61%, funcs 84.54%, lines 85.71%)
+- Risks / Follow-ups:
+  - Matrix entries remain `pending` until hands-on macOS/Windows interactive
+    execution is completed.

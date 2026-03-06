@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-06
 - Branch: `main`
-- Latest Commit: `9e9eed1` (`fix: scope popup responsive rules away from menu rows`)
-- Working Tree: dirty (event-driven clipboard listener follow-up in progress)
+- Latest Commit: `7aac9e1` (`feat: add desktop event-driven clipboard listener baseline`)
+- Working Tree: dirty (manual verification matrix refresh in progress)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -32,6 +32,7 @@
 - Commit message governance follow-up now explicitly documents and enforces commit body line width `<= 100` in both team guide and commitlint config (`AGENTS.md`, `.commitlintrc.json`).
 - Local desktop startup smoke revalidated on latest runtime baseline (`npm run dev:desktop` reached `Running target/debug/klip-tauri`), and full local `npm run qa` pipeline passed.
 - Added desktop manual verification matrix baseline for US-001/US-003/US-004/US-006 with reproducible scenarios and latest preflight evidence (`docs/status/manual-verification-us001-us006.md`).
+- Manual verification matrix refreshed for event-driven listener baseline: updated preflight evidence (`/tmp/klip-dev-desktop-event-listener-20260306.log`, `npm run qa`, `cargo test`) and expanded US-001 scenarios for event-driven capture latency and hide/reopen continuity (`docs/status/manual-verification-us001-us006.md`).
 - Panel hotkey usability update: default shortcut changed to `CommandOrControl+Shift+V`, legacy default `...+K` values auto-migrate to new default, and normalized runtime values (for example `shift+super+KeyV`) now render as readable labels (for example `Cmd+Shift+V`) in Settings (`src/features/settings`, `src/App.tsx`, `src-tauri/src/hotkey.rs`).
 - Panel hotkey input normalization update: runtime-returned strings (for example `shift+super+KeyV`) are now canonicalized before persistence/input display, so settings field stores and shows `CommandOrControl+Shift+V` consistently (`src/features/settings/hotkeyStorage.ts`).
 - Panel hotkey draft field now canonicalizes on user input and on apply flow, preventing runtime-formatted strings from reappearing in the input box (`src/App.tsx`, `src/features/settings/hotkeyStorage.ts`).
@@ -137,6 +138,7 @@
 - 2026-03-06: popup hover-decoupled stable-height follow-up (root-column-only baseline measurement) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-06: popup responsive-scope follow-up (remove popup breakpoint override + media-scope guard test) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 73 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-06: desktop event-driven clipboard listener follow-up validated via `npm run qa` (`test` 76 tests; `test:e2e` skipped; coverage statements `85.71%`, branches `86.61%`, funcs `84.54%`, lines `85.71%`) and `cargo test --manifest-path src-tauri/Cargo.toml` (25 tests).
+- 2026-03-06: desktop smoke preflight rechecked on event-driven listener baseline via `npm run dev:desktop` (log: `/tmp/klip-dev-desktop-event-listener-20260306.log`, includes `VITE v7.3.1` and `Running target/debug/klip-tauri`).
 
 ## Quick Resume Steps
 
