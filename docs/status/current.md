@@ -3,7 +3,7 @@
 - Last Updated: 2026-03-06
 - Branch: `main`
 - Latest Commit: `9e9eed1` (`fix: scope popup responsive rules away from menu rows`)
-- Working Tree: clean
+- Working Tree: dirty (event-driven clipboard listener follow-up in progress)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -27,6 +27,7 @@
 - Desktop startup scripts added via local Tauri CLI dependency (`npm run dev:desktop`, `npm run build:desktop`, `npm run tauri:info`).
 - Clipboard monitor timer binding fix for Tauri window runtime (`Can only call Window.setTimeout on instances of Window`) with regression test coverage (`src/features/history/clipboardMonitor.ts`, `tests/clipboardMonitor.test.ts`).
 - Desktop-native clipboard runtime bridge added: frontend now selects desktop clipboard port (`createClipboardPort`) and Tauri exposes `read_clipboard_text` / `write_clipboard_text` commands (`src/features/history/browserClipboard.ts`, `src-tauri/src/clipboard.rs`, `src-tauri/src/lib.rs`).
+- Desktop event-driven clipboard listener baseline added: Tauri now runs `clipboard-rs` watcher and emits `klip://clipboard-updated` to main window, while frontend clipboard monitor subscribes to events with polling fallback and added regression coverage for subscription/unsubscribe/fallback paths (`src-tauri/src/clipboard_listener.rs`, `src-tauri/src/lib.rs`, `src/features/history/browserClipboard.ts`, `src/features/history/clipboardMonitor.ts`, `tests/clipboardMonitor.test.ts`).
 - Commit message governance tightened: commit body now requires `What changes` / `Why needed` / `How tested` sections, enforced by `commit-msg` hook + validator script (`.commitlintrc.json`, `.husky/commit-msg`, `scripts/validate-commit-message.mjs`, `AGENTS.md`, `README.md`).
 - Commit message governance follow-up now explicitly documents and enforces commit body line width `<= 100` in both team guide and commitlint config (`AGENTS.md`, `.commitlintrc.json`).
 - Local desktop startup smoke revalidated on latest runtime baseline (`npm run dev:desktop` reached `Running target/debug/klip-tauri`), and full local `npm run qa` pipeline passed.
@@ -67,7 +68,7 @@
 ## In Progress / Gaps
 
 - Direct paste path is best-effort and still needs manual verification for reliability/permissions on macOS and Windows foreground apps (US-006/US-008 hardening gap).
-- History capture now has desktop-native clipboard read path, but still uses polling and lacks event-driven system listener integration (US-001 hardening gap).
+- History capture now has desktop event-driven listener + polling fallback, but interactive macOS/Windows reliability verification evidence is still pending (US-001 hardening gap).
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
@@ -80,7 +81,7 @@
 
 ## Next Focus
 
-1. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, and independent-window transitions (including window reuse/focus behavior).
+1. Run macOS interactive verification for popup hierarchy, paste-hide-focus flow, independent-window transitions, and event-driven clipboard capture behavior.
 2. Run screenshot-by-screenshot parity review for `snippet_edit.png` and `settings*.png` and capture remaining pixel diffs.
 3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
@@ -135,6 +136,7 @@
 - 2026-03-06: popup root-cause stabilization follow-up (runtime-measured stable column height + bounding-box resize) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-06: popup hover-decoupled stable-height follow-up (root-column-only baseline measurement) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-06: popup responsive-scope follow-up (remove popup breakpoint override + media-scope guard test) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 73 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
+- 2026-03-06: desktop event-driven clipboard listener follow-up validated via `npm run qa` (`test` 76 tests; `test:e2e` skipped; coverage statements `85.71%`, branches `86.61%`, funcs `84.54%`, lines `85.71%`) and `cargo test --manifest-path src-tauri/Cargo.toml` (25 tests).
 
 ## Quick Resume Steps
 
@@ -144,4 +146,4 @@
 4. Read `docs/status/packaging-verification-us011.md`.
 5. Read latest entries in `docs/status/progress-log.md`.
 6. Run `git log --oneline -n 10`.
-7. Run `npm run qa`, then `npm run dev:desktop` to verify compact popup defaults, keyboard submenu navigation, and `编辑片断...` / `偏好设置...` standalone-window transitions.
+7. Run `npm run qa`, then `npm run dev:desktop` to verify compact popup defaults, keyboard submenu navigation, event-driven clipboard capture, and `编辑片断...` / `偏好设置...` standalone-window transitions.

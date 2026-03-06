@@ -1,4 +1,5 @@
 pub mod clipboard;
+pub mod clipboard_listener;
 pub mod commands;
 pub mod direct_paste;
 pub mod history_model;
@@ -12,6 +13,7 @@ pub mod tray;
 pub fn run() {
     tauri::Builder::default()
         .manage(hotkey::PanelHotkeyState::default())
+        .manage(clipboard_listener::ClipboardListenerState::default())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, _shortcut, event| {
@@ -40,6 +42,8 @@ pub fn run() {
             commands::open_preferences_window,
             clipboard::read_clipboard_text,
             clipboard::write_clipboard_text,
+            clipboard_listener::start_clipboard_listener,
+            clipboard_listener::stop_clipboard_listener,
             direct_paste::direct_paste_text,
             hotkey::register_panel_hotkey,
             hotkey::hide_panel_window,

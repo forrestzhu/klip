@@ -420,6 +420,7 @@ export function App() {
 
 		const monitor = new ClipboardMonitor({
 			reader: clipboard,
+			subscribeChanges: clipboard.subscribeChanges,
 			onTextCaptured: async (text) => {
 				const created = await historyRepository.addCapturedText({ text });
 				if (created !== null) {

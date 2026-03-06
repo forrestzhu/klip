@@ -737,3 +737,32 @@ This file is append-only. Add one entry after each completed iteration.
   - Needs interactive desktop verification on macOS/Windows to confirm
     hover-driven submenu navigation no longer changes visible history-row
     metrics in actual Tauri windows.
+
+## 2026-03-06 - desktop event-driven clipboard listener baseline
+
+- Commit: `pending`
+- Summary:
+  - Added a desktop clipboard watcher runtime module backed by `clipboard-rs`
+    and wired two new Tauri commands to start/stop listener lifecycle
+    (`src-tauri/src/clipboard_listener.rs`, `src-tauri/src/lib.rs`,
+    `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`).
+  - Added frontend runtime bridge so desktop clipboard port subscribes to
+    `klip://clipboard-updated` events and controls watcher lifecycle
+    (`src/features/history/browserClipboard.ts`).
+  - Updated clipboard monitor to accept best-effort event subscription while
+    preserving polling fallback and stop-time unsubscription cleanup
+    (`src/features/history/clipboardMonitor.ts`, `src/App.tsx`).
+  - Added regression tests for subscribed event capture, unsubscribe cleanup,
+    and polling fallback when subscription setup fails
+    (`tests/clipboardMonitor.test.ts`).
+- Validation:
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via
+    `npm run qa` (`test` 76; `test:e2e` skipped; coverage statements 85.71%,
+    branches 86.61%, funcs 84.54%, lines 85.71%)
+  - cargo:test: pass (`cargo test --manifest-path src-tauri/Cargo.toml`,
+    25 tests)
+- Risks / Follow-ups:
+  - Interactive macOS/Windows verification is still required to confirm
+    watcher behavior across foreground app switches and permission edge cases.
+  - Current frontend path keeps polling as fallback; future tuning may reduce
+    poll frequency after broader desktop reliability validation.

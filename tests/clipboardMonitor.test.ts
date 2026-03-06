@@ -131,6 +131,83 @@ describe("ClipboardMonitor", () => {
 		expect(captured).toEqual(["alpha"]);
 	});
 
+	it("captures updates from subscribed clipboard change events", async () => {
+		vi.useFakeTimers();
+		const reader = createReader("alpha");
+		const captured: string[] = [];
+		const subscribeChanges = vi.fn(async (_handler: () => void) => {
+			return () => {};
+		});
+
+		const monitor = new ClipboardMonitor({
+			reader: reader,
+			subscribeChanges,
+			onTextCaptured: (text) => {
+				captured.push(text);
+			},
+			pollIntervalMs: 60_000,
+		});
+
+		monitor.start();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(subscribeChanges).toHaveBeenCalledTimes(1);
+		expect(captured).toEqual(["alpha"]);
+
+		reader.setValue("beta");
+		const registeredHandler = subscribeChanges.mock.calls.at(0)?.[0];
+		if (typeof registeredHandler === "function") {
+			registeredHandler();
+		}
+		await vi.advanceTimersByTimeAsync(0);
+		expect(captured).toEqual(["alpha", "beta"]);
+		monitor.stop();
+	});
+
+	it("unsubscribes clipboard event listener when stopped", async () => {
+		vi.useFakeTimers();
+		const reader = createReader("alpha");
+		const unsubscribe = vi.fn();
+		const subscribeChanges = vi.fn(async () => unsubscribe);
+
+		const monitor = new ClipboardMonitor({
+			reader: reader,
+			subscribeChanges,
+			onTextCaptured: () => {},
+		});
+
+		monitor.start();
+		await vi.advanceTimersByTimeAsync(0);
+		monitor.stop();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(unsubscribe).toHaveBeenCalledTimes(1);
+	});
+
+	it("falls back to polling when event subscription fails", async () => {
+		vi.useFakeTimers();
+		const reader = createReader("alpha");
+		const captured: string[] = [];
+
+		const monitor = new ClipboardMonitor({
+			reader: reader,
+			subscribeChanges: async () => {
+				throw new Error("listener unavailable");
+			},
+			onTextCaptured: (text) => {
+				captured.push(text);
+			},
+			pollIntervalMs: 300,
+		});
+
+		monitor.start();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(captured).toEqual(["alpha"]);
+
+		reader.setValue("beta");
+		await vi.advanceTimersByTimeAsync(300);
+		expect(captured).toEqual(["alpha", "beta"]);
+		monitor.stop();
+	});
+
 	it("binds default timer APIs to globalThis", async () => {
 		const originalSetTimeout = globalThis.setTimeout;
 		const originalClearTimeout = globalThis.clearTimeout;

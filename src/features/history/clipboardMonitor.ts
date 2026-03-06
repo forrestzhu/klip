@@ -9,9 +9,15 @@ export interface ClipboardReader {
 	readText(): Promise<string | null>;
 }
 
+type ClipboardChangeUnsubscribe = () => Promise<void> | void;
+type ClipboardChangeSubscriber = (
+	handler: () => void,
+) => Promise<ClipboardChangeUnsubscribe>;
+
 interface ClipboardMonitorOptions {
 	reader: ClipboardReader;
 	onTextCaptured: (text: string) => Promise<void> | void;
+	subscribeChanges?: ClipboardChangeSubscriber;
 	pollIntervalMs?: number;
 	readyTimeoutMs?: number;
 	now?: () => number;
@@ -24,6 +30,7 @@ interface ClipboardMonitorOptions {
 export class ClipboardMonitor {
 	private readonly reader: ClipboardReader;
 	private readonly onTextCaptured: (text: string) => Promise<void> | void;
+	private readonly subscribeChanges: ClipboardChangeSubscriber | null;
 	private readonly pollIntervalMs: number;
 	private readonly readyTimeoutMs: number;
 	private readonly now: () => number;
@@ -34,6 +41,7 @@ export class ClipboardMonitor {
 
 	private intervalId: ReturnType<typeof setInterval> | null = null;
 	private readyTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	private unsubscribeChanges: (() => Promise<void> | void) | null = null;
 	private latestText: string | null = null;
 	private isTickRunning = false;
 	private suppressionMap = new Map<string, number>();
@@ -45,6 +53,7 @@ export class ClipboardMonitor {
 	public constructor(options: ClipboardMonitorOptions) {
 		this.reader = options.reader;
 		this.onTextCaptured = options.onTextCaptured;
+		this.subscribeChanges = options.subscribeChanges ?? null;
 		this.pollIntervalMs =
 			options.pollIntervalMs ?? DEFAULT_CLIPBOARD_POLL_INTERVAL_MS;
 		this.readyTimeoutMs =
@@ -76,6 +85,7 @@ export class ClipboardMonitor {
 			void this.tick();
 		}, this.pollIntervalMs);
 
+		void this.initializeChangeSubscription();
 		void this.tick();
 	}
 
@@ -88,6 +98,12 @@ export class ClipboardMonitor {
 		if (this.readyTimeoutId !== null) {
 			this.clearTimeoutImpl(this.readyTimeoutId);
 			this.readyTimeoutId = null;
+		}
+
+		const unsubscribeChanges = this.unsubscribeChanges;
+		this.unsubscribeChanges = null;
+		if (typeof unsubscribeChanges === "function") {
+			void Promise.resolve(unsubscribeChanges()).catch(() => {});
 		}
 	}
 
@@ -167,6 +183,31 @@ export class ClipboardMonitor {
 			await this.onTextCaptured(text);
 		} finally {
 			this.isTickRunning = false;
+		}
+	}
+
+	private async initializeChangeSubscription() {
+		if (this.subscribeChanges === null || this.unsubscribeChanges) {
+			return;
+		}
+
+		try {
+			const unsubscribeChanges = await this.subscribeChanges(() => {
+				void this.tick();
+			});
+
+			if (typeof unsubscribeChanges !== "function") {
+				return;
+			}
+
+			if (this.intervalId === null) {
+				await unsubscribeChanges();
+				return;
+			}
+
+			this.unsubscribeChanges = unsubscribeChanges;
+		} catch {
+			// Event subscription is best-effort. Polling remains the fallback path.
 		}
 	}
 }

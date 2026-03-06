@@ -5,7 +5,21 @@ export interface ClipboardWriter {
 	writeText(text: string): Promise<void>;
 }
 
-export interface ClipboardPort extends ClipboardReader, ClipboardWriter {}
+export type ClipboardChangeUnsubscribe = () => Promise<void> | void;
+type ClipboardChangeHandler = () => void;
+
+export interface ClipboardChangeSubscriber {
+	subscribeChanges(
+		handler: ClipboardChangeHandler,
+	): Promise<ClipboardChangeUnsubscribe>;
+}
+
+export interface ClipboardPort
+	extends ClipboardReader,
+		ClipboardWriter,
+		ClipboardChangeSubscriber {}
+
+const DESKTOP_CLIPBOARD_UPDATED_EVENT = "klip://clipboard-updated";
 
 export function createClipboardPort(): ClipboardPort {
 	if (isDesktopRuntime()) {
@@ -38,6 +52,9 @@ export function createBrowserClipboardPort(): ClipboardPort {
 
 			await clipboard.writeText(text);
 		},
+		async subscribeChanges() {
+			return () => {};
+		},
 	};
 }
 
@@ -52,6 +69,27 @@ function createDesktopClipboardPort(): ClipboardPort {
 		},
 		async writeText(text) {
 			await invoke("write_clipboard_text", { text });
+		},
+		async subscribeChanges(handler) {
+			await invoke("start_clipboard_listener");
+
+			try {
+				const { getCurrentWindow } = await import("@tauri-apps/api/window");
+				const unlisten = await getCurrentWindow().listen(
+					DESKTOP_CLIPBOARD_UPDATED_EVENT,
+					() => {
+						handler();
+					},
+				);
+
+				return async () => {
+					await unlisten();
+					await invoke("stop_clipboard_listener");
+				};
+			} catch (error) {
+				await invoke("stop_clipboard_listener").catch(() => {});
+				throw error;
+			}
 		},
 	};
 }
