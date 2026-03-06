@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { PASTE_MODE_CLIPBOARD_ONLY } from "../../src/features/settings/pasteModeStorage";
+import { DEFAULT_SNIPPETS_FOLDER_ID } from "../../src/features/snippets/snippet.constants";
 import { readBrowserPreviewClipboard, seedBrowserPreview } from "./fixtures";
 
 test("renders popup menu and opens inline management views in browser preview", async ({
@@ -276,4 +277,92 @@ test("supports popup keyboard navigation across submenu open and close", async (
 	await expect
 		.poll(async () => readBrowserPreviewClipboard(page))
 		.toBe("Second keyboard history entry");
+});
+
+test("supports folder create rename and delete flows in snippet editor", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page);
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "编辑片断..." }).click();
+
+	const folderNameInput = page.getByPlaceholder("文件夹名称");
+
+	await folderNameInput.fill("Personal");
+	await page.getByRole("button", { name: "添加文件夹" }).click();
+	await expect(page.getByText("Folder ready: Personal.")).toBeVisible();
+
+	await folderNameInput.fill("Work");
+	await page.getByRole("button", { name: "重命名" }).click();
+	await expect(page.getByText("Folder renamed to Work.")).toBeVisible();
+
+	await page.getByLabel("归属文件夹").selectOption({ label: "Work" });
+	await page.getByLabel("标题").fill("Folder move sample");
+	await page
+		.getByLabel("内容")
+		.fill("Snippet that should move back to General");
+	await page.getByRole("button", { name: "创建片断" }).click();
+
+	await expect(page.getByText("Snippet created.")).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: /Folder move sample/ }),
+	).toBeVisible();
+
+	page.once("dialog", async (dialog) => {
+		expect(dialog.type()).toBe("confirm");
+		expect(dialog.message()).toBe(
+			'Delete folder "Work" and move snippets to General?',
+		);
+		await dialog.accept();
+	});
+
+	await page.getByRole("button", { name: "删除文件夹" }).click();
+
+	await expect(
+		page.getByText("Folder deleted and snippets moved to General."),
+	).toBeVisible();
+
+	const snippetItem = page.getByRole("button", { name: /Folder move sample/ });
+	await snippetItem.click();
+
+	await expect(page.locator("#snippet-editor-folder")).toHaveValue(
+		DEFAULT_SNIPPETS_FOLDER_ID,
+	);
+	await expect(page.getByText(/General ·/)).toBeVisible();
+});
+
+test("rejects invalid snippet alias input before save", async ({ page }) => {
+	await seedBrowserPreview(page);
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "编辑片断..." }).click();
+
+	await page.getByLabel("标题").fill("Bad alias snippet");
+	await page.getByLabel("别名（可选）").fill("!!!");
+	await page.getByLabel("内容").fill("Should not be saved");
+	await page.getByRole("button", { name: "创建片断" }).click();
+
+	await expect(
+		page.getByText("Invalid snippet alias. Use letters, numbers, '_' or '-'."),
+	).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: /Bad alias snippet/ }),
+	).toHaveCount(0);
+});
+
+test("keeps browser preview alive when quit action is triggered", async ({
+	page,
+}) => {
+	await seedBrowserPreview(page);
+
+	await page.goto("/");
+	await page.getByRole("button", { name: "退出 Klip" }).click();
+
+	await expect(
+		page.getByText("Browser preview cannot quit desktop app."),
+	).toBeVisible();
+	await expect(
+		page.getByRole("textbox", { name: "搜索历史和片断" }),
+	).toBeVisible();
 });

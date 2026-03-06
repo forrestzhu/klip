@@ -967,7 +967,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-07 - second-batch Playwright popup regression scenarios
 
-- Commit: `pending`
+- Commit: `a417ca8`
 - Summary:
   - Extended browser-preview Playwright coverage from 4 to 7 scenarios by
     adding clear-history confirm/accept validation, snippet alias-conflict
@@ -990,3 +990,29 @@ This file is append-only. Add one entry after each completed iteration.
     remains required.
   - Candidate next browser scenarios are folder CRUD, invalid-alias handling,
     and additional popup action/error paths.
+
+## 2026-03-07 - third-batch Playwright editor and popup action coverage
+
+- Commit: `pending`
+- Summary:
+  - Extended browser-preview Playwright coverage from 7 to 10 scenarios by
+    adding folder create/rename/delete-with-move coverage, invalid snippet
+    alias rejection, and browser-preview `退出 Klip` action handling
+    (`tests/e2e/browser-preview.spec.ts`).
+  - Reused the existing preview fixtures so new scenarios continue to run with
+    deterministic browser localStorage and in-memory clipboard behavior
+    (`tests/e2e/fixtures.ts`).
+  - Refreshed status artifacts so the current snapshot and PRD evidence now
+    reflect the broader browser-side E2E safety net
+    (`docs/status/current.md`, `docs/status/prd-tracker.md`).
+- Validation:
+  - format: pass (`npm run format`)
+  - typecheck: pass (`npm run typecheck`)
+  - test:e2e: pass (`npm run test:e2e`, 10 tests)
+  - qa: pass (`npm run qa`; `lint`/`typecheck`/`test`/`test:e2e`/`build`/`test:coverage`/`cargo:check`)
+- Risks / Follow-ups:
+  - Browser E2E still does not exercise Tauri-only tray/global-hotkey/
+    direct-paste/independent-window behavior, so manual desktop verification
+    remains required.
+  - Candidate next browser scenarios are snippet delete confirm, folder-name
+    conflict handling, and additional popup action/error paths.

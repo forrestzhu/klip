@@ -3,13 +3,13 @@
 - Last Updated: 2026-03-07
 - Branch: `main`
 - Latest Commit: `0fa148c` (`test: add browser preview playwright baseline`)
-- Working Tree: dirty (Playwright second-batch browser E2E scenarios + status artifacts update in progress)
+- Working Tree: dirty (Playwright third-batch browser E2E scenarios + status artifacts update in progress)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
-- Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy/editor/preferences split, with browser-side Playwright E2E regression baseline now covering both baseline and second-batch popup validation ahead of manual desktop verification.
-- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle, and browser preview now has Playwright coverage for popup search, inline management views, `;alias` lookup, settings persistence, clear-history confirmation, alias-conflict guardrails, and submenu keyboard traversal.
+- Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy/editor/preferences split, with browser-side Playwright E2E regression baseline now covering baseline, second-batch, and third-batch popup/editor validation ahead of manual desktop verification.
+- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle, and browser preview now has Playwright coverage for popup search, inline management views, `;alias` lookup, settings persistence, clear-history confirmation, alias-conflict/invalid-alias guardrails, submenu keyboard traversal, folder CRUD/relocation flow, and browser-preview quit-action handling.
 
 ## Completed Highlights
 
@@ -69,7 +69,7 @@
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
 - CI cargo follow-up hardening added: install required Linux GTK/WebKit dependencies on Ubuntu runners before Rust checks, and add a real Windows `.ico` app icon for Tauri build-script requirements (`.github/workflows/ci.yml`, `src-tauri/icons/icon.png`, `src-tauri/icons/icon.ico`).
-- Browser Playwright E2E baseline added for preview-mode regression: repo now includes `playwright.config.ts`, seeded browser fixtures with stub clipboard/localStorage control, seven Chromium browser-preview scenarios under `tests/e2e`, CI browser install wiring, and artifact ignore rules (`playwright.config.ts`, `tests/e2e/browser-preview.spec.ts`, `tests/e2e/fixtures.ts`, `.github/workflows/ci.yml`, `.gitignore`).
+- Browser Playwright E2E baseline added for preview-mode regression: repo now includes `playwright.config.ts`, seeded browser fixtures with stub clipboard/localStorage control, ten Chromium browser-preview scenarios under `tests/e2e`, CI browser install wiring, and artifact ignore rules (`playwright.config.ts`, `tests/e2e/browser-preview.spec.ts`, `tests/e2e/fixtures.ts`, `.github/workflows/ci.yml`, `.gitignore`).
 
 ## In Progress / Gaps
 
@@ -77,7 +77,7 @@
 - History capture now has desktop event-driven listener + polling fallback, but interactive macOS/Windows reliability verification evidence is still pending (US-001 hardening gap).
 - Popup search (including query-mode flattened direct-paste flow) is now implemented, but interactive latency/usability verification evidence is still pending for larger history datasets on desktop runtime (US-005 hardening gap).
 - Snippet alias lookup and global alias hotkey trigger are implemented, but cross-platform interactive verification evidence is still pending (US-008 remaining gap).
-- Browser Playwright coverage now protects preview-mode popup/history/snippet/settings regressions including clear-history confirm, alias-conflict rejection, and submenu keyboard traversal, but it does not cover Tauri-only tray/hotkey/direct-paste/independent-window behavior.
+- Browser Playwright coverage now protects preview-mode popup/history/snippet/settings regressions including clear-history confirm, alias-conflict and invalid-alias rejection, submenu keyboard traversal, folder CRUD/relocation, and browser-preview quit-action handling, but it does not cover Tauri-only tray/hotkey/direct-paste/independent-window behavior.
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
@@ -90,7 +90,7 @@
 
 ## Next Focus
 
-1. Expand Playwright browser E2E beyond the current seven-scenario baseline (for example folder CRUD, invalid-alias validation, and more popup action paths).
+1. Expand Playwright browser E2E beyond the current ten-scenario baseline (for example snippet delete confirm, folder-name conflict handling, and additional popup action/error paths).
 2. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) and alias-hotkey-trigger flow (auto `;` focus), paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
 3. Continue US-011 Windows packaging evidence (artifact + install/uninstall matrix).
 
@@ -99,7 +99,7 @@
 - 2026-03-07: `npm run lint` passed.
 - 2026-03-07: `npm run typecheck` passed.
 - 2026-03-07: `npm run test` passed (85 tests).
-- 2026-03-07: `npm run test:e2e` passed (7 browser-preview Chromium scenarios).
+- 2026-03-07: `npm run test:e2e` passed (10 browser-preview Chromium scenarios).
 - 2026-03-07: `npm run build` passed.
 - 2026-03-07: `npm run test:coverage` passed (statements 85.24%, branches 86.94%, funcs 84.67%, lines 85.24%).
 - 2026-03-07: `npm run cargo:check` passed.
