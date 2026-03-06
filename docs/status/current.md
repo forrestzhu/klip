@@ -1,9 +1,9 @@
 # Project Status Snapshot
 
-- Last Updated: 2026-03-05
+- Last Updated: 2026-03-06
 - Branch: `main`
-- Latest Commit: `2a6fd45` (`fix: prevent snippet hover clipping in popup columns`)
-- Working Tree: dirty (`src/App.tsx` + `src/styles.css` + `docs/status/*`)
+- Latest Commit: `5be3130` (`fix: replace popup static height with runtime measured baseline`)
+- Working Tree: dirty (`src/App.tsx` + `docs/status/*`)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -57,6 +57,7 @@
 - Popup panel height behavior follow-up now locks menu-column heights to a stable baseline and keeps preview/list scroll gutters stable, preventing left-panel length jumps when hovering different snippet/menu entries (`src/styles.css`).
 - Popup snippet-hover follow-up raises fixed popup column baseline to prevent internal content compression/truncation when snippet preview opens, while keeping panel height stable (`src/styles.css`).
 - Popup root-cause follow-up now replaces static popup-height constant with runtime-measured stable column height (session max) and switches desktop window sizing to visible bounding-box measurements, preventing snippet-hover clipping/regressions from overflow-based resize calculations (`src/App.tsx`, `src/styles.css`).
+- Popup stability follow-up now decouples stable-height measurement from hover-state transitions by deriving the baseline from root-column content only and only on root-entry changes, avoiding hover-driven internal row-metric churn (`src/App.tsx`).
 - CI install reliability hardening added: workflow now pins Node `22.22.0`, pins npm `10.9.4`, disables Husky during CI install, retries `npm ci`, and dumps npm debug logs on final failure (`.github/workflows/ci.yml`).
 - CI registry root-cause hardening added: lockfile `resolved` URLs are normalized from `registry.anpm.alibaba-inc.com` to `registry.npmjs.org`, project-level `.npmrc` now pins `registry=https://registry.npmjs.org/`, and CI setup/install path explicitly uses npmjs registry (`.npmrc`, `package-lock.json`, `.github/workflows/ci.yml`).
 - CI cross-platform follow-up hardening added: enforce LF checkouts via `.gitattributes` to avoid Windows lint CRLF diffs, and bump Rust toolchain from `1.84.0` to `1.85.0` (repo + workflow) to handle transitive crates requiring `edition2024` parsing support (`.gitattributes`, `rust-toolchain.toml`, `.github/workflows/ci.yml`).
@@ -131,6 +132,7 @@
 - 2026-03-05: popup left-panel stability + menu-title size follow-up validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-05: popup snippet-hover truncation follow-up (raised fixed popup column baseline + menu title downscale) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 - 2026-03-06: popup root-cause stabilization follow-up (runtime-measured stable column height + bounding-box resize) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
+- 2026-03-06: popup hover-decoupled stable-height follow-up (root-column-only baseline measurement) validated via `npm run format`, `npm run lint`, and `npm run qa` (`test` 71 tests; `test:e2e` skipped; coverage statements `87.08%`, branches `86.71%`, funcs `85.18%`, lines `87.08%`).
 
 ## Quick Resume Steps
 

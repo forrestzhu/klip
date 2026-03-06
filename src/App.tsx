@@ -235,6 +235,7 @@ export function App() {
 		activePopupEntry?.kind === "snippet-item" ? activePopupEntry.text : null;
 	const selectedSnippetItem =
 		filteredSnippetItems[selectedSnippetIndex] ?? null;
+	const popupRootEntryCount = popupRootEntries.length;
 
 	useEffect(() => {
 		setSelectedSnippetIndex((current) => {
@@ -636,7 +637,7 @@ export function App() {
 		if (panelView !== "menu") {
 			return;
 		}
-		if (popupColumns.length === 0) {
+		if (popupRootEntryCount === 0) {
 			return;
 		}
 
@@ -645,27 +646,18 @@ export function App() {
 			return;
 		}
 
-		const measurePopupColumnHeight = () => {
-			const popupLists = Array.from(
-				panelElement.querySelectorAll<HTMLElement>(".popup-list"),
-			);
-			const popupPreview = panelElement.querySelector<HTMLElement>(
-				".popup-preview-panel",
-			);
-			const measuredHeights = popupLists.map((element) =>
-				Math.ceil(element.scrollHeight),
-			);
-
-			if (popupPreview) {
-				measuredHeights.push(Math.ceil(popupPreview.scrollHeight));
-			}
-
-			const measuredMax = Math.max(0, ...measuredHeights);
-			if (measuredMax <= 0) {
+		const measureStableRootColumnHeight = () => {
+			const rootColumn = panelElement.querySelector<HTMLElement>(".popup-list");
+			if (!rootColumn) {
 				return;
 			}
 
-			const boundedHeight = clampNumber(measuredMax, 260, 760);
+			const measuredHeight = Math.ceil(rootColumn.scrollHeight);
+			if (measuredHeight <= 0) {
+				return;
+			}
+
+			const boundedHeight = clampNumber(measuredHeight, 260, 760);
 			setPopupStableColumnHeight((current) => {
 				if (current === null) {
 					return boundedHeight;
@@ -674,16 +666,13 @@ export function App() {
 			});
 		};
 
-		measurePopupColumnHeight();
-		const timer = setTimeout(
-			measurePopupColumnHeight,
-			selectedSnippetPreview ? 16 : 0,
-		);
+		measureStableRootColumnHeight();
+		const timer = setTimeout(measureStableRootColumnHeight, 0);
 
 		return () => {
 			clearTimeout(timer);
 		};
-	}, [panelView, popupColumns, selectedSnippetPreview]);
+	}, [panelView, popupRootEntryCount]);
 
 	useEffect(() => {
 		if (

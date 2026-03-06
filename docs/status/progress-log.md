@@ -688,7 +688,7 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-06 - popup root-cause stabilization (runtime measure + visible resize)
 
-- Commit: `pending`
+- Commit: `5be3130`
 - Summary:
   - Replaced static popup height constant strategy with runtime-measured stable popup column height (session max), then applied the measured height consistently to popup lists and preview panel (`src/App.tsx`).
   - Updated desktop popup window sizing to use visible panel bounding-box measurements (`getBoundingClientRect`) instead of `scrollHeight`, avoiding overflow-content-driven resize distortion (`src/App.tsx`).
@@ -699,3 +699,17 @@ This file is append-only. Add one entry after each completed iteration.
   - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
 - Risks / Follow-ups:
   - Need manual desktop verification for extreme long-preview samples to decide whether session-max height should be capped lower for ergonomics.
+
+## 2026-03-06 - popup hover-decoupled stable-height measurement follow-up
+
+- Commit: `pending`
+- Summary:
+  - Refined popup stable-height measurement to track root-column content only, instead of re-measuring on hover-specific submenu/preview transitions (`src/App.tsx`).
+  - Limited stable-height recomputation trigger to root-entry count changes, preventing hover-path changes from feeding back into row-height behavior (`src/App.tsx`).
+  - Kept runtime stable-height model and visible-size window resizing from prior iteration, but removed remaining hover-coupled measurement paths (`src/App.tsx`).
+- Validation:
+  - format: pass (`npm run format`)
+  - lint: pass (`npm run lint`)
+  - lint/typecheck/test/test:e2e/build/test:coverage/cargo:check: pass via `npm run qa` (`test` 71; `test:e2e` skipped; coverage statements 87.08%, branches 86.71%, funcs 85.18%, lines 87.08%)
+- Risks / Follow-ups:
+  - Requires manual hover-path verification on macOS desktop runtime to confirm history-range row height remains invariant across snippet-hover states.
