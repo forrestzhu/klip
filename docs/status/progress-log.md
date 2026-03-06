@@ -880,3 +880,24 @@ This file is append-only. Add one entry after each completed iteration.
     provide a standalone global alias command path.
   - Interactive desktop verification is still required for alias-search UX and
     direct-paste reliability across macOS/Windows foreground apps.
+
+## 2026-03-06 - desktop manual verification matrix refresh for alias scenarios
+
+- Commit: `f13f390`
+- Summary:
+  - Rechecked desktop startup smoke after alias baseline and captured fresh log
+    evidence (`/tmp/klip-dev-desktop-alias-20260306.log`), confirming Vite +
+    Tauri runtime startup path still reaches `Running target/debug/klip-tauri`.
+  - Refreshed manual verification matrix baseline commit to `f13f390` and
+    switched startup-log evidence path to the alias-baseline run
+    (`docs/status/manual-verification-us001-us006.md`).
+  - Expanded manual matrix with US-008 `;alias` scenarios for popup quick
+    search, enter-to-paste, and unknown-alias empty-state checks
+    (`docs/status/manual-verification-us001-us006.md`).
+- Validation:
+  - dev:desktop smoke: pass (`npm run dev:desktop`; log includes
+    `VITE v7.3.1`, `http://localhost:5173/`, and `Running target/debug/klip-tauri`)
+  - lint: pass (`npm run lint`)
+- Risks / Follow-ups:
+  - Interactive GUI rows remain `pending`; this terminal session can only
+    complete startup/preflight evidence, not hands-on popup/tray interactions.

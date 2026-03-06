@@ -1,7 +1,7 @@
-# Desktop Manual Verification Matrix (US-001/US-003/US-004/US-006)
+# Desktop Manual Verification Matrix (US-001/US-003/US-004/US-006/US-008)
 
 - Last Updated: 2026-03-06
-- Baseline Commit: `7aac9e1`
+- Baseline Commit: `f13f390`
 - Target Runtime: Tauri desktop (`npm run dev:desktop`)
 - Status Legend: `pass` | `fail` | `pending` | `blocked`
 
@@ -9,7 +9,7 @@
 
 - Local OS: macOS 15.7.4 (Build 24G517, arm64)
 - Local Node/NPM: Node `v25.2.1`, npm `10.9.3` (project target is Node 22)
-- Desktop startup log evidence: `/tmp/klip-dev-desktop-event-listener-20260306.log`
+- Desktop startup log evidence: `/tmp/klip-dev-desktop-alias-20260306.log`
 
 ## Automated Preflight Evidence
 
@@ -21,6 +21,7 @@
 | 2026-03-06 | `npm run dev:desktop` | pass | Log `/tmp/klip-dev-desktop-event-listener-20260306.log` includes `VITE v7.3.1` and `Running target/debug/klip-tauri`. |
 | 2026-03-06 | `npm run qa` | pass | `lint/typecheck/test/build/test:coverage/cargo:check` all passed; `test`=76, e2e skipped (no Playwright setup). |
 | 2026-03-06 | `cargo test --manifest-path src-tauri/Cargo.toml` | pass | 25 tests passed (0 failed). |
+| 2026-03-06 | `npm run dev:desktop` (alias baseline) | pass | Log `/tmp/klip-dev-desktop-alias-20260306.log` includes `VITE v7.3.1` and `Running target/debug/klip-tauri`. |
 
 ## Manual Verification Matrix
 
@@ -40,6 +41,9 @@
 | US-006 | Select history item performs direct paste into active app | pending | pending | Validate insertion in external app text field. |
 | US-006 | On direct paste success, panel auto-hides | pending | pending | Should hide immediately after success. |
 | US-006 | On direct paste failure, user sees message and clipboard fallback works | pending | pending | Switch to `clipboard-only` mode and verify fallback message + paste with `Cmd/Ctrl+V`. |
+| US-008 | Popup query `;alias` only returns matching snippet entries | pending | pending | Create two snippets with different aliases; verify `;alias` narrows to expected entry. |
+| US-008 | `Enter` on `;alias` result triggers paste and panel auto-hides | pending | pending | In external text field, run `;alias` search and press `Enter`; verify inserted text and panel hidden. |
+| US-008 | Unknown `;alias` query shows snippet empty-state text | pending | pending | Search `;missing-alias` and verify snippet section renders not-found state. |
 
 ## Execution Notes
 
