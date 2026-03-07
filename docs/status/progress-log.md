@@ -1449,3 +1449,28 @@ This file is append-only. Add one entry after each completed iteration.
     verification in real apps.
   - The dedicated tray icon asset should be more visible, but final visual
     confirmation in the live menu bar is still required.
+
+## 2026-03-07 - macOS tray title fallback follow-up
+
+- Commit: `pending`
+- Summary:
+  - Added a small macOS tray title fallback (`Klip`) in `src-tauri/src/tray.rs`
+    so the menu-bar entry still has visible text while template-icon
+    visibility is being tuned and manually verified.
+  - Applied the title only on macOS and added a Rust regression test to keep
+    the fallback non-empty.
+  - Refreshed `docs/status/current.md` and `docs/status/prd-tracker.md` for
+    this follow-up.
+- Validation:
+  - cargo test: pass (`PATH=/opt/homebrew/bin:$PATH cargo test --manifest-path src-tauri/Cargo.toml`; 36 Rust tests)
+  - lint: pass (`PATH=/opt/homebrew/bin:$PATH npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`PATH=/opt/homebrew/bin:$PATH npm run typecheck`)
+  - test: pass (`PATH=/opt/homebrew/bin:$PATH npm run test`; 90 tests)
+  - build: pass (`PATH=/opt/homebrew/bin:$PATH npm run build`)
+  - cargo:check: pass (`PATH=/opt/homebrew/bin:$PATH npm run cargo:check`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - Need hands-on macOS verification to confirm the title improves
+    discoverability without clashing with native menu-bar expectations.
+  - Local machine still lacks an active Node 22 switch path, so validation ran
+    under the currently installed Node runtime.

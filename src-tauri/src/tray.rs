@@ -17,6 +17,8 @@ const MACOS_TRAY_ICON_WIDTH: u32 = 24;
 const MACOS_TRAY_ICON_HEIGHT: u32 = 24;
 #[cfg(target_os = "macos")]
 const MACOS_TRAY_ICON_RGBA: &[u8] = include_bytes!("../icons/tray-template.rgba");
+#[cfg(target_os = "macos")]
+const MACOS_TRAY_TITLE: &str = "Klip";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrayMenuAction {
@@ -53,6 +55,8 @@ pub fn setup_tray<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
         } else if let Some(icon) = app.default_window_icon().cloned() {
             tray_builder = tray_builder.icon(icon);
         }
+
+        tray_builder = tray_builder.title(macos_tray_title());
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -119,6 +123,11 @@ fn load_macos_tray_icon() -> tauri::Result<Image<'static>> {
     .to_owned())
 }
 
+#[cfg(target_os = "macos")]
+fn macos_tray_title() -> &'static str {
+    MACOS_TRAY_TITLE
+}
+
 pub fn configure_main_window_for_panel<R: Runtime>(
     window: &tauri::WebviewWindow<R>,
 ) -> tauri::Result<()> {
@@ -129,6 +138,8 @@ pub fn configure_main_window_for_panel<R: Runtime>(
 mod tests {
     #[cfg(target_os = "macos")]
     use super::load_macos_tray_icon;
+    #[cfg(target_os = "macos")]
+    use super::macos_tray_title;
     use super::{parse_tray_menu_action, TrayMenuAction, TRAY_MENU_OPEN_PANEL, TRAY_MENU_QUIT_APP};
 
     #[test]
@@ -141,6 +152,12 @@ mod tests {
             parse_tray_menu_action(TRAY_MENU_QUIT_APP),
             Some(TrayMenuAction::QuitApp)
         );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_tray_title_fallback_is_not_empty() {
+        assert!(!macos_tray_title().trim().is_empty());
     }
 
     #[test]

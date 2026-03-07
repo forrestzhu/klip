@@ -2,8 +2,8 @@
 
 - Last Updated: 2026-03-07
 - Branch: `main`
-- Latest Commit: `2799b1d` (`ci: add release notes and macos signing flow`)
-- Working Tree: dirty (preferences build-commit footer + native panel follow-ups + macOS startup/hotkey-panel/direct-paste follow-ups + status artifacts ready for commit)
+- Latest Commit: `1cabc29` (`fix: stabilize macos panel tray and paste flow`)
+- Working Tree: dirty (macOS tray title follow-up + status artifacts ready for commit)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
@@ -23,6 +23,7 @@
 - Settings center startup-launch toggle baseline added with local persistence normalization and desktop runtime bridge (`src/features/settings/startupLaunchStorage.ts`, `src/features/settings/startupLaunchRuntime.ts`, `src-tauri/src/startup_launch.rs`, `src-tauri/src/lib.rs`).
 - Preferences window now shows a low-visibility build footer with the current short commit (and `-dirty` when built from a dirty tree), injected at Vite build time so installed builds can be identified from the settings window without access to git metadata (`vite.config.ts`, `src/features/build/buildInfo.ts`, `src/App.tsx`, `src/styles.css`).
 - Tauri tray/menu bar resident entry with icon click open, menu open, and quit action (`src-tauri/src/tray.rs`).
+- macOS tray follow-up now also sets a non-empty `Klip` title fallback so the menu-bar item still has visible text even when the template icon is subtle (`src-tauri/src/tray.rs`).
 - Tauri global hotkey baseline for opening panel, dynamic rebind, and conflict-aware error feedback (`src-tauri/src/hotkey.rs`, `src-tauri/src/lib.rs`).
 - Direct paste abstraction baseline in Tauri (`src-tauri/src/direct_paste.rs`) with platform paste attempt (macOS `osascript`, Windows `SendKeys`) and clipboard fallback response.
 - Native panel presenter follow-up now centralizes popup presentation, cursor-relative positioning, previous-target capture, and pre-paste focus restoration; macOS applies native `NSWindow` panel-style behavior lazily when the panel is actually presented, which avoids the installed-app startup abort seen when that native collection-behavior mutation was attempted too early during `setup`, and the latest follow-up also removes the invalid `MoveToActiveSpace` mutation that caused AppKit to abort the app as soon as the panel was shown via hotkey/tray while retaining a safe `FullScreenAuxiliary` collection behavior plus status-window level/hide-on-deactivate semantics; the tray icon now uses a dedicated macOS template asset so the menu bar item remains visible in the native menu bar appearance, while direct paste now preflights macOS Accessibility trust before hiding/restoring focus so permission-denied cases stay in-panel with an actionable fallback message instead of appearing to do nothing (`src-tauri/src/panel_presenter.rs`, `src-tauri/src/panel_presenter/macos.rs`, `src-tauri/src/panel_presenter/windows.rs`, `src-tauri/src/direct_paste.rs`, `src-tauri/src/tray.rs`, `src-tauri/src/lib.rs`, `src/features/paste/directPasteFeedback.ts`, `src/App.tsx`).
@@ -86,7 +87,7 @@
 - Popup search (including query-mode flattened direct-paste flow) is now implemented, but interactive latency/usability verification evidence is still pending for larger history datasets on desktop runtime (US-005 hardening gap).
 - Snippet alias lookup and global alias hotkey trigger are implemented, but cross-platform interactive verification evidence is still pending (US-008 remaining gap).
 - Browser Playwright coverage now protects preview-mode popup/history/snippet/settings regressions including clear-history confirm + empty-history action messaging, alias-conflict and invalid-alias rejection, submenu keyboard traversal, snippet delete confirm, folder CRUD/relocation, folder rename conflict handling, and browser-preview quit-action handling, but it does not cover Tauri-only tray/hotkey/direct-paste/independent-window behavior.
-- Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
+- Tray behavior has baseline runtime coverage and now includes a macOS title fallback for menu-bar visibility, but desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior now routes through the native panel presenter with cursor-relative placement, but macOS/Windows manual conflict and placement verification evidence is still pending (US-004 final hardening gap).
 - The native macOS panel presenter fix is implemented, and both the startup regression that made freshly installed builds quit immediately and the panel-show regression that aborted the app when the hotkey/tray tried to present the panel are now fixed in the rebuilt DMG; direct paste now explicitly gates on macOS Accessibility permission and no longer silently closes the panel on fallback, but hands-on verification is still pending for fullscreen apps, non-fullscreen apps, multi-display cursor anchoring, menu-bar icon visibility, and successful post-permission direct paste into the original foreground app.
 - The latest unsigned DMG has been rebuilt for reinstall testing after the macOS startup/panel-show/direct-paste follow-ups; local `tauri build --bundles app,dmg` currently succeeds again, though future runs may still require cleaning stale mounted `rw.*.dmg` leftovers before the DMG step can succeed.
@@ -106,6 +107,13 @@
 
 ## Last Validation Snapshot
 
+- 2026-03-07: `cargo test --manifest-path src-tauri/Cargo.toml` passed after adding the macOS tray title fallback (36 Rust tests including the new non-empty tray-title regression).
+- 2026-03-07: `npm run lint` passed after the macOS tray title follow-up (Biome reported existing schema-version info only).
+- 2026-03-07: `npm run typecheck` passed after the macOS tray title follow-up.
+- 2026-03-07: `npm run test` passed (90 tests) after the macOS tray title follow-up.
+- 2026-03-07: `npm run build` passed after the macOS tray title follow-up.
+- 2026-03-07: `npm run cargo:check` passed after the macOS tray title follow-up.
+- 2026-03-07: `git diff --check` passed after the macOS tray title follow-up and status refresh.
 - 2026-03-07: `cargo test --manifest-path src-tauri/Cargo.toml` passed after the macOS tray-icon/direct-paste follow-up (35 Rust tests including tray-icon asset and Accessibility guidance regressions; log: `/tmp/klip-followup-verify-20260307-195815/cargo-test.log`).
 - 2026-03-07: `npm run cargo:check` passed after the macOS tray-icon/direct-paste follow-up (log: `/tmp/klip-followup-verify-20260307-195815/cargo-check.log`).
 - 2026-03-07: `npm run lint` passed after the macOS tray-icon/direct-paste follow-up (Biome reported existing schema-version info only; log: `/tmp/klip-followup-verify-20260307-195815/lint-rerun.log`).
