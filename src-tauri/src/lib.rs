@@ -6,14 +6,31 @@ pub mod history_model;
 pub mod history_repository;
 pub mod history_storage;
 pub mod hotkey;
+pub mod panel_presenter;
 pub mod startup_launch;
 pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            #[cfg(target_os = "macos")]
+            {
+                app.handle()
+                    .set_activation_policy(tauri::ActivationPolicy::Accessory)?;
+                app.handle().set_dock_visibility(false)?;
+            }
+            tray::setup_tray(app)?;
+            hotkey::register_default_panel_hotkey(&app.handle()).map_err(|error| {
+                let setup_error: Box<dyn std::error::Error> =
+                    Box::new(std::io::Error::other(error));
+                tauri::Error::Setup(setup_error.into())
+            })?;
+            Ok(())
+        })
         .manage(hotkey::PanelHotkeyState::default())
         .manage(hotkey::SnippetAliasHotkeyState::default())
+        .manage(panel_presenter::PanelPresenterState::default())
         .manage(clipboard_listener::ClipboardListenerState::default())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
@@ -26,15 +43,6 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
-        .setup(|app| {
-            tray::setup_tray(app)?;
-            hotkey::register_default_panel_hotkey(&app.handle()).map_err(|error| {
-                let setup_error: Box<dyn std::error::Error> =
-                    Box::new(std::io::Error::other(error));
-                tauri::Error::Setup(setup_error.into())
-            })?;
-            Ok(())
-        })
         .invoke_handler(tauri::generate_handler![
             commands::quit_app,
             commands::open_snippet_editor_window,

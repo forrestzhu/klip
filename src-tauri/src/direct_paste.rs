@@ -4,7 +4,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Runtime};
 use thiserror::Error;
 
-use crate::tray;
+use crate::panel_presenter;
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -36,14 +36,11 @@ pub fn direct_paste_text<R: Runtime>(
     let normalized_text = normalize_input_text(&text)?;
     set_clipboard_text(&normalized_text)?;
 
-    match trigger_system_paste() {
-        Ok(()) => {
-            let _ = tray::hide_main_window(&app);
-            Ok(DirectPasteResponse {
-                mode: DirectPasteMode::Direct,
-                message: String::from("Pasted into active app."),
-            })
-        }
+    match trigger_system_paste(&app) {
+        Ok(()) => Ok(DirectPasteResponse {
+            mode: DirectPasteMode::Direct,
+            message: String::from("Pasted into active app."),
+        }),
         Err(error) => Ok(DirectPasteResponse {
             mode: DirectPasteMode::Fallback,
             message: format!(
@@ -69,14 +66,17 @@ fn set_clipboard_text(text: &str) -> Result<(), String> {
         .map_err(|error| DirectPasteError::ClipboardWrite(error.to_string()).to_string())
 }
 
-fn trigger_system_paste() -> Result<(), String> {
+fn trigger_system_paste<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
+        ensure_macos_direct_paste_access()?;
+        panel_presenter::prepare_direct_paste(app)?;
         return trigger_macos_paste();
     }
 
     #[cfg(target_os = "windows")]
     {
+        panel_presenter::prepare_direct_paste(app)?;
         return trigger_windows_paste();
     }
 
@@ -101,11 +101,48 @@ fn trigger_macos_paste() -> Result<(), String> {
     }
 
     let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if is_macos_accessibility_error(&stderr) {
+        return Err(macos_accessibility_message());
+    }
     if stderr.is_empty() {
         Err(String::from("osascript execution failed"))
     } else {
         Err(stderr)
     }
+}
+
+#[cfg(target_os = "macos")]
+fn ensure_macos_direct_paste_access() -> Result<(), String> {
+    if is_macos_accessibility_trusted() {
+        Ok(())
+    } else {
+        Err(macos_accessibility_message())
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn is_macos_accessibility_error(message: &str) -> bool {
+    let normalized = message.to_lowercase();
+    normalized.contains("not allowed to send keystrokes")
+        || normalized.contains("不允许发送按键")
+        || normalized.contains("accessibility")
+}
+
+#[cfg(target_os = "macos")]
+fn macos_accessibility_message() -> String {
+    String::from(
+        "Direct paste requires Accessibility permission on macOS. Allow Klip in System Settings > Privacy & Security > Accessibility, then retry.",
+    )
+}
+
+#[cfg(target_os = "macos")]
+fn is_macos_accessibility_trusted() -> bool {
+    #[link(name = "ApplicationServices", kind = "framework")]
+    unsafe extern "C" {
+        fn AXIsProcessTrusted() -> bool;
+    }
+
+    unsafe { AXIsProcessTrusted() }
 }
 
 #[cfg(target_os = "windows")]
@@ -133,6 +170,9 @@ fn trigger_windows_paste() -> Result<(), String> {
 mod tests {
     use super::{normalize_input_text, DirectPasteMode};
 
+    #[cfg(target_os = "macos")]
+    use super::macos_accessibility_message;
+
     #[test]
     fn normalize_input_rejects_empty_text() {
         let result = normalize_input_text("   ");
@@ -149,5 +189,13 @@ mod tests {
     fn direct_paste_mode_is_stable() {
         assert_eq!(DirectPasteMode::Direct, DirectPasteMode::Direct);
         assert_eq!(DirectPasteMode::Fallback, DirectPasteMode::Fallback);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_accessibility_message_mentions_system_settings() {
+        let message = macos_accessibility_message();
+        assert!(message.contains("Accessibility"));
+        assert!(message.contains("System Settings"));
     }
 }

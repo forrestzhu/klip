@@ -1134,3 +1134,318 @@ This file is append-only. Add one entry after each completed iteration.
     credentials; no secrets were provisioned during this iteration.
   - A real `workflow_dispatch` / tag-based release run remains necessary to
     validate the signed/notarized macOS path and record US-011 evidence.
+
+## 2026-03-07 - fresh macOS DMG rebuild for install verification
+
+- Commit: `b9c06de`
+- Summary:
+  - Rebuilt the local unsigned macOS desktop bundles so DMG install verification
+    can proceed against a fresh artifact instead of the older 2026-03-04 output
+    (`src-tauri/target/release/bundle/macos/Klip.app`,
+    `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`).
+  - Captured fresh packaging evidence including timestamp, sha256, and build log
+    path in the US-011 packaging verification doc
+    (`docs/status/packaging-verification-us011.md`,
+    `/tmp/klip-build-bundle-macos-20260307.log`).
+  - Refreshed status artifacts so the current snapshot and PRD evidence reflect
+    the new local macOS packaging baseline
+    (`docs/status/current.md`, `docs/status/prd-tracker.md`).
+- Validation:
+  - build: pass (`npm run build:desktop:bundle:macos`)
+  - lint: pass (`npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: skip (build/status-only change; latest 2026-03-07 pass retained)
+  - test: skip (build/status-only change; latest 2026-03-07 pass retained)
+  - diff-check: pass (`git diff --check`)
+  - cargo:check: skip (covered transitively by Tauri release build for this iteration)
+- Risks / Follow-ups:
+  - The rebuild used local Node `v25.2.1` because Node 22 runtime switching was
+    unavailable on this machine, so environment alignment remains a known gap.
+  - macOS DMG install, first-launch, tray persistence, and uninstall cleanup
+    checks still need hands-on verification to close the US-011 matrix rows.
+
+## 2026-03-07 - macOS panel workspace fix for hotkey invocation
+
+- Commit: `pending`
+- Summary:
+  - Fixed the macOS panel presentation path so the main window is configured as
+    `visible_on_all_workspaces`, allowing the hotkey popup to behave like a
+    tray panel instead of jumping to Klip's own desktop/Space
+    (`src-tauri/src/tray.rs`).
+  - Switched the macOS app runtime to `ActivationPolicy::Accessory` with the
+    Dock hidden, matching the intended tray-app behavior when the panel is
+    shown from the global hotkey (`src-tauri/src/lib.rs`).
+  - Rebuilt the unsigned macOS DMG after the fix so manual installation
+    verification can confirm current-space behavior from a fresh artifact
+    (`/tmp/klip-build-bundle-macos-space-fix-20260307.log`,
+    `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`).
+- Validation:
+  - cargo:check: pass (`npm run cargo:check`)
+  - build: pass (`npm run build:desktop:bundle:macos`)
+  - lint: pass (`npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`npm run typecheck`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The fix is based on macOS tray-app window semantics and still needs hands-on
+    verification from the rebuilt DMG to confirm Space-switching is gone.
+  - Auxiliary windows (`snippet-editor` / `preferences`) intentionally remain
+    normal app windows; only the main panel uses the all-workspaces tray
+    behavior.
+
+## 2026-03-07 - macOS direct paste focus restoration fix
+
+- Commit: `pending`
+- Summary:
+  - Updated the macOS panel flow to remember the frontmost app before Klip takes
+    focus, storing the bundle identifier for later paste restoration
+    (`src-tauri/src/tray.rs`).
+  - Updated direct paste so Klip hides the panel, re-activates the remembered
+    frontmost app, waits briefly, and only then sends the synthetic `Cmd+V`
+    keystroke (`src-tauri/src/direct_paste.rs`).
+  - Rebuilt the unsigned macOS DMG after the fix so manual verification can
+    confirm paste lands in the original app again
+    (`/tmp/klip-build-bundle-macos-paste-fix-20260307.log`,
+    `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`).
+- Validation:
+  - cargo:check: pass (`npm run cargo:check`)
+  - lint: pass (`npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`npm run typecheck`)
+  - build: pass (`npm run build:desktop:bundle:macos`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The fix still needs hands-on DMG verification in a real foreground text app
+    to confirm paste now returns to the original target reliably.
+  - If certain apps still reject restored focus, a follow-up may be needed to
+    tune the macOS re-activation delay or activation strategy.
+
+## 2026-03-07 - native panel presenter for fullscreen-safe popup and cursor anchoring
+
+- Commit: `pending`
+- Summary:
+  - Added a dedicated native panel presenter that centralizes popup show/hide,
+    cursor-relative positioning, previous-target capture, and pre-paste focus
+    restoration so the main panel and direct-paste pipeline share one source of
+    truth (`src-tauri/src/panel_presenter.rs`,
+    `src-tauri/src/direct_paste.rs`, `src-tauri/src/tray.rs`,
+    `src-tauri/src/lib.rs`).
+  - Added macOS native window handling that applies panel-style
+    `NSWindowCollectionBehavior` (`CanJoinAllSpaces`, `MoveToActiveSpace`,
+    `FullScreenAuxiliary`, `Transient`, `IgnoresCycle`) plus elevated window
+    level so the popup can stay in the active desktop/full-screen context
+    instead of switching to Klip's own Space
+    (`src-tauri/src/panel_presenter/macos.rs`,
+    `src-tauri/src/panel_presenter.rs`).
+  - Added shared cursor/work-area positioning logic with Rust regression tests,
+    and added Windows presenter scaffolding for the same cursor-based placement
+    and foreground-target restore flow so similar focus bugs can be handled
+    through the same abstraction later
+    (`src-tauri/src/panel_presenter.rs`,
+    `src-tauri/src/panel_presenter/windows.rs`).
+- Validation:
+  - cargo:test: pass (`cargo test --manifest-path src-tauri/Cargo.toml`)
+  - cargo:check: pass (`PATH=/opt/homebrew/bin:$PATH npm run cargo:check`)
+  - lint: pass (`PATH=/opt/homebrew/bin:$PATH npm run lint`; Biome reported
+    existing schema-version info only)
+  - typecheck: pass (`PATH=/opt/homebrew/bin:$PATH npm run typecheck`)
+  - test: pass (`PATH=/opt/homebrew/bin:$PATH npm run test`)
+  - build: pass (`PATH=/opt/homebrew/bin:$PATH npm run build`)
+  - build:desktop: pass (`PATH=/opt/homebrew/bin:$PATH npm run build:desktop`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - Hands-on verification is still required in real macOS fullscreen apps,
+    non-fullscreen apps, and multi-display setups to confirm cursor anchoring
+    and paste restoration match the intended native feel.
+  - Local validation used Homebrew Node `v25.2.1` because the repo-pinned Node
+    22 runtime was not available on this machine.
+
+## 2026-03-07 - manual macOS DMG rebuild for reinstall testing
+
+- Commit: `pending`
+- Summary:
+  - Rebuilt the unsigned macOS app bundle for reinstall testing via
+    `npm run build:desktop:bundle:macos`; the `.app` portion succeeded, but
+    the DMG step failed because a stale temporary
+    `rw.*.Klip_0.1.0_aarch64.dmg` remained mounted from an earlier failed
+    attempt (`/tmp/klip-build-bundle-macos-native-panel-20260307.log`).
+  - Investigated the failure, detached stale `/dev/disk8`, removed
+    `src-tauri/target/release/bundle/macos/rw.40197.Klip_0.1.0_aarch64.dmg`,
+    and reran the generated DMG script manually to produce a fresh installable
+    `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`
+    (`/tmp/klip-manual-dmg-success-20260307.log`).
+  - Refreshed packaging evidence so the latest reinstall target, checksum, and
+    stale-mount cleanup note are recorded in
+    `docs/status/packaging-verification-us011.md` and `docs/status/current.md`.
+- Validation:
+  - build:desktop:bundle:macos: fail (`PATH=/opt/homebrew/bin:$PATH npm run build:desktop:bundle:macos`; DMG step blocked by stale mounted temporary image)
+  - manual dmg script: pass (`src-tauri/target/release/bundle/dmg/bundle_dmg.sh --volname "Klip" ...`)
+  - artifact: pass (`src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`, sha256 `602fb883e3975d80de427c7d6f7d0d22379f912b3a06aca37c15134bc4ca3b06`)
+  - hdiutil verify: pass (`hdiutil verify src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The freshly built DMG is unsigned and still needs hands-on install and
+    behavior verification.
+  - Future local DMG rebuilds may need stale `/Volumes/dmg.*` / `rw.*.dmg`
+    cleanup before rerunning the Tauri bundle command.
+
+## 2026-03-07 - preferences footer build commit display
+
+- Commit: `pending`
+- Summary:
+  - Added a small frontend build-info helper and Vite build-time git injection
+    so the app can expose the current short commit with `-dirty` fallback
+    without depending on runtime access to `.git`
+    (`vite.config.ts`, `src/features/build/buildInfo.ts`,
+    `src/vite-env.d.ts`).
+  - Added a low-visibility commit footer to the standalone preferences window
+    so installed builds can be identified quickly during manual testing
+    (`src/App.tsx`, `src/styles.css`).
+  - Added regression coverage for normal / dirty / unknown commit formatting
+    in `tests/buildInfo.test.ts`.
+- Validation:
+  - typecheck: pass (`PATH=/opt/homebrew/bin:$PATH npm run typecheck`)
+  - test: pass (`PATH=/opt/homebrew/bin:$PATH npm run test`)
+  - build: pass (`PATH=/opt/homebrew/bin:$PATH npm run build`)
+  - build artifact check: pass (`rg --fixed-strings 'b9c06de-dirty' dist`)
+  - lint: pass (`PATH=/opt/homebrew/bin:$PATH npm run lint`; Biome reported
+    existing schema-version info only)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The displayed commit reflects the build tree state at Vite build time, so
+    an already-built app will not update until rebuilt.
+  - Browser preview and local dirty-tree builds intentionally show `-dirty`,
+    which is useful for testing but should be expected during local development.
+
+## 2026-03-07 - fresh macOS DMG rebuild after preferences commit footer
+
+- Commit: `pending`
+- Summary:
+  - Cleared stale local DMG state, including mounted repo images and leftover
+    temporary `rw.*.Klip_0.1.0_aarch64.dmg` files, before rerunning the macOS
+    bundle pipeline for a fresh reinstall target.
+  - Rebuilt unsigned macOS bundles through
+    `npm run build:desktop:bundle:macos`, producing fresh
+    `src-tauri/target/release/bundle/macos/Klip.app` and
+    `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`
+    (`/tmp/klip-build-bundle-macos-rebuild-20260307-183433.log`).
+  - Verified the rebuilt DMG with `hdiutil verify` and recorded the new
+    checksum `93a7147dfb8b79c53eaac0c570dc724a3e4005596e675b744b4d5e9b19d7b4ca`
+    for reinstall testing (`/tmp/klip-dmg-verify-20260307-183433.log`).
+- Validation:
+  - build:desktop:bundle:macos: pass (`PATH=/opt/homebrew/bin:$PATH npm run build:desktop:bundle:macos`)
+  - hdiutil verify: pass (`hdiutil verify src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`)
+  - artifact: pass (`src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`, sha256 `93a7147dfb8b79c53eaac0c570dc724a3e4005596e675b744b4d5e9b19d7b4ca`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The freshly rebuilt DMG is unsigned and still needs hands-on install and
+    behavior verification.
+  - If local DMG bundling fails again in future sessions, stale mounted repo
+    images should be checked before retrying the bundle command.
+
+## 2026-03-07 - macOS installed-app startup regression fix and DMG rebuild
+
+- Commit: `pending`
+- Summary:
+  - Reproduced the user-reported macOS issue where the app installed from the
+    latest DMG opened and immediately quit; direct release-bundle execution
+    aborted during startup with a non-unwinding panic.
+  - Narrowed the crash to eager macOS native panel setup during app startup:
+    calling the native `NSWindow` collection-behavior mutation too early from
+    `setup` caused installed builds to abort before the tray app could stay
+    resident.
+  - Fixed the regression by removing the eager startup-time main-window panel
+    configuration and keeping the native panel configuration lazy on actual
+    panel presentation, then rebuilt the unsigned macOS bundles and verified
+    both the rebuilt release bundle and the DMG-installed `/Applications`
+    app stay resident after launch.
+- Validation:
+  - cargo test: pass (`PATH=/opt/homebrew/bin:$PATH cargo test --manifest-path src-tauri/Cargo.toml`; 31 Rust tests, log dir `/tmp/klip-verify-20260307-190439/`)
+  - cargo:check: pass (`PATH=/opt/homebrew/bin:$PATH npm run cargo:check`)
+  - lint: pass (`PATH=/opt/homebrew/bin:$PATH npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`PATH=/opt/homebrew/bin:$PATH npm run typecheck`)
+  - test: pass (`PATH=/opt/homebrew/bin:$PATH npm run test`; 88 tests)
+  - build: pass (`PATH=/opt/homebrew/bin:$PATH npm run build`)
+  - build:desktop:bundle:macos: pass (`PATH=/opt/homebrew/bin:$PATH npm run build:desktop:bundle:macos`)
+  - hdiutil verify: pass (`hdiutil verify src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`; sha256 `13995e6ede608fdbe86811991e7b7a92675faaa528668d80503cf9fd5cf28e44`)
+  - release bundle launch: pass (`src-tauri/target/release/bundle/macos/Klip.app/Contents/MacOS/klip-tauri`; stayed resident, `/tmp/klip-verify-20260307-190439/release-launch.status`)
+  - DMG install + `/Applications` launch: pass (mounted rebuilt DMG, reinstalled `/Applications/Klip.app`, detached image, and confirmed resident launch via `/tmp/klip-install-verify-20260307-190701/installed-launch.status`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The startup regression is fixed, but fullscreen / non-fullscreen /
+    multi-display panel placement and restored direct-paste behavior still need
+    hands-on verification in real apps.
+  - The rebuilt DMG remains unsigned; Apple signing/notarization and Windows
+    packaging/install-uninstall evidence are still pending.
+
+## 2026-03-07 - macOS panel-show abort fix and DMG rebuild
+
+- Commit: `pending`
+- Summary:
+  - Reproduced the follow-up regression where the app stayed running after
+    install, but pressing the panel hotkey did nothing and the menu-bar icon
+    appeared missing; investigation showed startup itself was fine and tray /
+    hotkey registration completed successfully.
+  - Forced a panel show on the main thread under LLDB and captured the real
+    root cause: AppKit asserted in `-[TaoWindow _validateCollectionBehavior:]`
+    because the custom macOS presenter was applying an invalid
+    `MoveToActiveSpace` collection-behavior mutation to the Tao window when the
+    panel tried to open.
+  - Fixed the regression by keeping the native panel configuration on the main
+    thread, reducing the custom collection-behavior mutation to the safe
+    `FullScreenAuxiliary` flag only, adding Rust regression coverage to prevent
+    `MoveToActiveSpace` from returning, and opting the tray icon into macOS
+    template rendering so the menu-bar icon follows the native appearance more
+    reliably.
+- Validation:
+  - cargo test: pass (`PATH=/opt/homebrew/bin:$PATH cargo test --manifest-path src-tauri/Cargo.toml`; 33 Rust tests, logs `/tmp/klip-fix-verify-20260307-193152/`)
+  - cargo:check: pass (`PATH=/opt/homebrew/bin:$PATH npm run cargo:check`)
+  - lint: pass (`PATH=/opt/homebrew/bin:$PATH npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`PATH=/opt/homebrew/bin:$PATH npm run typecheck`)
+  - test: pass (`PATH=/opt/homebrew/bin:$PATH npm run test`; 88 tests)
+  - build: pass (`PATH=/opt/homebrew/bin:$PATH npm run build`)
+  - build:desktop:bundle:macos: pass (`PATH=/opt/homebrew/bin:$PATH npm run build:desktop:bundle:macos`)
+  - hdiutil verify: pass (`hdiutil verify src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`; sha256 `d16ad2ccab87fbe6e3c21f78a721835d3a2d2a05658649b64ff3dfa922651c3d`)
+  - DMG install + `/Applications` launch: pass (mounted rebuilt DMG, reinstalled `/Applications/Klip.app`, detached image, and confirmed resident launch via `/tmp/klip-install-verify-fix-20260307-193309/installed-launch.status`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The abort-on-show regression is fixed, but interactive macOS verification
+    is still needed to confirm fullscreen current-space behavior remains
+    acceptable after dropping `MoveToActiveSpace`.
+  - The tray icon now uses template rendering, but final visual confirmation
+    still needs a hands-on check in the real menu bar.
+
+## 2026-03-07 - macOS tray icon asset + direct paste accessibility follow-up
+
+- Commit: `pending`
+- Summary:
+  - Investigated the next user report where the panel could open again, but the
+    menu-bar icon still appeared missing and selecting a history item did not
+    paste back into the original cursor target.
+  - Added a dedicated macOS tray template icon asset and switched the tray path
+    to use that asset instead of the generic app icon so the menu-bar item is
+    rendered in a more native/visible way on macOS (`src-tauri/src/tray.rs`,
+    `src-tauri/icons/tray-template.rgba`, source PNG retained in
+    `src-tauri/icons/tray-template.png`).
+  - Added macOS Accessibility preflight for direct paste so Klip now detects
+    missing permission before hiding/restoring focus, returns an actionable
+    fallback message instead of seeming to do nothing, and keeps the panel open
+    on direct-paste fallback in the frontend so the user can actually see that
+    message (`src-tauri/src/direct_paste.rs`, `src/features/paste/`,
+    `src/App.tsx`).
+- Validation:
+  - red test: pass (`npm run test -- tests/directPasteFeedback.test.ts`; initially failed before implementing `shouldHidePanelAfterDirectPaste`)
+  - cargo macos tests: pass (`PATH=/opt/homebrew/bin:$PATH cargo test --manifest-path src-tauri/Cargo.toml macos_ -- --nocapture`)
+  - cargo test: pass (`PATH=/opt/homebrew/bin:$PATH cargo test --manifest-path src-tauri/Cargo.toml`; 35 Rust tests, logs `/tmp/klip-followup-verify-20260307-195815/`)
+  - cargo:check: pass (`PATH=/opt/homebrew/bin:$PATH npm run cargo:check`)
+  - lint: pass (`PATH=/opt/homebrew/bin:$PATH npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`PATH=/opt/homebrew/bin:$PATH npm run typecheck`)
+  - test: pass (`PATH=/opt/homebrew/bin:$PATH npm run test`; 90 tests)
+  - build: pass (`PATH=/opt/homebrew/bin:$PATH npm run build`)
+  - build:desktop:bundle:macos: pass (`PATH=/opt/homebrew/bin:$PATH npm run build:desktop:bundle:macos`)
+  - hdiutil verify: pass (`hdiutil verify src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`; sha256 `f428dcf39b2cc9d4f05e37025cbc515b3d4e9b109c89f8085a54b6984b59f10c`)
+  - DMG install + `/Applications` launch: pass (mounted rebuilt DMG, reinstalled `/Applications/Klip.app`, detached image, and confirmed resident launch via `/tmp/klip-install-verify-followup-20260307-195938/installed-launch.status`)
+  - diff-check: pass (`git diff --check`)
+- Risks / Follow-ups:
+  - The direct-paste UX now surfaces missing macOS Accessibility permission
+    clearly, but successful post-permission direct paste still needs hands-on
+    verification in real apps.
+  - The dedicated tray icon asset should be more visible, but final visual
+    confirmation in the live menu bar is still required.

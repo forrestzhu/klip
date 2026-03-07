@@ -516,6 +516,8 @@ body {
 }
 
 .clipy-preferences-window {
+	display: flex;
+	flex-direction: column;
 	min-height: 100vh;
 	background: #ebebed;
 	padding: 12px 14px 18px;
@@ -577,8 +579,17 @@ body {
 }
 
 .clipy-preferences-content {
+	flex: 1;
 	margin: 16px 0 0 44px;
 	max-width: 860px;
+}
+
+.clipy-preferences-build-info {
+	margin: 18px 0 0 44px;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	color: #858b96;
 }
 
 .clipy-preferences-section {

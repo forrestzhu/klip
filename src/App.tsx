@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BUILD_COMMIT_LABEL } from "./features/build/buildInfo";
 import {
 	ClipboardMonitor,
 	type ClipboardPort,
@@ -16,7 +17,10 @@ import {
 	type PopupMenuEntry,
 	resolvePopupMenuContext,
 } from "./features/menu/popupMenuModel";
-import { directPasteText } from "./features/paste";
+import {
+	directPasteText,
+	shouldHidePanelAfterDirectPaste,
+} from "./features/paste";
 import {
 	canonicalizePanelHotkey,
 	DEFAULT_PANEL_HOTKEY,
@@ -1142,7 +1146,9 @@ export function App() {
 					? result.message
 					: fallbackSuccessMessage,
 			);
-			await hidePanelAfterSuccess(hideAfterSuccess);
+			await hidePanelAfterSuccess(
+				hideAfterSuccess && shouldHidePanelAfterDirectPaste(result.mode),
+			);
 		} catch (error) {
 			try {
 				await runtime.clipboard.writeText(text);
@@ -2258,6 +2264,7 @@ export function App() {
 						</section>
 					) : null}
 				</div>
+				<p className="clipy-preferences-build-info">{BUILD_COMMIT_LABEL}</p>
 			</section>
 		);
 	};
