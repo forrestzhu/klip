@@ -42,6 +42,8 @@
 - Release body template: `.github/release-notes-template.md`
 - `workflow_dispatch`: build + upload Actions artifacts only
 - `push.tags=v*`: build + upload Actions artifacts + attach release assets
+- Apple secret provisioning runbook:
+  `docs/release/apple-release-secrets-setup.md`
 
 ## Apple Signing / Notarization Secrets
 
@@ -58,6 +60,8 @@
 - Tag builds with only the certificate secrets produce signed macOS artifacts.
 - Tag builds with all certificate + App Store Connect secrets produce signed
   and notarized macOS artifacts.
+- Full secret registration / verification checklist:
+  `docs/release/apple-release-secrets-setup.md`
 
 ## Install/Run/Uninstall Matrix
 

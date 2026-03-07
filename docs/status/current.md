@@ -2,14 +2,14 @@
 
 - Last Updated: 2026-03-07
 - Branch: `main`
-- Latest Commit: `e4bf108` (`test: extend browser preview playwright coverage`)
-- Working Tree: clean after local release automation/signing commit
+- Latest Commit: `2799b1d` (`ci: add release notes and macos signing flow`)
+- Working Tree: dirty (Apple release secrets setup guide + status artifacts ready for commit)
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase
 
 - Active scope: Phase 1 (MVP) plus Phase 2 Clipy-style popup hierarchy/editor/preferences split, with browser-side Playwright E2E regression baseline now covering baseline, second-batch, third-batch, and fourth-batch popup/editor validation ahead of manual desktop verification.
-- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline with tag-triggered GitHub Release asset upload, custom release-note template, and optional macOS signing/notarization path when Apple CI secrets are configured; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle, and browser preview now has Playwright coverage for popup search, inline management views, `;alias` lookup, settings persistence, clear-history confirm + empty-history action messaging, alias-conflict/invalid-alias guardrails, submenu keyboard traversal, snippet delete confirmation, folder CRUD/relocation, folder rename conflict handling, and browser-preview quit-action handling.
+- Product state: local offline clipboard workflow with History/Snippets storage, tray/menu runtime, hotkey invocation, best-effort direct paste, startup-launch setting, and packaging baseline with tag-triggered GitHub Release asset upload, custom release-note template, optional macOS signing/notarization path when Apple CI secrets are configured, and a dedicated runbook for Apple secret registration / verification; popup UI now uses Clipy-style flattened root sections with cascading submenu columns, while `编辑片断...` and `偏好设置...` open standalone windows (`snippet-editor` / `preferences`) with reuse/focus lifecycle, and browser preview now has Playwright coverage for popup search, inline management views, `;alias` lookup, settings persistence, clear-history confirm + empty-history action messaging, alias-conflict/invalid-alias guardrails, submenu keyboard traversal, snippet delete confirmation, folder CRUD/relocation, folder rename conflict handling, and browser-preview quit-action handling.
 
 ## Completed Highlights
 
@@ -44,6 +44,7 @@
 - US-011 packaging verification document added with artifact checklist, install/run/uninstall matrix, and release-note permission/limitation draft (`docs/status/packaging-verification-us011.md`).
 - Desktop packaging workflow now preserves manual-dispatch artifact uploads and publishes tag-triggered GitHub Release assets for unsigned macOS `.dmg` and Windows `.exe` bundles (`.github/workflows/desktop-packaging.yml`).
 - Desktop packaging release metadata now uses a checked-in GitHub Release body template, and macOS tag builds can switch between unsigned, signed-only, or signed-and-notarized bundle modes depending on configured Apple secrets (`.github/release-notes-template.md`, `.github/workflows/desktop-packaging.yml`, `package.json`, `README.md`, `docs/status/packaging-verification-us011.md`).
+- Added a dedicated Apple release secrets setup runbook covering CSR creation, Developer ID certificate export, App Store Connect API key generation, GitHub secret registration, and release verification flow (`docs/release/apple-release-secrets-setup.md`, `README.md`, `docs/status/packaging-verification-us011.md`).
 - Local macOS packaging preflight now produced unsigned `.app` and `.dmg` artifacts (`src-tauri/target/release/bundle/macos/Klip.app`, `src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`).
 - Clipy-style popup hierarchy baseline added: compact menu now shows `History`/`Snippets` submenu structure plus `Edit Snippets...` and `Preferences...`, with history default capped to 30 and grouped as `1-10`, `11-20`, `21-30` (`src/App.tsx`, `src/features/menu/popupMenuModel.ts`, `src/features/history/history.constants.ts`).
 - Popup keyboard navigation now supports `↑/↓` selection and `←/→` hierarchical navigation, with `Enter` selecting/pasting at leaf items (`src/App.tsx`).
@@ -83,7 +84,7 @@
 - Tray behavior has baseline runtime coverage; desktop cross-platform manual verification evidence is still incomplete.
 - Global hotkey behavior lacks macOS/Windows manual conflict verification evidence (US-004 final hardening gap).
 - Startup-launch toggle runtime bridge is implemented, but interactive macOS/Windows verification evidence is still pending.
-- US-011 packaging baseline now covers CI artifact generation, checked-in release metadata, and optional macOS signing/notarization automation on tag builds, but a real signed/notarized tag run plus Windows installer artifact evidence and install/uninstall interactive checks are still pending.
+- US-011 packaging baseline now covers CI artifact generation, checked-in release metadata, optional macOS signing/notarization automation on tag builds, and a dedicated Apple secret provisioning runbook, but a real signed/notarized tag run plus Windows installer artifact evidence and install/uninstall interactive checks are still pending.
 - Three-window runtime split is implemented, but interactive verification evidence is still pending for popup-to-window transition, reuse/focus lifecycle, and close/reopen behavior on macOS/Windows.
 - Snippet editor/preferences now have Clipy-style baseline layout, but pixel-level spacing/typography and full interaction parity still need manual screenshot verification.
 - Popup badcase behavior still requires hands-on verification against newly added local screenshots (`docs/klip-test-ui`).
@@ -94,13 +95,14 @@
 
 1. Run macOS interactive verification for popup hierarchy + popup search (`;alias`) and alias-hotkey-trigger flow (auto `;` focus), paste-hide-focus behavior, independent-window transitions, and event-driven clipboard capture behavior.
 2. Complete screenshot-level parity review for popup, snippet editor, and preferences windows.
-3. Provision Apple release secrets, run a tag-based US-011 release dry run, and continue Windows packaging evidence (Release upload + install/uninstall matrix).
+3. Review `docs/release/apple-release-secrets-setup.md`, provision Apple release secrets, run a tag-based US-011 release dry run, and continue Windows packaging evidence (Release upload + install/uninstall matrix).
 
 ## Last Validation Snapshot
 
 - 2026-03-07: `.github/workflows/desktop-packaging.yml` parsed successfully via `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/desktop-packaging.yml')"` .
 - 2026-03-07: `.github/release-notes-template.md` render preview passed via `GITHUB_REF_NAME=v0.1.0 sed "s/{{TAG_NAME}}/${GITHUB_REF_NAME}/g" .github/release-notes-template.md > /tmp/klip-release-notes-preview.md`.
 - 2026-03-07: `git diff --check` passed after desktop release workflow/status updates.
+- 2026-03-07: `npm run lint` passed after Apple release guide documentation updates.
 - 2026-03-07: `npm run format` passed.
 - 2026-03-07: `npm run lint` passed after desktop release workflow/status updates.
 - 2026-03-07: `npm run typecheck` passed after release metadata/signing workflow updates.

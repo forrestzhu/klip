@@ -125,6 +125,8 @@ npm run build:desktop:bundle:windows
 - `workflow_dispatch` keeps the same packaging workflow available for artifact
   dry runs without publishing a GitHub Release.
 - Release title/body come from the workflow plus `.github/release-notes-template.md`.
+- Apple signing/notarization setup steps are documented in
+  `docs/release/apple-release-secrets-setup.md`.
 
 ### Apple Release Secrets
 
@@ -143,6 +145,8 @@ npm run build:desktop:bundle:windows
   builds produce signed and notarized macOS bundles.
 - If the Apple secrets are absent, the workflow falls back to unsigned macOS
   artifacts and the release notes call that out.
+- Full setup and verification checklist:
+  `docs/release/apple-release-secrets-setup.md`
 
 ## License
 

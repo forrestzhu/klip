@@ -1106,3 +1106,31 @@ This file is append-only. Add one entry after each completed iteration.
     still needs real `APPLE_*` secrets and a tag push to validate that path.
   - Windows installers are still unsigned, and US-011 install/uninstall
     evidence remains outstanding on a Windows runtime.
+
+## 2026-03-07 - apple release secret registration guide
+
+- Commit: `pending`
+- Summary:
+  - Added a dedicated Apple release secret registration runbook that documents
+    CSR creation, `Developer ID Application` certificate export, `.p12` to
+    base64 conversion, App Store Connect API key generation, GitHub secret
+    setup, and release verification flow
+    (`docs/release/apple-release-secrets-setup.md`).
+  - Linked the new runbook from the repository release documentation so the
+    README and US-011 packaging baseline both point to a single setup guide
+    (`README.md`, `docs/status/packaging-verification-us011.md`).
+  - Refreshed status artifacts so the current snapshot and PRD evidence reflect
+    the new Apple secret registration documentation baseline
+    (`docs/status/current.md`, `docs/status/prd-tracker.md`).
+- Validation:
+  - lint: pass (`npm run lint`; Biome reported existing schema-version info only)
+  - diff-check: pass (`git diff --check`)
+  - typecheck: skip (docs-only change; latest 2026-03-07 pass retained)
+  - test: skip (docs-only change; latest 2026-03-07 pass retained)
+  - build: skip (docs-only change; latest 2026-03-07 pass retained)
+  - cargo:check: skip (Rust unchanged; latest 2026-03-07 pass retained)
+- Risks / Follow-ups:
+  - The setup guide still requires real Apple account access and downloaded
+    credentials; no secrets were provisioned during this iteration.
+  - A real `workflow_dispatch` / tag-based release run remains necessary to
+    validate the signed/notarized macOS path and record US-011 evidence.
