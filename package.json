@@ -26,6 +26,7 @@
 		"build:desktop": "tauri build --debug --no-bundle",
 		"build:desktop:bundle": "tauri build --ci --no-sign",
 		"build:desktop:bundle:macos": "tauri build --ci --no-sign --bundles app,dmg",
+		"build:desktop:bundle:macos:signed": "tauri build --ci --bundles app,dmg",
 		"build:desktop:bundle:windows": "tauri build --ci --no-sign --bundles nsis",
 		"tauri:info": "tauri info"
 	},

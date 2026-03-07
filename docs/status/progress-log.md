@@ -1042,3 +1042,67 @@ This file is append-only. Add one entry after each completed iteration.
   - Candidate next browser scenarios are snippet edit/update flows,
     editor-toolbar empty-selection messaging, and additional settings/error
     paths.
+
+## 2026-03-07 - desktop release asset publishing baseline
+
+- Commit: `pending`
+- Summary:
+  - Extended the desktop packaging workflow so tag-triggered runs still build
+    the existing macOS/Windows matrix artifacts and now publish macOS `.dmg`
+    plus Windows `.exe` bundles to the matching GitHub Release via
+    `softprops/action-gh-release` (`.github/workflows/desktop-packaging.yml`).
+  - Kept `workflow_dispatch` packaging dry runs artifact-only by gating the
+    publish job to `refs/tags/v*`, which preserves manual verification without
+    creating a GitHub Release.
+  - Refreshed status artifacts so the current snapshot and PRD evidence reflect
+    the new US-011 release attachment baseline
+    (`docs/status/current.md`, `docs/status/prd-tracker.md`).
+- Validation:
+  - yaml-parse: pass
+    (`ruby -e "require 'yaml'; YAML.load_file('.github/workflows/desktop-packaging.yml')"`)
+  - lint: pass (`npm run lint`; Biome reported existing schema-version info only)
+  - diff-check: pass (`git diff --check`)
+  - typecheck: skip (workflow/docs-only change; latest 2026-03-07 pass retained)
+  - test: skip (workflow/docs-only change; latest 2026-03-07 pass retained)
+  - build: skip (workflow/docs-only change; latest 2026-03-07 pass retained)
+  - cargo:check: skip (Rust unchanged; latest 2026-03-07 pass retained)
+- Risks / Follow-ups:
+  - GitHub Releases now receive unsigned desktop bundles only; macOS signing /
+    notarization and Windows signing remain future distribution work.
+  - Need a real tag push to verify end-to-end Release asset upload and capture
+    the remaining US-011 Windows install/uninstall evidence.
+
+## 2026-03-07 - release notes template and macOS signing workflow baseline
+
+- Commit: `pending`
+- Summary:
+  - Added a checked-in GitHub Release notes template plus explicit release name
+    handling so `v*` tag builds publish consistent release metadata alongside
+    the packaged `.dmg` / `.exe` artifacts
+    (`.github/release-notes-template.md`,
+    `.github/workflows/desktop-packaging.yml`).
+  - Added an optional macOS signed build path
+    (`npm run build:desktop:bundle:macos:signed`) and taught the packaging
+    workflow to switch between unsigned, signed-only, and signed-and-notarized
+    bundle modes based on configured Apple certificate / App Store Connect
+    secrets (`package.json`, `.github/workflows/desktop-packaging.yml`).
+  - Documented the release flow and required Apple secrets in the project docs
+    and US-011 verification baseline (`README.md`,
+    `docs/status/packaging-verification-us011.md`,
+    `docs/status/current.md`, `docs/status/prd-tracker.md`).
+- Validation:
+  - yaml-parse: pass
+    (`ruby -e "require 'yaml'; YAML.load_file('.github/workflows/desktop-packaging.yml')"`)
+  - release-notes-render: pass
+    (`GITHUB_REF_NAME=v0.1.0 sed "s/{{TAG_NAME}}/${GITHUB_REF_NAME}/g" .github/release-notes-template.md > /tmp/klip-release-notes-preview.md`)
+  - lint: pass (`npm run lint`; Biome reported existing schema-version info only)
+  - typecheck: pass (`npm run typecheck`)
+  - diff-check: pass (`git diff --check`)
+  - test: skip (workflow/docs/package-only change; latest 2026-03-07 pass retained)
+  - build: skip (release automation change; latest 2026-03-07 pass retained)
+  - cargo:check: skip (Rust unchanged; latest 2026-03-07 pass retained)
+- Risks / Follow-ups:
+  - Release automation now supports signed/notarized macOS bundles, but CI
+    still needs real `APPLE_*` secrets and a tag push to validate that path.
+  - Windows installers are still unsigned, and US-011 install/uninstall
+    evidence remains outstanding on a Windows runtime.

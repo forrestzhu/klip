@@ -1,7 +1,7 @@
 # Packaging Verification Baseline (US-011)
 
-- Last Updated: 2026-03-04
-- Baseline Commit: `95f7c29`
+- Last Updated: 2026-03-07
+- Baseline Commit: `pending`
 - Status Legend: `pass` | `fail` | `pending` | `blocked`
 
 ## Environment Baseline
@@ -15,8 +15,10 @@
 | Platform | Command | Expected Output |
 | --- | --- | --- |
 | macOS | `npm run build:desktop:bundle:macos` | `app` + `dmg` bundles under `src-tauri/target/release/bundle/` |
+| macOS | `npm run build:desktop:bundle:macos:signed` | Signed `app` + `dmg`, with notarization when Apple API secrets are present |
 | Windows | `npm run build:desktop:bundle:windows` | `nsis` installer under `src-tauri/target/release/bundle/nsis/` |
 | CI Matrix | `.github/workflows/desktop-packaging.yml` | Artifact upload per OS (`klip-bundles-macos-latest`, `klip-bundles-windows-latest`) |
+| GitHub Release | Push `v*` tag | Attach `.dmg` + `.exe` to the matching GitHub Release using `.github/release-notes-template.md` |
 
 ## Artifact Checklist
 
@@ -32,6 +34,30 @@
 | --- | --- | --- | --- |
 | 2026-03-04 | `npm run tauri:info` | pass | Log at `/tmp/klip-tauri-info-us011-20260304.log`; environment warning: Xcode app missing, command completed. |
 | 2026-03-04 | `npm run build:desktop:bundle:macos` | pass | Log at `/tmp/klip-build-bundle-macos-us011-20260304.log`; output includes `Klip.app` + `Klip_0.1.0_aarch64.dmg`. |
+| 2026-03-07 | Workflow YAML parse | pass | `.github/workflows/desktop-packaging.yml` parses after adding release metadata plus optional macOS signing/notarization path. |
+
+## GitHub Release Baseline
+
+- Release name format: `Klip <tag>`
+- Release body template: `.github/release-notes-template.md`
+- `workflow_dispatch`: build + upload Actions artifacts only
+- `push.tags=v*`: build + upload Actions artifacts + attach release assets
+
+## Apple Signing / Notarization Secrets
+
+| Secret | Purpose | Status |
+| --- | --- | --- |
+| `APPLE_CERTIFICATE` | Base64-encoded `.p12` signing certificate | pending |
+| `APPLE_CERTIFICATE_PASSWORD` | Signing certificate password | pending |
+| `APPLE_SIGNING_IDENTITY` | Optional explicit identity override | pending |
+| `APPLE_API_KEY` | App Store Connect key ID for notarization | pending |
+| `APPLE_API_ISSUER` | App Store Connect issuer ID for notarization | pending |
+| `APPLE_API_KEY_P8` | App Store Connect `.p8` private key contents | pending |
+
+- Tag builds without Apple secrets fall back to unsigned macOS artifacts.
+- Tag builds with only the certificate secrets produce signed macOS artifacts.
+- Tag builds with all certificate + App Store Connect secrets produce signed
+  and notarized macOS artifacts.
 
 ## Install/Run/Uninstall Matrix
 
@@ -52,5 +78,5 @@
 
 ## Open Blockers
 
-- This machine can generate unsigned macOS bundles, but code-signing/notarization prerequisites (Xcode app + certificates) are still missing.
+- This machine can generate unsigned macOS bundles, but release signing/notarization secrets are still unset and local Xcode prerequisites remain incomplete.
 - Windows installer verification requires CI Windows runs and/or a Windows interactive test environment.

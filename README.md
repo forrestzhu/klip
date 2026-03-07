@@ -112,8 +112,37 @@ npm run build:desktop:bundle:windows
 ```
 
 - `build:desktop:bundle:macos` is for macOS runners/local macOS.
+- `build:desktop:bundle:macos:signed` enables macOS code signing/notarization
+  when the required Apple release secrets are present in CI.
 - `build:desktop:bundle:windows` is for Windows runners/local Windows.
 - Verification matrix and release-note constraints are tracked in `docs/status/packaging-verification-us011.md`.
+
+## GitHub Release Automation
+
+- Push a `v*` tag to run `.github/workflows/desktop-packaging.yml`, build the
+  desktop bundles, upload Actions artifacts, and attach `.dmg` / `.exe` files
+  to the matching GitHub Release.
+- `workflow_dispatch` keeps the same packaging workflow available for artifact
+  dry runs without publishing a GitHub Release.
+- Release title/body come from the workflow plus `.github/release-notes-template.md`.
+
+### Apple Release Secrets
+
+| Secret | Required For | Notes |
+| --- | --- | --- |
+| `APPLE_CERTIFICATE` | macOS signing | Base64-encoded `.p12` Developer ID Application certificate. |
+| `APPLE_CERTIFICATE_PASSWORD` | macOS signing | Password for the `.p12` certificate. |
+| `APPLE_SIGNING_IDENTITY` | optional | Override signing identity; if omitted, Tauri infers it from the certificate. |
+| `APPLE_API_KEY` | notarization | App Store Connect API key ID. |
+| `APPLE_API_ISSUER` | notarization | App Store Connect issuer ID. |
+| `APPLE_API_KEY_P8` | notarization | Raw contents of the `.p8` App Store Connect private key. |
+
+- If only the certificate secrets are configured, tag builds produce signed
+  macOS bundles without notarization.
+- If the certificate and App Store Connect secrets are all configured, tag
+  builds produce signed and notarized macOS bundles.
+- If the Apple secrets are absent, the workflow falls back to unsigned macOS
+  artifacts and the release notes call that out.
 
 ## License
 
