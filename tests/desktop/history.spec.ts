@@ -16,15 +16,15 @@ test.describe("Klip History Management Tests", () => {
 	test("should be able to add history item", async () => {
 		// Add a test history item
 		const testContent = "Test clipboard content";
-		
+
 		try {
 			const result = await invoke<boolean>("add_history_item", {
 				content: testContent,
-				contentType: "text"
+				contentType: "text",
 			});
-			
+
 			expect(result).toBe(true);
-		} catch (error) {
+		} catch {
 			// If the command doesn't exist, skip
 			test.skip();
 		}
@@ -32,12 +32,15 @@ test.describe("Klip History Management Tests", () => {
 
 	test("should be able to get history items", async () => {
 		try {
-			const items = await invoke<Array<{ content: string }>>("get_history_items", {
-				limit: 10
-			});
-			
+			const items = await invoke<Array<{ content: string }>>(
+				"get_history_items",
+				{
+					limit: 10,
+				},
+			);
+
 			expect(Array.isArray(items)).toBe(true);
-		} catch (error) {
+		} catch {
 			// If the command doesn't exist, skip
 			test.skip();
 		}
@@ -48,23 +51,23 @@ test.describe("Klip History Management Tests", () => {
 			// First add an item
 			await invoke("add_history_item", {
 				content: "Item to delete",
-				contentType: "text"
+				contentType: "text",
 			});
-			
+
 			// Get items
 			const items = await invoke<Array<{ id: string }>>("get_history_items", {
-				limit: 10
+				limit: 10,
 			});
-			
+
 			if (items.length > 0) {
 				// Delete first item
 				const result = await invoke<boolean>("delete_history_item", {
-					id: items[0].id
+					id: items[0].id,
 				});
-				
+
 				expect(result).toBe(true);
 			}
-		} catch (error) {
+		} catch {
 			// If the command doesn't exist, skip
 			test.skip();
 		}
@@ -74,22 +77,22 @@ test.describe("Klip History Management Tests", () => {
 		try {
 			// Get max history setting
 			const maxHistory = await invoke<number>("get_max_history");
-			
+
 			// Add more items than max
 			for (let i = 0; i < maxHistory + 5; i++) {
 				await invoke("add_history_item", {
 					content: `Test item ${i}`,
-					contentType: "text"
+					contentType: "text",
 				});
 			}
-			
+
 			// Verify history count doesn't exceed max
 			const items = await invoke<Array<unknown>>("get_history_items", {
-				limit: 1000
+				limit: 1000,
 			});
-			
+
 			expect(items.length).toBeLessThanOrEqual(maxHistory);
-		} catch (error) {
+		} catch {
 			// If the command doesn't exist, skip
 			test.skip();
 		}

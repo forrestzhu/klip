@@ -18,11 +18,11 @@ test.describe("Klip Snippets Management Tests", () => {
 			const result = await invoke<string>("create_snippet", {
 				name: "Test Snippet",
 				content: "Test snippet content",
-				folderId: null
+				folderId: null,
 			});
-			
+
 			expect(result).toBeTruthy();
-		} catch (error) {
+		} catch {
 			test.skip();
 		}
 	});
@@ -30,9 +30,9 @@ test.describe("Klip Snippets Management Tests", () => {
 	test("should be able to list snippets", async () => {
 		try {
 			const snippets = await invoke<Array<{ name: string }>>("get_snippets");
-			
+
 			expect(Array.isArray(snippets)).toBe(true);
-		} catch (error) {
+		} catch {
 			test.skip();
 		}
 	});
@@ -43,18 +43,18 @@ test.describe("Klip Snippets Management Tests", () => {
 			const snippetId = await invoke<string>("create_snippet", {
 				name: "Snippet to Update",
 				content: "Original content",
-				folderId: null
+				folderId: null,
 			});
-			
+
 			// Update it
 			const result = await invoke<boolean>("update_snippet", {
 				id: snippetId,
 				name: "Updated Snippet",
-				content: "Updated content"
+				content: "Updated content",
 			});
-			
+
 			expect(result).toBe(true);
-		} catch (error) {
+		} catch {
 			test.skip();
 		}
 	});
@@ -65,16 +65,16 @@ test.describe("Klip Snippets Management Tests", () => {
 			const snippetId = await invoke<string>("create_snippet", {
 				name: "Snippet to Delete",
 				content: "Delete me",
-				folderId: null
+				folderId: null,
 			});
-			
+
 			// Delete it
 			const result = await invoke<boolean>("delete_snippet", {
-				id: snippetId
+				id: snippetId,
 			});
-			
+
 			expect(result).toBe(true);
-		} catch (error) {
+		} catch {
 			test.skip();
 		}
 	});
@@ -85,23 +85,23 @@ test.describe("Klip Snippets Management Tests", () => {
 			await invoke("create_snippet", {
 				name: "Email Template",
 				content: "Dear customer,",
-				folderId: null
+				folderId: null,
 			});
-			
+
 			await invoke("create_snippet", {
 				name: "Code Snippet",
 				content: "console.log('hello')",
-				folderId: null
+				folderId: null,
 			});
-			
+
 			// Search for "email"
 			const results = await invoke<Array<{ name: string }>>("search_snippets", {
-				query: "email"
+				query: "email",
 			});
-			
+
 			expect(results.length).toBeGreaterThan(0);
 			expect(results[0].name).toContain("Email");
-		} catch (error) {
+		} catch {
 			test.skip();
 		}
 	});
