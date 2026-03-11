@@ -40,3 +40,18 @@ export function createHistoryId(): string {
 	const random = Math.random().toString(36).slice(2, 12);
 	return `hist-${Date.now()}-${random}`;
 }
+
+/**
+ * Check if a history item is empty
+ */
+export function isEmptyHistoryItem(text: string): boolean {
+	return !text || text.trim().length === 0;
+}
+
+/**
+ * Validate history item content
+ */
+export function validateHistoryItem(text: string): boolean {
+	// Not empty and not too long (max 10MB)
+	return !isEmptyHistoryItem(text) && text.length <= 10 * 1024 * 1024;
+}

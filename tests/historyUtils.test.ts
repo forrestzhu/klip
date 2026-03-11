@@ -7,7 +7,9 @@ import {
 	clampHistoryMaxItems,
 	createHistoryId,
 	isCapturableText,
+	isEmptyHistoryItem,
 	normalizeSourceApp,
+	validateHistoryItem,
 } from "../src/features/history/historyUtils";
 
 describe("historyUtils", () => {
@@ -69,5 +71,29 @@ describe("historyUtils", () => {
 			configurable: true,
 			value: originalCrypto,
 		});
+	});
+});
+
+describe("isEmptyHistoryItem", () => {
+	it("returns true for empty string", () => {
+		expect(isEmptyHistoryItem("")).toBe(true);
+	});
+
+	it("returns true for whitespace-only string", () => {
+		expect(isEmptyHistoryItem("   ")).toBe(true);
+	});
+
+	it("returns false for valid text", () => {
+		expect(isEmptyHistoryItem("hello")).toBe(false);
+	});
+});
+
+describe("validateHistoryItem", () => {
+	it("returns false for empty text", () => {
+		expect(validateHistoryItem("")).toBe(false);
+	});
+
+	it("returns true for valid text", () => {
+		expect(validateHistoryItem("hello")).toBe(true);
 	});
 });
