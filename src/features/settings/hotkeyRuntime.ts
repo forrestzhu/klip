@@ -1,3 +1,10 @@
+/**
+ * Hotkey Runtime Module
+ *
+ * Provides functions to register and manage keyboard shortcuts in Tauri desktop environment.
+ * Automatically detects runtime environment and falls back gracefully when not in desktop mode.
+ */
+
 import { invoke } from "@tauri-apps/api/core";
 import { canonicalizePanelHotkey } from "./hotkeyStorage";
 
@@ -5,6 +12,10 @@ interface RegisterPanelHotkeyPayload {
 	shortcut: string;
 }
 
+/**
+ * Check if running in Tauri desktop runtime
+ * @returns true if in desktop environment, false otherwise
+ */
 export function isDesktopRuntime(): boolean {
 	if (typeof window === "undefined") {
 		return false;
@@ -14,6 +25,11 @@ export function isDesktopRuntime(): boolean {
 	return tauriWindow.__TAURI_INTERNALS__ !== undefined;
 }
 
+/**
+ * Register a global hotkey to toggle the main panel
+ * @param shortcut - The keyboard shortcut (e.g., "CommandOrControl+Shift+V")
+ * @returns The canonicalized shortcut string
+ */
 export async function registerDesktopPanelHotkey(
 	shortcut: string,
 ): Promise<string> {
@@ -25,6 +41,11 @@ export async function registerDesktopPanelHotkey(
 	return canonical.length > 0 ? canonical : response.shortcut;
 }
 
+/**
+ * Register a global hotkey for snippet alias
+ * @param shortcut - The keyboard shortcut (e.g., "CommandOrControl+Shift+S")
+ * @returns The canonicalized shortcut string, or empty string if invalid
+ */
 export async function registerDesktopSnippetAliasHotkey(
 	shortcut: string,
 ): Promise<string> {
@@ -39,14 +60,23 @@ export async function registerDesktopSnippetAliasHotkey(
 	return canonical.length > 0 ? canonical : "";
 }
 
+/**
+ * Hide the main panel window
+ */
 export async function hideDesktopPanelWindow(): Promise<void> {
 	await invoke("hide_panel_window");
 }
 
+/**
+ * Open the snippet editor window
+ */
 export async function openDesktopSnippetEditorWindow(): Promise<void> {
 	await invoke("open_snippet_editor_window");
 }
 
+/**
+ * Open the preferences/settings window
+ */
 export async function openDesktopPreferencesWindow(): Promise<void> {
 	await invoke("open_preferences_window");
 }
