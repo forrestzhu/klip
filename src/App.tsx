@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BUILD_COMMIT_LABEL } from "./features/build/buildInfo";
 import {
 	ClipboardMonitor,
@@ -185,6 +185,13 @@ export function App() {
 	const [lastUpdateCheckAt, setLastUpdateCheckAt] = useState(() =>
 		new Date().toLocaleString(),
 	);
+	const [historyStats, setHistoryStats] = useState<{
+		totalCount: number;
+		uniqueCount: number;
+		withSourceAppCount: number;
+		oldestTimestampMs: number | null;
+		newestTimestampMs: number | null;
+	} | null>(null);
 
 	const runtimeRef = useRef<RuntimeContext | null>(null);
 	const popupPanelRef = useRef<HTMLElement | null>(null);
@@ -928,6 +935,53 @@ export function App() {
 		setHistoryItems(runtime.historyRepository.getItems());
 		setActionMessage(`History limit updated to ${applied}.`);
 	};
+
+	const fetchHistoryStats = useCallback(async () => {
+		if (!isDesktopRuntime()) {
+			// Browser fallback: calculate from local items
+			const uniqueTexts = new Set(historyItems.map((item) => item.text));
+			const withSourceApp = historyItems.filter(
+				(item) => item.sourceApp !== null,
+			);
+			setHistoryStats({
+				totalCount: historyItems.length,
+				uniqueCount: uniqueTexts.size,
+				withSourceAppCount: withSourceApp.length,
+				oldestTimestampMs:
+					historyItems.length > 0
+						? new Date(
+								historyItems[historyItems.length - 1].createdAt,
+							).getTime()
+						: null,
+				newestTimestampMs:
+					historyItems.length > 0
+						? new Date(historyItems[0].createdAt).getTime()
+						: null,
+			});
+			return;
+		}
+
+		try {
+			const stats = await invoke<{
+				totalCount: number;
+				uniqueCount: number;
+				withSourceAppCount: number;
+				oldestTimestampMs: number | null;
+				newestTimestampMs: number | null;
+			}>("get_history_stats", { limit: maxItems });
+			setHistoryStats(stats);
+		} catch (error) {
+			console.error("Failed to fetch history stats:", error);
+			setActionMessage(
+				`Failed to fetch history stats: ${toErrorMessage(error)}`,
+			);
+		}
+	}, [historyItems, maxItems]);
+
+	// Update history stats when history items change
+	useEffect(() => {
+		void fetchHistoryStats();
+	}, [fetchHistoryStats]);
 
 	const handleApplyPanelHotkey = async () => {
 		if (typeof window === "undefined") {
@@ -2059,6 +2113,65 @@ export function App() {
 									? "桌面运行时下将即时应用系统登录项设置。"
 									: "浏览器预览模式仅保存本地偏好，不会修改系统登录项。"}
 							</p>
+						</section>
+					) : null}
+
+					{preferencesTab === "general" ? (
+						<section className="clipy-preferences-section">
+							<h3>历史记录统计</h3>
+							{historyStats ? (
+								<div className="clipy-stats-grid">
+									<div className="clipy-stat-item">
+										<span className="clipy-stat-label">总条目数</span>
+										<span className="clipy-stat-value">
+											{historyStats.totalCount}
+										</span>
+									</div>
+									<div className="clipy-stat-item">
+										<span className="clipy-stat-label">唯一条目数</span>
+										<span className="clipy-stat-value">
+											{historyStats.uniqueCount}
+										</span>
+									</div>
+									<div className="clipy-stat-item">
+										<span className="clipy-stat-label">带来源应用</span>
+										<span className="clipy-stat-value">
+											{historyStats.withSourceAppCount}
+										</span>
+									</div>
+									<div className="clipy-stat-item">
+										<span className="clipy-stat-label">最早记录</span>
+										<span className="clipy-stat-value clipy-stat-timestamp">
+											{historyStats.oldestTimestampMs
+												? new Date(
+														historyStats.oldestTimestampMs,
+													).toLocaleString()
+												: "无"}
+										</span>
+									</div>
+									<div className="clipy-stat-item">
+										<span className="clipy-stat-label">最新记录</span>
+										<span className="clipy-stat-value clipy-stat-timestamp">
+											{historyStats.newestTimestampMs
+												? new Date(
+														historyStats.newestTimestampMs,
+													).toLocaleString()
+												: "无"}
+										</span>
+									</div>
+								</div>
+							) : (
+								<p className="clipy-inline-note">正在加载统计数据...</p>
+							)}
+							<button
+								type="button"
+								className="clipy-secondary-button"
+								onClick={() => {
+									void fetchHistoryStats();
+								}}
+							>
+								刷新统计
+							</button>
 						</section>
 					) : null}
 

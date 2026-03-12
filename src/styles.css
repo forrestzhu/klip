@@ -752,3 +752,38 @@ body {
 		font-size: 20px;
 	}
 }
+
+/* History Stats Styles */
+.clipy-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.clipy-stat-item {
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+	background: #f9fafb;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+}
+
+.clipy-stat-label {
+	font-size: 12px;
+	color: #6b7280;
+	margin-bottom: 4px;
+}
+
+.clipy-stat-value {
+	font-size: 18px;
+	font-weight: 600;
+	color: #111827;
+}
+
+.clipy-stat-timestamp {
+	font-size: 13px;
+	font-weight: 400;
+	color: #374151;
+}
