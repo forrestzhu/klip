@@ -20,6 +20,16 @@ pub struct ClipboardListenerState {
     handle: Mutex<Option<ClipboardListenerHandle>>,
 }
 
+impl ClipboardListenerState {
+    /// Check if the clipboard listener is currently running
+    pub fn is_running(&self) -> bool {
+        self.handle
+            .lock()
+            .map(|guard| guard.is_some())
+            .unwrap_or(false)
+    }
+}
+
 struct ClipboardListenerHandle {
     shutdown: WatcherShutdown,
     join_handle: JoinHandle<()>,

@@ -8,6 +8,7 @@ pub mod history_storage;
 pub mod hotkey;
 pub mod panel_presenter;
 pub mod startup_launch;
+pub mod test_commands;
 pub mod tray;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -32,6 +33,8 @@ pub fn run() {
         .manage(hotkey::SnippetAliasHotkeyState::default())
         .manage(panel_presenter::PanelPresenterState::default())
         .manage(clipboard_listener::ClipboardListenerState::default())
+        .manage(test_commands::SimulatedFocusState::default())
+        .manage(test_commands::SimulatedWindowState::default())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
@@ -47,6 +50,7 @@ pub fn run() {
             commands::quit_app,
             commands::open_snippet_editor_window,
             commands::open_preferences_window,
+            commands::check_tray_visibility,
             clipboard::read_clipboard_text,
             clipboard::write_clipboard_text,
             clipboard_listener::start_clipboard_listener,
@@ -56,7 +60,29 @@ pub fn run() {
             hotkey::register_snippet_alias_hotkey,
             hotkey::hide_panel_window,
             startup_launch::get_startup_launch_enabled,
-            startup_launch::set_startup_launch_enabled
+            startup_launch::set_startup_launch_enabled,
+            // Test commands for E2E testing
+            test_commands::simulate_clipboard_change,
+            test_commands::simulate_hotkey_press,
+            test_commands::simulate_key_press,
+            test_commands::simulate_app_restart,
+            test_commands::simulate_app_switch,
+            test_commands::simulate_fullscreen_app,
+            test_commands::is_clipboard_listener_running,
+            test_commands::get_panel_hotkey,
+            test_commands::set_panel_hotkey,
+            test_commands::reset_panel_hotkey,
+            test_commands::is_window_focused,
+            test_commands::get_window_position,
+            test_commands::get_screen_bounds,
+            test_commands::get_previous_focused_app,
+            test_commands::get_current_focused_app,
+            test_commands::get_app_version,
+            test_commands::clear_history,
+            test_commands::get_history_items,
+            test_commands::add_history_item,
+            test_commands::delete_history_item,
+            test_commands::get_max_history
         ])
         .on_menu_event(|app, event| {
             if let Some(action) = tray::parse_tray_menu_action(event.id().as_ref()) {

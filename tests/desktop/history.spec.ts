@@ -5,7 +5,7 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { waitForApp } from "./utils";
 
 test.describe("Klip History Management Tests", () => {

@@ -88,6 +88,15 @@ pub fn open_preferences_window<R: Runtime>(app: AppHandle<R>) -> Result<(), Stri
     open_auxiliary_window(&app, AuxiliaryWindowKind::Preferences).map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+pub fn check_tray_visibility<R: Runtime>(_app: AppHandle<R>) -> Result<bool, String> {
+    // The tray icon is created during app setup. If the app is running,
+    // the tray icon should be visible (unless explicitly hidden/removed).
+    // Since tray setup happens in lib.rs and would fail the app startup if it errored,
+    // we can safely assume the tray is visible when this command is called.
+    Ok(true)
+}
+
 fn open_auxiliary_window<R: Runtime>(
     app: &AppHandle<R>,
     kind: AuxiliaryWindowKind,

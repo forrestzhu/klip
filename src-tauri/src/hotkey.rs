@@ -23,6 +23,16 @@ pub struct PanelHotkeyState {
     active_shortcut: Mutex<Option<ActiveShortcutBinding>>,
 }
 
+impl PanelHotkeyState {
+    /// Get the current active shortcut string
+    pub fn get_active_shortcut(&self) -> Option<String> {
+        self.active_shortcut
+            .lock()
+            .ok()
+            .and_then(|guard| guard.as_ref().map(|s| s.shortcut.clone()))
+    }
+}
+
 #[derive(Default)]
 pub struct SnippetAliasHotkeyState {
     active_shortcut: Mutex<Option<ActiveShortcutBinding>>,

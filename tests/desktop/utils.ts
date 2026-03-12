@@ -4,8 +4,8 @@
  * Helper functions for testing Tauri desktop applications
  */
 
-import { invoke } from "@tauri-apps/api/tauri";
-import { appWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 /**
  * Wait for app to be ready
@@ -16,7 +16,7 @@ export async function waitForApp(timeout = 5000): Promise<void> {
 	while (Date.now() - startTime < timeout) {
 		try {
 			// Try to get window title to verify app is running
-			const title = await appWindow.title();
+			const title = await getCurrentWindow().title();
 			if (title) {
 				return;
 			}
@@ -52,8 +52,9 @@ export async function showWindowViaHotkey(): Promise<void> {
 	// In real implementation, this would use system-level hotkey simulation
 	// For now, we'll use Tauri command to show window
 	try {
-		await appWindow.show();
-		await appWindow.setFocus();
+		const window = getCurrentWindow();
+		await window.show();
+		await window.setFocus();
 	} catch (error) {
 		throw new Error(`Failed to show window: ${error}`);
 	}
@@ -64,7 +65,7 @@ export async function showWindowViaHotkey(): Promise<void> {
  */
 export async function hideWindow(): Promise<void> {
 	try {
-		await appWindow.hide();
+		await getCurrentWindow().hide();
 	} catch (error) {
 		throw new Error(`Failed to hide window: ${error}`);
 	}
@@ -75,7 +76,7 @@ export async function hideWindow(): Promise<void> {
  */
 export async function isWindowVisible(): Promise<boolean> {
 	try {
-		return await appWindow.isVisible();
+		return await getCurrentWindow().isVisible();
 	} catch (_error) {
 		return false;
 	}
@@ -85,7 +86,7 @@ export async function isWindowVisible(): Promise<boolean> {
  * Get window title
  */
 export async function getWindowTitle(): Promise<string> {
-	return await appWindow.title();
+	return await getCurrentWindow().title();
 }
 
 /**

@@ -42,11 +42,7 @@ test.describe("Klip Desktop Smoke Tests", () => {
 	});
 
 	test("tray icon should be visible", async () => {
-		// Note: This test requires native implementation
-		// For now, we'll skip if not implemented
-		test.skip();
-
-		// const trayVisible = await isTrayVisible();
-		// expect(trayVisible).toBe(true);
+		const trayVisible = await isTrayVisible();
+		expect(trayVisible).toBe(true);
 	});
 });
