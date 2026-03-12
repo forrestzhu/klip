@@ -3,7 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createLogger, type Logger, LogLevel } from "../src/utils/logger";
+import { createLogger, type Logger } from "../src/utils/logger";
 
 describe("Logger Performance Monitoring", () => {
 	let logger: Logger;

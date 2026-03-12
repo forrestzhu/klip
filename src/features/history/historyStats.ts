@@ -40,7 +40,10 @@ export function groupItemsByDate(
 		if (!grouped.has(date)) {
 			grouped.set(date, []);
 		}
-		grouped.get(date)!.push(item);
+		const group = grouped.get(date);
+		if (group) {
+			group.push(item);
+		}
 	}
 
 	return grouped;

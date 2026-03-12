@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { HistoryItem } from "../src/features/history/history.types";
 import {
 	importHistoryFromCSV,
 	importHistoryFromJSON,

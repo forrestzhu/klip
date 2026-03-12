@@ -222,9 +222,6 @@ test.describe("US-006: Direct Paste Tests", () => {
 
 	test("AC4: should have consistent behavior across platforms", async () => {
 		try {
-			// Test on current platform
-			const platform = process.platform;
-
 			// Open panel
 			await showWindowViaHotkey();
 			await new Promise((resolve) => setTimeout(resolve, 500));

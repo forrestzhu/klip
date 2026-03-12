@@ -3,7 +3,7 @@
  */
 
 import type { HistoryItem } from "./history.types";
-import { isEmptyHistoryItem, validateHistoryItem } from "./historyUtils";
+import { validateHistoryItem } from "./historyUtils";
 
 /**
  * Filter out invalid history items

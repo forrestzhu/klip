@@ -8,6 +8,7 @@ import { expect, test } from "@playwright/test";
 import {
 	getWindowTitle,
 	hideWindow,
+	isTrayVisible,
 	isWindowVisible,
 	showWindowViaHotkey,
 	waitForApp,

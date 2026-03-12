@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createLogger, Logger, LogLevel } from "../src/utils/logger";
+import { createLogger, Logger } from "../src/utils/logger";
 
 describe("Logger", () => {
 	it("should create a logger with context", () => {

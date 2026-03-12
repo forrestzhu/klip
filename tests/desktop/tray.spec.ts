@@ -10,7 +10,6 @@ import {
 	hideWindow,
 	isTrayVisible,
 	isWindowVisible,
-	showWindowViaHotkey,
 	waitForApp,
 } from "./utils";
 
@@ -267,9 +266,6 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 
 	test("should handle tray icon updates", async () => {
 		try {
-			// Get initial icon state
-			const initialState = await invoke<string>("get_tray_icon_state");
-
 			// Add history item (should update icon badge if implemented)
 			await invoke("add_history_item", {
 				content: "Icon test item",

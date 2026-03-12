@@ -60,7 +60,8 @@ test.describe("US-002: History Persistence Tests", () => {
 			>("get_history_items", {
 				limit: 100,
 			});
-			const testItemIds = itemsBeforeRestart
+			// Get IDs of added items (for verification)
+			itemsBeforeRestart
 				.filter((item) => testItems.includes(item.content))
 				.map((item) => item.id);
 
@@ -154,13 +155,16 @@ test.describe("US-002: History Persistence Tests", () => {
 			// Find our test item
 			const testItem = items.find((item) => item.content === testContent);
 			expect(testItem).toBeDefined();
+			if (!testItem) {
+				throw new Error("Test item not found");
+			}
 
 			// Verify content exists
-			expect(testItem!.content).toBe(testContent);
+			expect(testItem.content).toBe(testContent);
 
 			// Verify timestamp exists and is valid ISO 8601
-			expect(testItem!.created_at).toBeDefined();
-			const timestamp = new Date(testItem!.created_at);
+			expect(testItem.created_at).toBeDefined();
+			const timestamp = new Date(testItem.created_at);
 			expect(timestamp.getTime()).not.toBeNaN();
 
 			// Verify timestamp is recent (within last minute)
