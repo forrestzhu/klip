@@ -82,7 +82,8 @@ pub fn run() {
             test_commands::get_history_items,
             test_commands::add_history_item,
             test_commands::delete_history_item,
-            test_commands::get_max_history
+            test_commands::get_max_history,
+            test_commands::get_history_stats
         ])
         .on_menu_event(|app, event| {
             if let Some(action) = tray::parse_tray_menu_action(event.id().as_ref()) {

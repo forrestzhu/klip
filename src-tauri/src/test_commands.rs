@@ -342,6 +342,37 @@ pub fn get_max_history() -> Result<usize, String> {
     Ok(100)
 }
 
+/// History statistics response
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryStatsResponse {
+    pub total_count: usize,
+    pub unique_count: usize,
+    pub with_source_app_count: usize,
+    pub oldest_timestamp_ms: Option<u64>,
+    pub newest_timestamp_ms: Option<u64>,
+}
+
+/// Get history statistics
+///
+/// Returns aggregated statistics about the clipboard history,
+/// including total count, unique items, and items with source app information.
+#[tauri::command]
+pub fn get_history_stats(
+    limit: Option<usize>,
+) -> Result<HistoryStatsResponse, String> {
+    // In a real implementation, this would calculate stats from the history repository
+    // For testing, return mock statistics
+    let _limit = limit.unwrap_or(100);
+    Ok(HistoryStatsResponse {
+        total_count: 0,
+        unique_count: 0,
+        with_source_app_count: 0,
+        oldest_timestamp_ms: None,
+        newest_timestamp_ms: None,
+    })
+}
+
 // === Helper Types ===
 
 #[derive(Debug, Clone, Serialize)]
@@ -367,5 +398,22 @@ mod tests {
         let text = SimulatedContentType::Text;
         let json = serde_json::to_string(&text).expect("serialize");
         assert!(json.contains("text"));
+    }
+
+    #[test]
+    fn history_stats_response_serialization() {
+        let stats = HistoryStatsResponse {
+            total_count: 10,
+            unique_count: 8,
+            with_source_app_count: 5,
+            oldest_timestamp_ms: Some(1000),
+            newest_timestamp_ms: Some(2000),
+        };
+        let json = serde_json::to_string(&stats).expect("serialize");
+        assert!(json.contains("totalCount"));
+        assert!(json.contains("uniqueCount"));
+        assert!(json.contains("withSourceAppCount"));
+        assert!(json.contains("oldestTimestampMs"));
+        assert!(json.contains("newestTimestampMs"));
     }
 }
