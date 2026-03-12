@@ -8,8 +8,18 @@ import {
 
 describe("historyExport", () => {
 	const items: HistoryItem[] = [
-		{ id: "1", text: "hello", createdAt: "2026-03-11T10:00:00Z", sourceApp: "app1" },
-		{ id: "2", text: "world", createdAt: "2026-03-11T11:00:00Z", sourceApp: null },
+		{
+			id: "1",
+			text: "hello",
+			createdAt: "2026-03-11T10:00:00Z",
+			sourceApp: "app1",
+		},
+		{
+			id: "2",
+			text: "world",
+			createdAt: "2026-03-11T11:00:00Z",
+			sourceApp: null,
+		},
 	];
 
 	describe("exportHistoryToJSON", () => {

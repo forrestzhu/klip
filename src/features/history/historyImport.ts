@@ -14,7 +14,7 @@ export function importHistoryFromJSON(json: string): HistoryItem[] {
 		if (!Array.isArray(items)) {
 			throw new Error("Invalid format: expected array");
 		}
-		return items.map(item => ({
+		return items.map((item) => ({
 			id: item.id || createHistoryId(),
 			text: item.text || "",
 			createdAt: item.createdAt || new Date().toISOString(),
@@ -31,14 +31,14 @@ export function importHistoryFromJSON(json: string): HistoryItem[] {
 export function importHistoryFromCSV(csv: string): HistoryItem[] {
 	const lines = csv.split("\n").slice(1); // Skip header
 	return lines
-		.filter(line => line.trim().length > 0)
-		.map(line => {
+		.filter((line) => line.trim().length > 0)
+		.map((line) => {
 			const parts = line.match(/(?:^|,)("(?:[^"]*(?:""[^"]*)*)"|[^,]*)/g);
 			if (!parts || parts.length < 4) return null;
-			
-			const cleanValue = (val: string) => 
+
+			const cleanValue = (val: string) =>
 				val.replace(/^,?"?|"?$/g, "").replace(/""/g, '"');
-			
+
 			return {
 				id: cleanValue(parts[0]),
 				text: cleanValue(parts[1]),
@@ -55,11 +55,11 @@ export function importHistoryFromCSV(csv: string): HistoryItem[] {
 export function importHistoryFromText(text: string): HistoryItem[] {
 	const lines = text.split("\n");
 	return lines
-		.filter(line => line.trim().length > 0)
-		.map(line => {
+		.filter((line) => line.trim().length > 0)
+		.map((line) => {
 			const match = line.match(/^\[([^\]]+)\]\s+(.+)$/);
 			if (!match) return null;
-			
+
 			return {
 				id: createHistoryId(),
 				text: match[2],

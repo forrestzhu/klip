@@ -9,9 +9,9 @@ import type { HistoryItem } from "./history.types";
  */
 export function validateHistoryItem(item: unknown): item is HistoryItem {
 	if (typeof item !== "object" || item === null) return false;
-	
+
 	const candidate = item as Record<string, unknown>;
-	
+
 	return (
 		typeof candidate.id === "string" &&
 		typeof candidate.text === "string" &&
@@ -25,7 +25,7 @@ export function validateHistoryItem(item: unknown): item is HistoryItem {
  */
 export function validateHistoryItems(items: unknown): HistoryItem[] {
 	if (!Array.isArray(items)) return [];
-	
+
 	return items.filter(validateHistoryItem);
 }
 

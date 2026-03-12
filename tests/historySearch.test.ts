@@ -7,9 +7,24 @@ import {
 
 describe("historySearch", () => {
 	const items: HistoryItem[] = [
-		{ id: "1", text: "Hello World", createdAt: "2026-03-11T00:00:00Z", sourceApp: null },
-		{ id: "2", text: "Goodbye", createdAt: "2026-03-11T00:01:00Z", sourceApp: null },
-		{ id: "3", text: "hello again", createdAt: "2026-03-11T00:02:00Z", sourceApp: null },
+		{
+			id: "1",
+			text: "Hello World",
+			createdAt: "2026-03-11T00:00:00Z",
+			sourceApp: null,
+		},
+		{
+			id: "2",
+			text: "Goodbye",
+			createdAt: "2026-03-11T00:01:00Z",
+			sourceApp: null,
+		},
+		{
+			id: "3",
+			text: "hello again",
+			createdAt: "2026-03-11T00:02:00Z",
+			sourceApp: null,
+		},
 	];
 
 	describe("searchHistoryItems", () => {

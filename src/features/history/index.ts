@@ -27,8 +27,8 @@ export {
 export {
 	clampHistoryMaxItems,
 	createHistoryId,
-	isEmptyHistoryItem,
 	isCapturableText,
+	isEmptyHistoryItem,
 	normalizeSourceApp,
 	validateHistoryItem,
 } from "./historyUtils";

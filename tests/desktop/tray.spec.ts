@@ -6,7 +6,13 @@
 
 import { expect, test } from "@playwright/test";
 import { invoke } from "@tauri-apps/api/core";
-import { waitForApp, isTrayVisible, showWindowViaHotkey, isWindowVisible, hideWindow } from "./utils";
+import {
+	hideWindow,
+	isTrayVisible,
+	isWindowVisible,
+	showWindowViaHotkey,
+	waitForApp,
+} from "./utils";
 
 test.describe("US-003: Tray/Menu Bar Tests", () => {
 	test.beforeAll(async () => {
@@ -65,13 +71,13 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Hide window first
 			await hideWindow();
-			
+
 			// Simulate left-click on tray icon
 			await invoke("simulate_tray_click", { button: "left" });
-			
+
 			// Wait for panel to appear
-			await new Promise(resolve => setTimeout(resolve, 500));
-			
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
 			// Verify panel is visible
 			const visible = await isWindowVisible();
 			expect(visible).toBe(true);
@@ -90,14 +96,14 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Simulate right-click on tray icon
 			await invoke("simulate_tray_click", { button: "right" });
-			
+
 			// Wait for menu to appear
-			await new Promise(resolve => setTimeout(resolve, 300));
-			
+			await new Promise((resolve) => setTimeout(resolve, 300));
+
 			// Verify menu items exist
 			const menuItems = await invoke<Array<string>>("get_tray_menu_items");
 			expect(menuItems.length).toBeGreaterThan(0);
-			
+
 			// Verify essential menu items
 			expect(menuItems).toContain("Quit Klip");
 		} catch {
@@ -115,13 +121,13 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Hide window first
 			await hideWindow();
-			
+
 			// Simulate single-click on tray icon
 			await invoke("simulate_tray_click", { button: "left" });
-			
+
 			// Wait for panel to appear
-			await new Promise(resolve => setTimeout(resolve, 500));
-			
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
 			// Verify panel is visible
 			const visible = await isWindowVisible();
 			expect(visible).toBe(true);
@@ -140,10 +146,10 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Simulate right-click on tray icon
 			await invoke("simulate_tray_click", { button: "right" });
-			
+
 			// Wait for menu to appear
-			await new Promise(resolve => setTimeout(resolve, 300));
-			
+			await new Promise((resolve) => setTimeout(resolve, 300));
+
 			// Verify menu items exist
 			const menuItems = await invoke<Array<string>>("get_tray_menu_items");
 			expect(menuItems.length).toBeGreaterThan(0);
@@ -157,13 +163,13 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 			// Get initial process ID
 			const pidBefore = await invoke<number>("get_app_pid");
 			expect(pidBefore).toBeGreaterThan(0);
-			
+
 			// Simulate clicking "Quit Klip" menu item
 			await invoke("simulate_tray_menu_click", { item: "Quit Klip" });
-			
+
 			// Wait for app to quit
-			await new Promise(resolve => setTimeout(resolve, 2000));
-			
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+
 			// Verify app process is no longer running
 			const isRunning = await invoke<boolean>("is_app_running");
 			expect(isRunning).toBe(false);
@@ -176,30 +182,34 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Start clipboard listener
 			await invoke("start_clipboard_listener");
-			
+
 			// Register global hotkey
-			await invoke("register_hotkey", { 
-				shortcut: "CommandOrControl+Shift+V" 
+			await invoke("register_hotkey", {
+				shortcut: "CommandOrControl+Shift+V",
 			});
-			
+
 			// Verify resources are active
-			let listenerRunning = await invoke<boolean>("is_clipboard_listener_running");
+			let listenerRunning = await invoke<boolean>(
+				"is_clipboard_listener_running",
+			);
 			expect(listenerRunning).toBe(true);
-			
+
 			let hotkeyRegistered = await invoke<boolean>("is_hotkey_registered");
 			expect(hotkeyRegistered).toBe(true);
-			
+
 			// Quit app from tray
 			await invoke("simulate_tray_menu_click", { item: "Quit Klip" });
-			
+
 			// Wait for cleanup
-			await new Promise(resolve => setTimeout(resolve, 2000));
-			
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+
 			// Verify resources are released (if app is still running in test mode)
 			try {
-				listenerRunning = await invoke<boolean>("is_clipboard_listener_running");
+				listenerRunning = await invoke<boolean>(
+					"is_clipboard_listener_running",
+				);
 				expect(listenerRunning).toBe(false);
-				
+
 				hotkeyRegistered = await invoke<boolean>("is_hotkey_registered");
 				expect(hotkeyRegistered).toBe(false);
 			} catch {
@@ -214,17 +224,21 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Hide window
 			await hideWindow();
-			
+
 			// Open from tray
 			await invoke("simulate_tray_click", { button: "left" });
-			await new Promise(resolve => setTimeout(resolve, 500));
-			
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
 			// Get panel position
-			const position = await invoke<{ x: number; y: number }>("get_window_position");
-			
+			const position = await invoke<{ x: number; y: number }>(
+				"get_window_position",
+			);
+
 			// Verify panel is within screen bounds
-			const screenBounds = await invoke<{ width: number; height: number }>("get_screen_bounds");
-			
+			const screenBounds = await invoke<{ width: number; height: number }>(
+				"get_screen_bounds",
+			);
+
 			expect(position.x).toBeGreaterThanOrEqual(0);
 			expect(position.y).toBeGreaterThanOrEqual(0);
 			expect(position.x).toBeLessThan(screenBounds.width);
@@ -238,11 +252,11 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Hide window
 			await hideWindow();
-			
+
 			// Open from tray
 			await invoke("simulate_tray_click", { button: "left" });
-			await new Promise(resolve => setTimeout(resolve, 500));
-			
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
 			// Verify window is focused
 			const isFocused = await invoke<boolean>("is_window_focused");
 			expect(isFocused).toBe(true);
@@ -255,16 +269,16 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Get initial icon state
 			const initialState = await invoke<string>("get_tray_icon_state");
-			
+
 			// Add history item (should update icon badge if implemented)
 			await invoke("add_history_item", {
 				content: "Icon test item",
-				contentType: "text"
+				contentType: "text",
 			});
-			
+
 			// Wait for icon update
-			await new Promise(resolve => setTimeout(resolve, 500));
-			
+			await new Promise((resolve) => setTimeout(resolve, 500));
+
 			// Verify icon state may have changed (optional feature)
 			const newState = await invoke<string>("get_tray_icon_state");
 			// Just verify the command doesn't crash
@@ -278,7 +292,7 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 		try {
 			// Get tooltip text
 			const tooltip = await invoke<string>("get_tray_tooltip");
-			
+
 			// Verify tooltip contains app name
 			expect(tooltip.toLowerCase()).toContain("klip");
 		} catch {
@@ -291,12 +305,12 @@ test.describe("US-003: Tray/Menu Bar Tests", () => {
 			// Rapidly click tray icon multiple times
 			for (let i = 0; i < 5; i++) {
 				await invoke("simulate_tray_click", { button: "left" });
-				await new Promise(resolve => setTimeout(resolve, 100));
+				await new Promise((resolve) => setTimeout(resolve, 100));
 			}
-			
+
 			// Wait for operations to complete
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+
 			// Verify app is still responsive
 			const visible = await isWindowVisible();
 			expect(typeof visible).toBe("boolean");

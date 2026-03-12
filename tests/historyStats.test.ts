@@ -8,9 +8,24 @@ import {
 
 describe("historyStats", () => {
 	const items: HistoryItem[] = [
-		{ id: "1", text: "item1", createdAt: "2026-03-11T10:00:00Z", sourceApp: "app1" },
-		{ id: "2", text: "item2", createdAt: "2026-03-11T11:00:00Z", sourceApp: null },
-		{ id: "3", text: "item1", createdAt: "2026-03-11T12:00:00Z", sourceApp: "app2" },
+		{
+			id: "1",
+			text: "item1",
+			createdAt: "2026-03-11T10:00:00Z",
+			sourceApp: "app1",
+		},
+		{
+			id: "2",
+			text: "item2",
+			createdAt: "2026-03-11T11:00:00Z",
+			sourceApp: null,
+		},
+		{
+			id: "3",
+			text: "item1",
+			createdAt: "2026-03-11T12:00:00Z",
+			sourceApp: "app2",
+		},
 	];
 
 	describe("calculateHistoryStats", () => {

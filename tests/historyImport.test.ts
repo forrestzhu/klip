@@ -10,7 +10,12 @@ describe("historyImport", () => {
 	describe("importHistoryFromJSON", () => {
 		it("imports valid JSON", () => {
 			const json = JSON.stringify([
-				{ id: "1", text: "hello", createdAt: "2026-03-11T10:00:00Z", sourceApp: null },
+				{
+					id: "1",
+					text: "hello",
+					createdAt: "2026-03-11T10:00:00Z",
+					sourceApp: null,
+				},
 			]);
 			const items = importHistoryFromJSON(json);
 			expect(items).toHaveLength(1);
