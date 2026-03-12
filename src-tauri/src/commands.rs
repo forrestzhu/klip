@@ -112,6 +112,7 @@ fn open_auxiliary_window<R: Runtime>(
                 .inner_size(width, height)
                 .min_inner_size(min_width, min_height)
                 .resizable(kind.resizable())
+                .center()
                 .build()?;
 
         show_and_focus_window(&window)?;
