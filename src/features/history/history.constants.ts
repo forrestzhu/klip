@@ -2,6 +2,8 @@
  * History Constants
  *
  * Configuration constants for the clipboard history feature.
+ *
+ * @module historyConstants
  */
 
 /** Current schema version for history storage */

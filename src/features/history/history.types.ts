@@ -3,6 +3,8 @@
  *
  * Provides TypeScript type definitions for the clipboard history feature.
  * History items represent clipboard content that has been copied by the user.
+ *
+ * @module historyTypes
  */
 
 /**
