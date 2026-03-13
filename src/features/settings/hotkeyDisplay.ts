@@ -1,13 +1,57 @@
-import { DEFAULT_PANEL_HOTKEY } from "./hotkey.constants";
+/**
+ * Hotkey Display Module
+ *
+ * Provides utilities for formatting and displaying keyboard shortcuts
+ * in a platform-specific manner.
+ */
 
+/**
+ * The platform type for hotkey display.
+ * - `mac`: macOS-specific formatting
+ * - `windows`: Windows-specific formatting
+ * - `other`: Generic formatting for other platforms
+ */
 type HotkeyPlatform = "mac" | "windows" | "other";
 
+/**
+ * A token representing a hotkey component.
+ * Contains the display label, rendering order, and whether it's a modifier key.
+ */
 interface DisplayToken {
+	/** The user-friendly label for the token */
 	label: string;
+	/** Rendering order (modifiers are rendered first) */
 	order: number;
+	/** Whether this token represents a modifier key (Ctrl, Cmd, Shift, Alt) */
 	isModifier: boolean;
 }
 
+/**
+ * Format a hotkey string for display in a platform-appropriate format.
+ *
+ * This function normalizes the hotkey string, extracts individual keys and modifiers,
+ * and formats them according to the target platform. Modifiers are sorted and
+ * rendered in a consistent order.
+ *
+ * @param value - The hotkey string to format (e.g., "CommandOrControl+Shift+V")
+ * @param platform - The target platform for formatting (default: auto-detected)
+ * @returns A formatted hotkey string suitable for display
+ *
+ * @example
+ * ```ts
+ * // macOS
+ * formatPanelHotkeyForDisplay("CommandOrControl+Shift+V", "mac");
+ * // "Cmd+Shift+V"
+ *
+ * // Windows
+ * formatPanelHotkeyForDisplay("CommandOrControl+Shift+V", "windows");
+ * // "Ctrl+Shift+V"
+ *
+ * // Auto-detect platform
+ * formatPanelHotkeyForDisplay("Ctrl+Shift+V");
+ * // "Ctrl+Shift+V" (or "Cmd+Shift+V" on macOS)
+ * ```
+ */
 export function formatPanelHotkeyForDisplay(
 	value: string,
 	platform: HotkeyPlatform = detectPlatform(),
@@ -37,6 +81,15 @@ export function formatPanelHotkeyForDisplay(
 	return [...modifiers, ...keys].map((token) => token.label).join("+");
 }
 
+/**
+ * Detect the current platform.
+ *
+ * Determines the operating system based on the browser's navigator.platform value.
+ *
+ * @returns The detected platform type
+ *
+ * @private
+ */
 function detectPlatform(): HotkeyPlatform {
 	if (typeof navigator === "undefined") {
 		return "other";
@@ -52,6 +105,18 @@ function detectPlatform(): HotkeyPlatform {
 	return "other";
 }
 
+/**
+ * Convert a raw hotkey token to a display token.
+ *
+ * Maps internal hotkey tokens to platform-specific display labels.
+ * Handles common key names and modifier keys.
+ *
+ * @param value - The raw hotkey token
+ * @param platform - The target platform for label selection
+ * @returns A display token with label and metadata
+ *
+ * @private
+ */
 function toDisplayToken(value: string, platform: HotkeyPlatform): DisplayToken {
 	const normalized = value.toLowerCase();
 
@@ -94,6 +159,17 @@ function toDisplayToken(value: string, platform: HotkeyPlatform): DisplayToken {
 	return { label: normalizeKeyLabel(value), order: 99, isModifier: false };
 }
 
+/**
+ * Normalize a raw key label to a standard display format.
+ *
+ * Converts special key names (like "arrowup", "space", etc.) to their
+ * display equivalents. Also handles "keyX" and "digitX" patterns.
+ *
+ * @param value - The raw key label to normalize
+ * @returns A normalized key label
+ *
+ * @private
+ */
 function normalizeKeyLabel(value: string): string {
 	const normalized = value.trim();
 	const lowered = normalized.toLowerCase();

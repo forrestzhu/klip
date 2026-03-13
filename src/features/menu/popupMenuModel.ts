@@ -6,54 +6,108 @@ import {
 	type SnippetItem,
 } from "../snippets";
 
+/**
+ * Popup Menu Model
+ *
+ * Provides functionality for building and navigating popup menus
+ * in the Klip application. Handles history items, snippets, and
+ * navigation through hierarchical menu structures.
+ */
+
+/** Maximum number of history items to display in popup menu */
 export const POPUP_HISTORY_LIMIT = 30;
+
+/** Number of history items to group together in submenus */
 export const POPUP_HISTORY_GROUP_SIZE = 10;
 
+/**
+ * Available actions that can be performed from the popup menu.
+ */
 export type PopupMenuAction =
 	| "clear-history"
 	| "edit-snippets"
 	| "open-preferences"
 	| "quit-app";
 
+/**
+ * Base interface for all popup menu entries.
+ */
 interface PopupMenuBaseEntry {
+	/** Unique identifier for this entry */
 	id: string;
+	/** Display label for this entry */
 	label: string;
 }
 
+/**
+ * A submenu entry in the popup menu.
+ * Contains a label and a list of child menu entries.
+ */
 export interface PopupSubmenuEntry extends PopupMenuBaseEntry {
 	kind: "submenu";
+	/** Child menu entries */
 	children: PopupMenuEntry[];
 }
 
+/**
+ * A history item entry in the popup menu.
+ * Displays a copied clipboard item.
+ */
 export interface PopupHistoryItemEntry extends PopupMenuBaseEntry {
 	kind: "history-item";
+	/** The actual clipboard text content */
 	text: string;
+	/** Additional detail information (e.g., timestamp) */
 	detail: string;
 }
 
+/**
+ * A snippet item entry in the popup menu.
+ * Displays a saved snippet.
+ */
 export interface PopupSnippetItemEntry extends PopupMenuBaseEntry {
 	kind: "snippet-item";
+	/** The actual snippet text content */
 	text: string;
+	/** Additional detail information (e.g., folder name, alias) */
 	detail: string;
 }
 
+/**
+ * An action entry that triggers a popup menu action.
+ */
 export interface PopupActionEntry extends PopupMenuBaseEntry {
 	kind: "action";
+	/** The action to perform */
 	action: PopupMenuAction;
 }
 
+/**
+ * A section header entry in the popup menu.
+ * Used to group related menu items.
+ */
 export interface PopupSectionEntry extends PopupMenuBaseEntry {
 	kind: "section";
 }
 
+/**
+ * A separator entry in the popup menu.
+ * Visually separates menu items.
+ */
 export interface PopupSeparatorEntry extends PopupMenuBaseEntry {
 	kind: "separator";
 }
 
+/**
+ * An empty entry shown when there are no items to display.
+ */
 export interface PopupEmptyEntry extends PopupMenuBaseEntry {
 	kind: "empty";
 }
 
+/**
+ * Union type for all popup menu entry types.
+ */
 export type PopupMenuEntry =
 	| PopupSubmenuEntry
 	| PopupHistoryItemEntry
@@ -63,19 +117,51 @@ export type PopupMenuEntry =
 	| PopupSeparatorEntry
 	| PopupEmptyEntry;
 
+/**
+ * Context information for navigating a popup menu.
+ */
 export interface PopupMenuContext {
+	/** The path (entry IDs) from root to current position */
 	path: string[];
+	/** Breadcrumb labels showing the current navigation path */
 	breadcrumb: string[];
+	/** The current level of menu entries */
 	entries: PopupMenuEntry[];
 }
 
+/**
+ * Input parameters for building the root popup menu entries.
+ */
 interface BuildPopupMenuRootEntriesInput {
+	/** History items to display */
 	historyItems: HistoryItem[];
+	/** Snippet folders */
 	snippetFolders: SnippetFolder[];
+	/** Snippet items */
 	snippetItems: SnippetItem[];
+	/** Optional search query for filtering items */
 	query?: string;
 }
 
+/**
+ * Build the root level popup menu entries.
+ *
+ * This function determines whether to show search results or default entries
+ * based on whether a query is provided. It creates menu entries for history
+ * items, snippets, and action buttons.
+ *
+ * @param input - Configuration for building the popup menu
+ * @returns An array of popup menu entries
+ *
+ * @example
+ * ```ts
+ * const entries = buildPopupMenuRootEntries({
+ *   historyItems: history,
+ *   snippetFolders: folders,
+ *   snippetItems: snippets
+ * });
+ * ```
+ */
 export function buildPopupMenuRootEntries(
 	input: BuildPopupMenuRootEntriesInput,
 ): PopupMenuEntry[] {
@@ -148,6 +234,26 @@ function buildSearchPopupMenuEntries(
 	return entries;
 }
 
+/**
+ * Resolve the popup menu context for a given path.
+ *
+ * Navigates through the menu hierarchy starting from root entries
+ * and returns the current context (breadcrumb and entries).
+ * Stops at the first unrecognized entry in the path.
+ *
+ * @param rootEntries - The root menu entries to start from
+ * @param rawPath - The path to navigate (array of entry IDs)
+ * @returns The resolved popup menu context
+ *
+ * @example
+ * ```ts
+ * const context = resolvePopupMenuContext(
+ *   buildPopupMenuRootEntries(...),
+ *   ["history-section", "history-range-1-10", "history-item-123"]
+ * );
+ * // Returns context showing the user is in the first history range
+ * ```
+ */
 export function resolvePopupMenuContext(
 	rootEntries: PopupMenuEntry[],
 	rawPath: string[],
@@ -177,12 +283,40 @@ export function resolvePopupMenuContext(
 	};
 }
 
+/**
+ * Type guard to check if an entry is a submenu.
+ *
+ * @param entry - The menu entry to check
+ * @returns true if the entry is a submenu
+ *
+ * @example
+ * ```ts
+ * if (isPopupSubmenuEntry(entry)) {
+ *   console.log(entry.label, entry.children.length, 'children');
+ * }
+ * ```
+ */
 export function isPopupSubmenuEntry(
 	entry: PopupMenuEntry,
 ): entry is PopupSubmenuEntry {
 	return entry.kind === "submenu";
 }
 
+/**
+ * Check if a menu entry is selectable (can be clicked).
+ *
+ * Returns false for section headers, separators, and empty entries.
+ *
+ * @param entry - The menu entry to check
+ * @returns true if the entry is selectable
+ *
+ * @example
+ * ```ts
+ * if (isPopupSelectableEntry(entry)) {
+ *   // Entry can be clicked to perform an action
+ * }
+ * ```
+ */
 export function isPopupSelectableEntry(entry: PopupMenuEntry): boolean {
 	return (
 		entry.kind !== "section" &&

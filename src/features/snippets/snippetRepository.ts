@@ -1,3 +1,10 @@
+/**
+ * Snippet Repository Module
+ *
+ * Provides the main repository class for managing snippets and folders.
+ * Handles CRUD operations, searching, validation, and persistence.
+ */
+
 import {
 	DEFAULT_SNIPPETS_FOLDER_ID,
 	DEFAULT_SNIPPETS_FOLDER_NAME,
@@ -18,24 +25,45 @@ import {
 	normalizeSnippetTitle,
 } from "./snippetUtils";
 
+/**
+ * Configuration options for creating a SnippetRepository instance.
+ */
 interface SnippetRepositoryOptions {
+	/** Storage backend for persisting snippets state */
 	storage: SnippetsStorage;
+	/** Function to get current time (for testing) */
 	now?: () => Date;
+	/** Function to generate unique IDs (for testing) */
 	createId?: () => string;
 }
 
+/**
+ * Input parameters for adding a new snippet.
+ */
 interface AddSnippetInput {
+	/** The text content of the snippet */
 	text: string;
+	/** Optional title (will be derived from text if not provided) */
 	title?: string | null;
+	/** Optional alias for quick access */
 	alias?: string | null;
+	/** Optional folder ID (defaults to default folder) */
 	folderId?: string | null;
 }
 
+/**
+ * Input parameters for updating an existing snippet.
+ */
 interface UpdateSnippetInput {
+	/** ID of the snippet to update */
 	id: string;
+	/** New text content (optional) */
 	text?: string | null;
+	/** New title (optional) */
 	title?: string | null;
+	/** New alias (optional) */
 	alias?: string | null;
+	/** New folder ID (optional) */
 	folderId?: string | null;
 }
 
