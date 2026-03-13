@@ -12,6 +12,8 @@ import {
  * Provides functionality for building and navigating popup menus
  * in the Klip application. Handles history items, snippets, and
  * navigation through hierarchical menu structures.
+ *
+ * @module popupMenuModel
  */
 
 /** Maximum number of history items to display in popup menu */
