@@ -5,7 +5,7 @@
  * Note: Desktop-specific functions require Tauri runtime and are tested in E2E tests.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isDesktopRuntime } from "../src/features/settings/hotkeyRuntime";
 
 describe("Hotkey Runtime", () => {
