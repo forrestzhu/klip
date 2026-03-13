@@ -1,3 +1,16 @@
+/**
+ * Hotkey Storage Module
+ *
+ * Manages persistent storage and normalization of keyboard shortcuts.
+ * Handles reading, writing, and canonicalization of hotkey strings.
+ *
+ * Features:
+ * - Read/write panel hotkey from localStorage
+ * - Read/write snippet alias hotkey from localStorage
+ * - Normalize hotkey strings to canonical format
+ * - Handle legacy hotkey formats
+ */
+
 import {
 	DEFAULT_PANEL_HOTKEY,
 	DEFAULT_SNIPPET_ALIAS_HOTKEY,
@@ -5,6 +18,16 @@ import {
 	SNIPPET_ALIAS_HOTKEY_STORAGE_KEY,
 } from "./hotkey.constants";
 
+/**
+ * Read panel hotkey from storage
+ * @param storage - Storage interface (typically localStorage)
+ * @returns Hotkey string in canonical format
+ * @example
+ * ```ts
+ * const hotkey = readPanelHotkey(localStorage);
+ * // Returns: "CommandOrControl+Shift+K"
+ * ```
+ */
 export function readPanelHotkey(storage: Storage): string {
 	const rawValue = storage.getItem(PANEL_HOTKEY_STORAGE_KEY);
 	if (rawValue === null) {
@@ -29,6 +52,17 @@ export function readPanelHotkey(storage: Storage): string {
 	return normalized;
 }
 
+/**
+ * Write panel hotkey to storage
+ * @param storage - Storage interface (typically localStorage)
+ * @param value - Hotkey string (will be normalized)
+ * @returns Normalized hotkey string that was persisted
+ * @example
+ * ```ts
+ * writePanelHotkey(localStorage, "cmd shift k");
+ * // Persists and returns: "CommandOrControl+Shift+K"
+ * ```
+ */
 export function writePanelHotkey(storage: Storage, value: string): string {
 	const normalized = canonicalizePanelHotkey(value);
 	const persistedValue =
@@ -38,6 +72,11 @@ export function writePanelHotkey(storage: Storage, value: string): string {
 	return persistedValue;
 }
 
+/**
+ * Read snippet alias hotkey from storage
+ * @param storage - Storage interface (typically localStorage)
+ * @returns Hotkey string in canonical format
+ */
 export function readSnippetAliasHotkey(storage: Storage): string {
 	const rawValue = storage.getItem(SNIPPET_ALIAS_HOTKEY_STORAGE_KEY);
 	if (rawValue === null) {
@@ -51,6 +90,12 @@ export function readSnippetAliasHotkey(storage: Storage): string {
 	return normalized;
 }
 
+/**
+ * Write snippet alias hotkey to storage
+ * @param storage - Storage interface (typically localStorage)
+ * @param value - Hotkey string (will be normalized)
+ * @returns Normalized hotkey string that was persisted
+ */
 export function writeSnippetAliasHotkey(
 	storage: Storage,
 	value: string,
@@ -60,6 +105,26 @@ export function writeSnippetAliasHotkey(
 	return normalized;
 }
 
+/**
+ * Canonicalize a hotkey string to standard format
+ *
+ * Converts various hotkey formats to a canonical representation:
+ * - Normalizes modifiers: CommandOrControl, Shift, Alt
+ * - Orders modifiers consistently
+ * - Uppercases letter keys
+ * - Handles legacy formats (e.g., "Shift+Super+KeyK")
+ *
+ * @param value - Hotkey string in any format
+ * @returns Canonical hotkey string (e.g., "CommandOrControl+Shift+K")
+ * @example
+ * ```ts
+ * canonicalizePanelHotkey("cmd shift k");
+ * // Returns: "CommandOrControl+Shift+K"
+ *
+ * canonicalizePanelHotkey("Shift+Super+KeyK");
+ * // Returns: "CommandOrControl+Shift+K"
+ * ```
+ */
 export function canonicalizePanelHotkey(value: string): string {
 	const tokens =
 		value
@@ -105,6 +170,11 @@ export function canonicalizePanelHotkey(value: string): string {
 	return [...orderedModifiers, ...keys].join("+");
 }
 
+/**
+ * Check if hotkey matches legacy default format
+ * @param value - Hotkey string to check
+ * @returns true if matches legacy format
+ */
 function isLegacyDefaultPanelHotkey(value: string): boolean {
 	const normalized = value.replaceAll(" ", "").toLowerCase();
 	return (
@@ -113,6 +183,12 @@ function isLegacyDefaultPanelHotkey(value: string): boolean {
 	);
 }
 
+/**
+ * Normalize a single key token
+ * Handles special formats like "KeyK" → "K", "Digit1" → "1"
+ * @param value - Key token to normalize
+ * @returns Normalized key token
+ */
 function normalizeKeyToken(value: string): string {
 	const normalized = value.trim();
 	const lowered = normalized.toLowerCase();
