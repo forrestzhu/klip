@@ -1,3 +1,19 @@
+/**
+ * Klip Application Root Component
+ *
+ * Main application component that orchestrates clipboard history management,
+ * snippet handling, and user interface interactions.
+ *
+ * Features:
+ * - Clipboard history panel with keyboard shortcut activation
+ * - Snippet management with folder organization
+ * - Direct paste feedback and mode switching
+ * - Build commit info display
+ * - Tauri desktop integration
+ *
+ * @module App
+ */
+
 import { invoke } from "@tauri-apps/api/core";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
