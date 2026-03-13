@@ -1,3 +1,10 @@
+/**
+ * Snippets Feature Module
+ *
+ * Public API for the snippets feature. Provides types, utilities, and
+ * the repository class for managing text snippets.
+ */
+
 export {
 	DEFAULT_SNIPPET_ALIAS_MAX_LENGTH,
 	DEFAULT_SNIPPET_TITLE_MAX_LENGTH,

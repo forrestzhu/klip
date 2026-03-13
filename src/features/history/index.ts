@@ -1,3 +1,10 @@
+/**
+ * History Feature Module
+ *
+ * Public API for the clipboard history feature. Provides clipboard monitoring,
+ * history storage, and utilities for managing clipboard history items.
+ */
+
 export {
 	type ClipboardPort,
 	type ClipboardWriter,

@@ -1,3 +1,10 @@
+/**
+ * Settings Feature Module
+ *
+ * Public API for the settings feature. Provides hotkey management,
+ * paste mode configuration, and startup launch settings.
+ */
+
 export {
 	DEFAULT_PANEL_HOTKEY,
 	DEFAULT_SNIPPET_ALIAS_HOTKEY,

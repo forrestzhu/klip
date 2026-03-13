@@ -67,6 +67,23 @@ interface UpdateSnippetInput {
 	folderId?: string | null;
 }
 
+/**
+ * Repository class for managing snippets and folders.
+ *
+ * Provides CRUD operations, search functionality, and persistence
+ * for the snippets feature. Implements lazy loading and automatic
+ * normalization of data.
+ *
+ * @example
+ * ```ts
+ * const repository = new SnippetRepository({
+ *   storage: new LocalStorageBackend()
+ * });
+ *
+ * await repository.load();
+ * const snippets = repository.getSnippets();
+ * ```
+ */
 export class SnippetRepository {
 	private readonly storage: SnippetsStorage;
 	private readonly now: () => Date;
@@ -75,6 +92,11 @@ export class SnippetRepository {
 	private state: SnippetsState;
 	private hasLoaded = false;
 
+	/**
+	 * Create a new SnippetRepository instance.
+	 *
+	 * @param options - Configuration options
+	 */
 	public constructor(options: SnippetRepositoryOptions) {
 		this.storage = options.storage;
 		this.now = options.now ?? (() => new Date());
@@ -82,6 +104,14 @@ export class SnippetRepository {
 		this.state = this.createDefaultState();
 	}
 
+	/**
+	 * Load snippets state from storage.
+	 *
+	 * Loads the persisted state, normalizes it, and saves back if
+	 * normalization made any changes. Subsequent calls return cached state.
+	 *
+	 * @returns The loaded snippets state
+	 */
 	public async load(): Promise<SnippetsState> {
 		if (this.hasLoaded) {
 			return this.getState();
@@ -108,6 +138,11 @@ export class SnippetRepository {
 		return this.getState();
 	}
 
+	/**
+	 * Get the current snippets state.
+	 *
+	 * @returns A copy of the current state
+	 */
 	public getState(): SnippetsState {
 		return {
 			...this.state,
@@ -116,14 +151,31 @@ export class SnippetRepository {
 		};
 	}
 
+	/**
+	 * Get all snippet folders.
+	 *
+	 * @returns Array of all folders
+	 */
 	public getFolders(): SnippetFolder[] {
 		return this.state.folders.map((folder) => ({ ...folder }));
 	}
 
+	/**
+	 * Get all snippets.
+	 *
+	 * @returns Array of all snippets
+	 */
 	public getSnippets(): SnippetItem[] {
 		return this.state.snippets.map((snippet) => ({ ...snippet }));
 	}
 
+	/**
+	 * Search snippets by keyword and optionally filter by folder.
+	 *
+	 * @param query - Search keyword (matches alias, title, or text)
+	 * @param folderId - Optional folder ID to filter results
+	 * @returns Array of matching snippets
+	 */
 	public searchSnippets(
 		query: string,
 		folderId?: string | null,
@@ -150,6 +202,15 @@ export class SnippetRepository {
 			.map((snippet) => ({ ...snippet }));
 	}
 
+	/**
+	 * Add a new snippet folder.
+	 *
+	 * If a folder with the same name already exists (case-insensitive),
+	 * returns the existing folder instead of creating a duplicate.
+	 *
+	 * @param name - Folder name
+	 * @returns The created or existing folder
+	 */
 	public async addFolder(name: string): Promise<SnippetFolder> {
 		await this.ensureLoaded();
 
@@ -174,6 +235,13 @@ export class SnippetRepository {
 		return { ...folder };
 	}
 
+	/**
+	 * Rename a snippet folder.
+	 *
+	 * @param folderId - ID of the folder to rename
+	 * @param name - New name for the folder
+	 * @returns The updated folder, or null if not found or duplicate name
+	 */
 	public async renameFolder(
 		folderId: string,
 		name: string,
@@ -208,6 +276,15 @@ export class SnippetRepository {
 		return { ...folder };
 	}
 
+	/**
+	 * Delete a snippet folder.
+	 *
+	 * Cannot delete the default folder. Snippets in the deleted folder
+	 * are moved to the default folder.
+	 *
+	 * @param folderId - ID of the folder to delete
+	 * @returns true if deleted, false if not found or is default folder
+	 */
 	public async deleteFolder(folderId: string): Promise<boolean> {
 		await this.ensureLoaded();
 
@@ -236,6 +313,12 @@ export class SnippetRepository {
 		return true;
 	}
 
+	/**
+	 * Add a new snippet.
+	 *
+	 * @param input - Snippet data
+	 * @returns The created snippet, or null if text is invalid
+	 */
 	public async addSnippet(input: AddSnippetInput): Promise<SnippetItem | null> {
 		await this.ensureLoaded();
 
@@ -261,6 +344,15 @@ export class SnippetRepository {
 		return { ...snippet };
 	}
 
+	/**
+	 * Update an existing snippet.
+	 *
+	 * Only provided fields are updated. If text changes and title was
+	 * previously auto-derived, the title is re-derived.
+	 *
+	 * @param input - Update data
+	 * @returns The updated snippet, or null if not found or invalid
+	 */
 	public async updateSnippet(
 		input: UpdateSnippetInput,
 	): Promise<SnippetItem | null> {
@@ -307,6 +399,12 @@ export class SnippetRepository {
 		return { ...snippet };
 	}
 
+	/**
+	 * Delete a snippet.
+	 *
+	 * @param snippetId - ID of the snippet to delete
+	 * @returns true if deleted, false if not found
+	 */
 	public async deleteSnippet(snippetId: string): Promise<boolean> {
 		await this.ensureLoaded();
 
@@ -322,6 +420,10 @@ export class SnippetRepository {
 		return true;
 	}
 
+	/**
+	 * Ensure the repository has loaded state from storage.
+	 * @private
+	 */
 	private async ensureLoaded() {
 		if (this.hasLoaded) {
 			return;
@@ -330,6 +432,15 @@ export class SnippetRepository {
 		await this.load();
 	}
 
+	/**
+	 * Resolve a folder ID to a valid folder ID.
+	 *
+	 * Returns null if the folder ID is invalid or doesn't exist.
+	 *
+	 * @param folderId - Folder ID to resolve
+	 * @returns Valid folder ID or null
+	 * @private
+	 */
 	private resolveFolderId(folderId: string | null | undefined): string | null {
 		if (typeof folderId !== "string") {
 			return null;
@@ -345,6 +456,11 @@ export class SnippetRepository {
 			: null;
 	}
 
+	/**
+	 * Create the default snippets state.
+	 * @returns Default state with one default folder
+	 * @private
+	 */
 	private createDefaultState(): SnippetsState {
 		const nowIso = this.now().toISOString();
 		return {
@@ -361,6 +477,18 @@ export class SnippetRepository {
 		};
 	}
 
+	/**
+	 * Normalize a loaded state to ensure data consistency.
+	 *
+	 * - Removes duplicate IDs
+	 * - Validates and normalizes all fields
+	 * - Ensures default folder exists
+	 * - Repairs missing or invalid timestamps
+	 *
+	 * @param input - State to normalize
+	 * @returns Normalized state
+	 * @private
+	 */
 	private normalizeState(input: SnippetsState): SnippetsState {
 		const nowIso = this.now().toISOString();
 		const normalizedFolders: SnippetFolder[] = [];
@@ -445,11 +573,24 @@ export class SnippetRepository {
 		};
 	}
 
+	/**
+	 * Persist the current state to storage.
+	 * @private
+	 */
 	private async persist() {
 		await this.storage.save(this.state);
 	}
 }
 
+/**
+ * Check if two states are identical.
+ *
+ * @param left - First state
+ * @param right - Second state
+ * @returns true if states are identical
+ *
+ * @private
+ */
 function isSameState(left: SnippetsState, right: SnippetsState): boolean {
 	return JSON.stringify(left) === JSON.stringify(right);
 }
