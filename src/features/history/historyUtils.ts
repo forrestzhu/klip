@@ -2,7 +2,10 @@
  * History Utilities
  *
  * Helper functions for validating, normalizing, and managing
- * clipboard history items.
+ * clipboard history items. Provides core validation logic,
+ * ID generation, and data normalization utilities.
+ *
+ * @module historyUtils
  */
 
 import {
@@ -13,8 +16,21 @@ import {
 
 /**
  * Type guard to check if a value is non-empty capturable text.
- * @param value - Value to check
- * @returns True if value is a non-empty string
+ *
+ * Validates that the value is a string and contains non-whitespace content.
+ * Used to filter out empty clipboard entries before capturing.
+ *
+ * @param value - Value to check (may be null, undefined, or string)
+ * @returns True if value is a non-empty string with content beyond whitespace
+ *
+ * @example
+ * ```ts
+ * isCapturableText("Hello"); // true
+ * isCapturableText("   "); // false (whitespace only)
+ * isCapturableText(""); // false (empty)
+ * isCapturableText(null); // false
+ * isCapturableText(undefined); // false
+ * ```
  */
 export function isCapturableText(
 	value: string | null | undefined,
@@ -24,8 +40,20 @@ export function isCapturableText(
 
 /**
  * Normalizes the source application name.
- * @param value - Source app name to normalize
- * @returns Normalized name, or null if invalid
+ *
+ * Trims whitespace and validates source app name.
+ * Returns null for invalid or empty values.
+ *
+ * @param value - Source app name to normalize (e.g., "com.apple.Safari")
+ * @returns Trimmed and validated app name, or null if invalid/empty
+ *
+ * @example
+ * ```ts
+ * normalizeSourceApp("com.apple.Safari"); // "com.apple.Safari"
+ * normalizeSourceApp("  Safari  "); // "Safari"
+ * normalizeSourceApp(""); // null (empty)
+ * normalizeSourceApp(null); // null
+ * ```
  */
 export function normalizeSourceApp(
 	value: string | null | undefined,
@@ -40,8 +68,21 @@ export function normalizeSourceApp(
 
 /**
  * Clamps the max items value to allowed range.
- * @param value - Value to clamp
- * @returns Clamped value between MIN_HISTORY_MAX_ITEMS and MAX_HISTORY_MAX_ITEMS
+ *
+ * Ensures the max items configuration stays within safe bounds.
+ * Non-finite values default to DEFAULT_HISTORY_MAX_ITEMS.
+ *
+ * @param value - Value to clamp (user-provided max items setting)
+ * @returns Clamped integer value between MIN_HISTORY_MAX_ITEMS and MAX_HISTORY_MAX_ITEMS
+ *
+ * @example
+ * ```ts
+ * clampHistoryMaxItems(100); // 100 (within range)
+ * clampHistoryMaxItems(0); // 1 (minimum)
+ * clampHistoryMaxItems(99999); // 10000 (maximum)
+ * clampHistoryMaxItems(NaN); // 100 (default)
+ * clampHistoryMaxItems(Infinity); // 100 (default)
+ * ```
  */
 export function clampHistoryMaxItems(value: number): number {
 	const safeValue = Number.isFinite(value)
@@ -56,7 +97,17 @@ export function clampHistoryMaxItems(value: number): number {
 
 /**
  * Creates a unique history item ID.
- * @returns Unique ID string
+ *
+ * Generates a cryptographically secure UUID when available (modern browsers/Node.js).
+ * Falls back to timestamp + random string for older environments.
+ *
+ * @returns Unique ID string in format "hist-{timestamp}-{random}" or UUID
+ *
+ * @example
+ * ```ts
+ * createHistoryId(); // "hist-1710374400000-a1b2c3d4e5" (fallback)
+ * createHistoryId(); // "550e8400-e29b-41d4-a716-446655440000" (crypto API)
+ * ```
  */
 export function createHistoryId(): string {
 	if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -68,18 +119,41 @@ export function createHistoryId(): string {
 }
 
 /**
- * Check if a history item is empty
+ * Check if a history item is empty.
+ *
+ * Validates whether text content should be considered an empty entry.
+ * Empty or whitespace-only strings are treated as empty items.
+ *
  * @param text - Text content to check
- * @returns True if text is empty or whitespace only
+ * @returns True if text is null, undefined, empty, or whitespace only
+ *
+ * @example
+ * ```ts
+ * isEmptyHistoryItem("Hello"); // false
+ * isEmptyHistoryItem(""); // true
+ * isEmptyHistoryItem("   "); // true
+ * isEmptyHistoryItem(null); // true
+ * ```
  */
 export function isEmptyHistoryItem(text: string): boolean {
 	return !text || text.trim().length === 0;
 }
 
 /**
- * Validate history item content
+ * Validate history item content.
+ *
+ * Comprehensive validation for clipboard history entries.
+ * Checks that content is not empty and within size limits (10MB).
+ *
  * @param text - Text content to validate
- * @returns True if text is valid (not empty and not too long)
+ * @returns True if text is valid (non-empty and ≤10MB)
+ *
+ * @example
+ * ```ts
+ * validateHistoryItem("Short text"); // true
+ * validateHistoryItem(""); // false (empty)
+ * validateHistoryItem("x".repeat(11 * 1024 * 1024)); // false (too long)
+ * ```
  */
 export function validateHistoryItem(text: string): boolean {
 	// Not empty and not too long (max 10MB)
