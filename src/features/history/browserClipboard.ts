@@ -8,6 +8,8 @@
  * - Read/write text from/to clipboard
  * - Subscribe to clipboard changes (desktop only)
  * - Graceful fallback for browser environments
+ *
+ * @module browserClipboard
  */
 
 import { invoke } from "@tauri-apps/api/core";

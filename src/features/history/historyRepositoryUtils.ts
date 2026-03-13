@@ -1,5 +1,10 @@
 /**
- * Utility functions for HistoryRepository
+ * History Repository Utilities
+ *
+ * Utility functions for HistoryRepository module.
+ * Provides validation and filtering helpers for history items.
+ *
+ * @module historyRepositoryUtils
  */
 
 import type { HistoryItem } from "./history.types";
