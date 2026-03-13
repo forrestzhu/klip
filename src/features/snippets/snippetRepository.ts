@@ -3,6 +3,8 @@
  *
  * Provides the main repository class for managing snippets and folders.
  * Handles CRUD operations, searching, validation, and persistence.
+ *
+ * @module snippetRepository
  */
 
 import {
