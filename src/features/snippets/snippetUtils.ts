@@ -1,9 +1,21 @@
+/**
+ * Snippet utility functions
+ *
+ * Provides helper functions for normalizing and validating snippet data.
+ * Includes title derivation, text truncation, and alias generation utilities.
+ */
+
 import {
 	DEFAULT_SNIPPET_ALIAS_MAX_LENGTH,
 	DEFAULT_SNIPPET_TITLE_MAX_LENGTH,
 	DEFAULT_SNIPPETS_FOLDER_NAME,
 } from "./snippet.constants";
 
+/**
+ * Check if a value is non-empty text
+ * @param value - Value to check
+ * @returns True if value is a non-empty string
+ */
 export function isNonEmptyText(
 	value: string | null | undefined,
 ): value is string {
