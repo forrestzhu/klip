@@ -1,3 +1,15 @@
+/**
+ * Snippet Storage Module
+ *
+ * Manages persistent storage of snippet folders and items.
+ * Provides a key-value storage abstraction for browser and desktop environments.
+ *
+ * Features:
+ * - Load/save snippets state from/to storage
+ * - Validate and normalize loaded data
+ * - Handle schema versioning
+ */
+
 import { SNIPPETS_SCHEMA_VERSION } from "./snippet.constants";
 import type {
 	SnippetFolder,
@@ -8,11 +20,22 @@ import type {
 
 export const SNIPPETS_STORAGE_KEY = "klip.snippets.v1";
 
+/**
+ * Key-value storage interface
+ * Abstracts localStorage and other storage mechanisms
+ */
 export interface KeyValueStorage {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;
 }
 
+/**
+ * Create a browser-based snippets storage
+ * Uses key-value storage (typically localStorage)
+ * @param storage - Key-value storage implementation
+ * @param storageKey - Storage key (defaults to SNIPPETS_STORAGE_KEY)
+ * @returns SnippetsStorage instance
+ */
 export function createBrowserSnippetsStorage(
 	storage: KeyValueStorage,
 	storageKey = SNIPPETS_STORAGE_KEY,
@@ -37,6 +60,12 @@ export function createBrowserSnippetsStorage(
 	};
 }
 
+/**
+ * Normalize loaded state from storage
+ * Validates and sanitizes folders and snippets
+ * @param input - Partial state from storage
+ * @returns Normalized snippets state
+ */
 function normalizeLoadedState(input: Partial<SnippetsState>): SnippetsState {
 	const folders = Array.isArray(input.folders) ? input.folders : [];
 	const snippets = Array.isArray(input.snippets) ? input.snippets : [];
@@ -53,6 +82,11 @@ function normalizeLoadedState(input: Partial<SnippetsState>): SnippetsState {
 	};
 }
 
+/**
+ * Validate snippet folder object
+ * @param value - Value to validate
+ * @returns true if valid SnippetFolder
+ */
 function isValidFolder(value: unknown): value is SnippetFolder {
 	return (
 		typeof value === "object" &&
@@ -64,6 +98,11 @@ function isValidFolder(value: unknown): value is SnippetFolder {
 	);
 }
 
+/**
+ * Validate snippet item object
+ * @param value - Value to validate
+ * @returns true if valid SnippetItem
+ */
 function isValidSnippet(value: unknown): value is SnippetItem {
 	return (
 		typeof value === "object" &&
