@@ -9,6 +9,8 @@
  * - Read/write snippet alias hotkey from localStorage
  * - Normalize hotkey strings to canonical format
  * - Handle legacy hotkey formats
+ *
+ * @module hotkeyStorage
  */
 
 import {

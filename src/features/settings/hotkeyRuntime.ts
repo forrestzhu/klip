@@ -3,6 +3,8 @@
  *
  * Provides functions to register and manage keyboard shortcuts in Tauri desktop environment.
  * Automatically detects runtime environment and falls back gracefully when not in desktop mode.
+ *
+ * @module hotkeyRuntime
  */
 
 import { invoke } from "@tauri-apps/api/core";

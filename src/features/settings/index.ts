@@ -3,6 +3,8 @@
  *
  * Public API for the settings feature. Provides hotkey management,
  * paste mode configuration, and startup launch settings.
+ *
+ * @module settings
  */
 
 export {
