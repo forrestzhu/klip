@@ -4,6 +4,8 @@
  * Provides TypeScript type definitions for the snippets feature.
  * Snippets are saved text fragments that can be quickly inserted
  * via keyboard shortcuts or the popup menu.
+ *
+ * @module snippetTypes
  */
 
 /**

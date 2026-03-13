@@ -8,6 +8,8 @@
  * - Load/save snippets state from/to storage
  * - Validate and normalize loaded data
  * - Handle schema versioning
+ *
+ * @module snippetStorage
  */
 
 import { SNIPPETS_SCHEMA_VERSION } from "./snippet.constants";

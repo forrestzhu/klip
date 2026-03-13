@@ -2,6 +2,8 @@
  * Snippet Constants
  *
  * Configuration constants for the snippets feature.
+ *
+ * @module snippetConstants
  */
 
 /** Current schema version for snippets storage */

@@ -3,6 +3,8 @@
  *
  * Public API for the snippets feature. Provides types, utilities, and
  * the repository class for managing text snippets.
+ *
+ * @module snippets
  */
 
 export {

@@ -1,8 +1,10 @@
 /**
- * Snippet utility functions
+ * Snippet Utilities
  *
  * Provides helper functions for normalizing and validating snippet data.
  * Includes title derivation, text truncation, and alias generation utilities.
+ *
+ * @module snippetUtils
  */
 
 import {
