@@ -3,7 +3,11 @@
  *
  * Provides utilities for formatting and displaying keyboard shortcuts
  * in a platform-specific manner.
+ *
+ * @module hotkeyDisplay
  */
+
+import { DEFAULT_PANEL_HOTKEY } from "./hotkey.constants";
 
 /**
  * The platform type for hotkey display.
