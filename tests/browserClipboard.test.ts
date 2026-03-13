@@ -55,6 +55,18 @@ describe("createBrowserClipboardPort", () => {
 			"Browser clipboard write API is unavailable",
 		);
 	});
+
+	it("returns empty unsubscribe function for subscribeChanges", async () => {
+		mockNavigatorClipboard({
+			readText: vi.fn(async () => "test"),
+			writeText: vi.fn(async () => undefined),
+		});
+		const port = createBrowserClipboardPort();
+
+		const unsubscribe = await port.subscribeChanges(() => {});
+		expect(typeof unsubscribe).toBe("function");
+		expect(unsubscribe()).toBeUndefined();
+	});
 });
 
 const originalNavigator = globalThis.navigator;
