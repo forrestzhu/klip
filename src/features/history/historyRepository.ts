@@ -1,3 +1,10 @@
+/**
+ * History Repository
+ *
+ * Repository class for managing clipboard history state.
+ * Provides CRUD operations with automatic persistence and validation.
+ */
+
 import {
 	DEFAULT_HISTORY_MAX_ITEMS,
 	HISTORY_SCHEMA_VERSION,
@@ -14,18 +21,36 @@ import {
 	normalizeSourceApp,
 } from "./historyUtils";
 
+/**
+ * Configuration options for HistoryRepository.
+ */
 interface HistoryRepositoryOptions {
+	/** Storage implementation for persistence */
 	storage: HistoryStorage;
+	/** Default maximum number of items */
 	defaultMaxItems?: number;
+	/** Function to get current date/time */
 	now?: () => Date;
+	/** Function to generate unique IDs */
 	createId?: () => string;
 }
 
+/**
+ * Input for adding captured clipboard text.
+ */
 interface AddCapturedTextInput {
+	/** The text content that was captured */
 	text: string;
+	/** Optional source application name */
 	sourceApp?: string | null;
 }
 
+/**
+ * Repository for managing clipboard history items.
+ *
+ * Provides methods for loading, saving, adding, and managing
+ * clipboard history with automatic persistence to storage.
+ */
 export class HistoryRepository {
 	private readonly storage: HistoryStorage;
 	private readonly now: () => Date;
@@ -35,6 +60,10 @@ export class HistoryRepository {
 	private state: HistoryState;
 	private hasLoaded = false;
 
+	/**
+	 * Creates a new HistoryRepository instance.
+	 * @param options - Configuration options
+	 */
 	public constructor(options: HistoryRepositoryOptions) {
 		this.storage = options.storage;
 		this.now = options.now ?? (() => new Date());
@@ -45,6 +74,10 @@ export class HistoryRepository {
 		this.state = this.createDefaultState(this.defaultMaxItems);
 	}
 
+	/**
+	 * Loads the history state from storage.
+	 * @returns The loaded history state
+	 */
 	public async load(): Promise<HistoryState> {
 		if (this.hasLoaded) {
 			return this.getState();
@@ -71,6 +104,10 @@ export class HistoryRepository {
 		return this.getState();
 	}
 
+	/**
+	 * Gets a copy of the current history state.
+	 * @returns Copy of the current state
+	 */
 	public getState(): HistoryState {
 		return {
 			...this.state,
@@ -78,14 +115,27 @@ export class HistoryRepository {
 		};
 	}
 
+	/**
+	 * Gets a copy of all history items.
+	 * @returns Copy of history items array
+	 */
 	public getItems(): HistoryItem[] {
 		return this.state.items.map((item) => ({ ...item }));
 	}
 
+	/**
+	 * Gets the current maximum items limit.
+	 * @returns Maximum items limit
+	 */
 	public getMaxItems(): number {
 		return this.state.maxItems;
 	}
 
+	/**
+	 * Sets the maximum items limit and trims items if necessary.
+	 * @param maxItems - New maximum items limit
+	 * @returns The clamped value that was set
+	 */
 	public async setMaxItems(maxItems: number): Promise<number> {
 		await this.ensureLoaded();
 
@@ -100,6 +150,9 @@ export class HistoryRepository {
 		return clamped;
 	}
 
+	/**
+	 * Clears all history items.
+	 */
 	public async clearItems(): Promise<void> {
 		await this.ensureLoaded();
 
@@ -111,6 +164,11 @@ export class HistoryRepository {
 		await this.persist();
 	}
 
+	/**
+	 * Adds a captured text to the history.
+	 * @param input - Input containing text and optional source app
+	 * @returns The created history item, or null if text is invalid or duplicate
+	 */
 	public async addCapturedText(
 		input: AddCapturedTextInput,
 	): Promise<HistoryItem | null> {
@@ -196,6 +254,12 @@ export class HistoryRepository {
 	}
 }
 
+/**
+ * Checks if two history states are equivalent.
+ * @param left - First history state
+ * @param right - Second history state
+ * @returns True if states are equivalent
+ */
 function isSameState(left: HistoryState, right: HistoryState): boolean {
 	return JSON.stringify(left) === JSON.stringify(right);
 }
