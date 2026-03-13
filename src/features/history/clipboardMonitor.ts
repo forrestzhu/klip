@@ -3,6 +3,8 @@
  *
  * Monitors clipboard changes and captures text content. Supports both
  * polling and event-based change detection, with suppression of own writes.
+ *
+ * @module clipboardMonitor
  */
 
 import {

@@ -3,6 +3,8 @@
  *
  * Repository class for managing clipboard history state.
  * Provides CRUD operations with automatic persistence and validation.
+ *
+ * @module historyRepository
  */
 
 import {
