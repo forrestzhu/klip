@@ -3,6 +3,8 @@
  *
  * Browser-based storage implementation for clipboard history state.
  * Provides localStorage-based persistence with normalization and validation.
+ *
+ * @module historyStorage
  */
 
 import {
