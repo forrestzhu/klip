@@ -255,7 +255,7 @@ fn is_unregister_missing_binding_error(error: &GlobalShortcutError) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_conflict_error_message, normalize_shortcut, HotkeyError};
+    use super::{is_conflict_error_message, normalize_shortcut, HotkeyError, DEFAULT_PANEL_HOTKEY, SNIPPET_ALIAS_TRIGGER_EVENT};
 
     #[test]
     fn normalize_shortcut_trims_whitespace_between_segments() {
@@ -296,5 +296,34 @@ mod tests {
         ));
         assert!(is_conflict_error_message("this shortcut is already in use"));
         assert!(!is_conflict_error_message("failed to parse shortcut"));
+    }
+
+    #[test]
+    fn hotkey_error_messages_are_descriptive() {
+        let empty_error = HotkeyError::EmptyShortcut.to_string();
+        let invalid_error = HotkeyError::InvalidShortcut.to_string();
+        let conflict_error = HotkeyError::Conflict { shortcut: String::from("Cmd+K") }.to_string();
+
+        assert!(!empty_error.is_empty());
+        assert!(!invalid_error.is_empty());
+        assert!(!conflict_error.is_empty());
+    }
+
+    #[test]
+    fn default_hotkey_constants_are_not_empty() {
+        assert!(!DEFAULT_PANEL_HOTKEY.is_empty());
+        assert!(!SNIPPET_ALIAS_TRIGGER_EVENT.is_empty());
+    }
+
+    #[test]
+    fn default_panel_hotkey_has_valid_format() {
+        assert!(DEFAULT_PANEL_HOTKEY.contains('+'));
+        assert!(DEFAULT_PANEL_HOTKEY.len() > 3);
+    }
+
+    #[test]
+    fn snippet_alias_trigger_event_has_valid_format() {
+        assert!(SNIPPET_ALIAS_TRIGGER_EVENT.contains("://"));
+        assert!(SNIPPET_ALIAS_TRIGGER_EVENT.starts_with("klip:"));
     }
 }
