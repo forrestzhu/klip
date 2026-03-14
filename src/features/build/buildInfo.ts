@@ -1,8 +1,10 @@
 /**
- * Build Information Module
+ * Build Information
  *
  * Provides utilities for reading and formatting build commit information.
  * The commit hash is injected at build time via Vite define plugin.
+ *
+ * @module buildInfo
  */
 
 /** Placeholder value when commit information is unavailable */

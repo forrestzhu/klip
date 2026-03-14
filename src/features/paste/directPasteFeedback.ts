@@ -2,6 +2,8 @@
  * Direct Paste Feedback
  *
  * Determines UI feedback behavior after direct paste operations.
+ *
+ * @module directPasteFeedback
  */
 
 import type { DirectPasteMode } from "./directPasteRuntime";

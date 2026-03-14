@@ -1,8 +1,10 @@
 /**
- * Direct Paste Runtime Module
+ * Direct Paste Runtime
  *
  * Provides functionality for pasting text directly to the active application.
  * This module offers desktop-specific functionality that requires Tauri runtime.
+ *
+ * @module directPasteRuntime
  */
 
 import { invoke } from "@tauri-apps/api/core";
