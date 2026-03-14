@@ -55,6 +55,7 @@
 		"lint-staged": "^15.5.0",
 		"typescript": "^5.9.2",
 		"vite": "^7.1.5",
-		"vitest": "^3.2.4"
+		"vitest": "^3.2.4",
+		"webdriverio": "^9.25.0"
 	}
 }
