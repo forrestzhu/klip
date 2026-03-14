@@ -1,5 +1,5 @@
 /**
- * Paste Mode Storage Module
+ * Paste Mode Storage
  *
  * Manages persistent storage of paste behavior settings.
  * Controls how clipboard content is pasted into target applications.
@@ -7,6 +7,8 @@
  * Modes:
  * - `direct-with-fallback`: Try direct paste first, fall back to clipboard
  * - `clipboard-only`: Only use system clipboard
+ *
+ * @module pasteModeStorage
  */
 
 export const PASTE_MODE_STORAGE_KEY = "klip.settings.pasteMode";

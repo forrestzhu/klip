@@ -2,6 +2,8 @@
  * Hotkey Constants
  *
  * Configuration constants for keyboard shortcuts in the Klip application.
+ *
+ * @module hotkeyConstants
  */
 
 /** Default hotkey for opening the panel (Command+Shift+V on Mac, Ctrl+Shift+V on Windows) */

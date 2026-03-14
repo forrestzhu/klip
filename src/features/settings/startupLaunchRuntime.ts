@@ -1,8 +1,10 @@
 /**
- * Startup Launch Runtime Module
+ * Startup Launch Runtime
  *
  * Manages the application's auto-start behavior on system boot.
  * This module provides desktop-specific functionality that requires Tauri runtime.
+ *
+ * @module startupLaunchRuntime
  */
 
 import { invoke } from "@tauri-apps/api/core";

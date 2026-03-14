@@ -1,5 +1,5 @@
 /**
- * Startup Launch Storage Module
+ * Startup Launch Storage
  *
  * Manages persistent storage of auto-launch settings.
  * Controls whether the app automatically starts when the user logs in.
@@ -8,6 +8,8 @@
  * - Read/write startup launch enabled/disabled state
  * - Normalize various input formats to boolean
  * - Persistent storage via localStorage
+ *
+ * @module startupLaunchStorage
  */
 
 export const STARTUP_LAUNCH_STORAGE_KEY = "klip.settings.startupLaunchEnabled";
