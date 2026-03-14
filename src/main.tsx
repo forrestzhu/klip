@@ -2,6 +2,9 @@
  * Application Entry Point
  *
  * Renders the root React component into the DOM.
+ * This is the main entry point for the Klip clipboard manager application.
+ *
+ * @module main
  */
 
 import React from "react";
