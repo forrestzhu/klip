@@ -1625,6 +1625,7 @@ export function App() {
 						aria-label="搜索历史和片断"
 						autoComplete="off"
 						className="popup-search-input"
+						data-testid="popup-search-input"
 						placeholder="搜索历史和片断（;别名）..."
 						ref={popupSearchInputRef}
 						type="text"
@@ -1649,6 +1650,7 @@ export function App() {
 										: `popup-column-${popupContext.path.slice(0, depth).join(".")}`
 								}
 								className="popup-list"
+								data-testid={depth === 0 ? "popup-list-root" : undefined}
 								style={popupColumnStyle}
 							>
 								{entries.map((entry, index) => {
