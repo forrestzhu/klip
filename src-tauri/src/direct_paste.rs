@@ -168,13 +168,20 @@ fn trigger_windows_paste() -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_input_text, DirectPasteMode};
+    use super::{normalize_input_text, DirectPasteMode, DirectPasteError};
 
     #[cfg(target_os = "macos")]
     use super::macos_accessibility_message;
 
     #[test]
     fn normalize_input_rejects_empty_text() {
+        let result = normalize_input_text("");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("empty"));
+    }
+
+    #[test]
+    fn normalize_input_rejects_whitespace_only() {
         let result = normalize_input_text("   ");
         assert!(result.is_err());
     }
@@ -186,9 +193,38 @@ mod tests {
     }
 
     #[test]
+    fn normalize_input_accepts_valid_text() {
+        let result = normalize_input_text("Hello, World!");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "Hello, World!");
+    }
+
+    #[test]
     fn direct_paste_mode_is_stable() {
         assert_eq!(DirectPasteMode::Direct, DirectPasteMode::Direct);
         assert_eq!(DirectPasteMode::Fallback, DirectPasteMode::Fallback);
+    }
+
+    #[test]
+    fn direct_paste_mode_serialization() {
+        let direct = DirectPasteMode::Direct;
+        let fallback = DirectPasteMode::Fallback;
+        
+        let direct_json = serde_json::to_string(&direct).unwrap();
+        let fallback_json = serde_json::to_string(&fallback).unwrap();
+        
+        assert_eq!(direct_json, "\"direct\"");
+        assert_eq!(fallback_json, "\"fallback\"");
+    }
+
+    #[test]
+    fn direct_paste_error_messages_are_descriptive() {
+        let empty_error = DirectPasteError::EmptyText.to_string();
+        let clipboard_error = DirectPasteError::ClipboardWrite(String::from("access denied")).to_string();
+        
+        assert!(!empty_error.is_empty());
+        assert!(!clipboard_error.is_empty());
+        assert!(clipboard_error.contains("clipboard"));
     }
 
     #[cfg(target_os = "macos")]
