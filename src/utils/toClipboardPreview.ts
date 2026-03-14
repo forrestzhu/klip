@@ -3,6 +3,8 @@
  *
  * Provides a function to convert clipboard text into a preview format
  * suitable for display in UI components.
+ *
+ * @module toClipboardPreview
  */
 
 /**

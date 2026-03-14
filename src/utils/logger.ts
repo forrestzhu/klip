@@ -1,5 +1,9 @@
 /**
+ * Logger Utilities
+ *
  * Enhanced logger utility with timestamps, log levels, and performance monitoring
+ *
+ * @module logger
  */
 
 export enum LogLevel {

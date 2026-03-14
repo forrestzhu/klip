@@ -1,8 +1,10 @@
 /**
- * Heartbeat Test Module
+ * Heartbeat Test
  *
  * Provides a simple function to verify the heartbeat system is functioning.
  * Used for testing and monitoring the application's health.
+ *
+ * @module heartbeatTest
  */
 
 /**
