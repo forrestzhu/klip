@@ -81,3 +81,16 @@ feat|fix|docs|style|refactor|perf|test|chore|ci: short summary
 - Treat clipboard content as sensitive data; do not log plaintext clipboard payloads.
 - Never commit secrets, tokens, or personal data; use environment variables or secure key storage.
 - Keep Node and Rust versions pinned to avoid local/CI drift.
+
+## Quick Start for AI Agents
+
+When working on Klip, follow this workflow:
+
+1. **Read PRD first**: `docs/plans/2026-03-03-klip-prd.md`
+2. **Check code standards**: `docs/plans/2026-03-03-code-standards-design.md`
+3. **Make small, focused changes**
+4. **Run tests**: `pnpm test`
+5. **Commit with conventional commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`
+6. **Push immediately** after each meaningful change
+
+**Current focus**: Documentation + Testing (waiting on macOS permissions for UI tests)
