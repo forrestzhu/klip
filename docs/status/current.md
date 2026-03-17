@@ -1,9 +1,9 @@
 # Project Status Snapshot
 
-- Last Updated: 2026-03-07
+- Last Updated: 2026-03-18
 - Branch: `main`
-- Latest Commit: `1cabc29` (`fix: stabilize macos panel tray and paste flow`)
-- Working Tree: dirty (macOS tray title follow-up + status artifacts ready for commit)
+- Latest Commit: `a50a91a` (`docs: add Quick Start section for AI agents in AGENTS.md`)
+- Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
 ## Current Phase

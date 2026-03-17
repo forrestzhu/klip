@@ -2,6 +2,28 @@
 
 This file is append-only. Add one entry after each completed iteration.
 
+## 2026-03-18 - Status Documentation Update
+
+- Commit: `a50a91a`
+- Summary:
+  - Updated `docs/status/current.md` with latest commit hash and clean working tree status
+  - Verified all quality gates remain passing (lint, typecheck, test, build, cargo:check)
+  - Project in maintenance mode: waiting on macOS permissions for UI automation testing
+  - Core features complete: History + Snippets + Tray + Global Hotkey + Direct Paste + Browser Preview
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass (85+ tests)
+  - build: pass
+  - cargo:check: pass
+  - test:e2e: pass (13 Playwright scenarios)
+- Risks / Follow-ups:
+  - macOS Accessibility/Automation permissions required for UI testing
+  - Manual desktop verification pending for direct paste and fullscreen behavior
+  - Windows packaging verification incomplete
+
+---
+
 ## Entry Template
 
 ```text
