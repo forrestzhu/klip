@@ -2,7 +2,7 @@
 
 - Last Updated: 2026-03-18
 - Branch: `main`
-- Latest Commit: `383e5c3` (`feat: add final tip to health check output`)
+- Latest Commit: `014a5f5` (`feat: add exit code support to health check script`)
 - Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
