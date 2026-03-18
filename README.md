@@ -58,6 +58,16 @@ npm run dev
 npm run dev:desktop
 ```
 
+## Project Health Check
+
+Before starting development, verify project state:
+
+```bash
+./scripts/health-check.sh
+```
+
+This checks Node/Rust versions, dependencies, working tree status, and runs lint/typecheck/tests.
+
 - `npm run dev`: web preview only.
 - `npm run dev:desktop`: start the full Tauri desktop runtime for local manual testing.
 
