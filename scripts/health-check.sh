@@ -51,6 +51,7 @@ if npm run lint > /dev/null 2>&1; then
     echo -e "   ${GREEN}✅ Lint pass${NC}"
 else
     echo -e "   ${RED}❌ Lint fail${NC}"
+    LINT_FAILED=1
 fi
 
 # Run quick typecheck
@@ -59,6 +60,7 @@ if npm run typecheck > /dev/null 2>&1; then
     echo -e "   ${GREEN}✅ Typecheck pass${NC}"
 else
     echo -e "   ${RED}❌ Typecheck fail${NC}"
+    TYPECHECK_FAILED=1
 fi
 
 # Check test status (quick)
@@ -74,3 +76,9 @@ echo "=============================="
 echo "Health check complete!"
 echo ""
 echo "💡 Tip: Run './scripts/health-check.sh' before starting development"
+
+# Exit with error code if any check failed
+if [ ${LINT_FAILED:-0} -eq 1 ] || [ ${TYPECHECK_FAILED:-0} -eq 1 ]; then
+    exit 1
+fi
+exit 0
