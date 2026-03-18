@@ -89,6 +89,13 @@ Run all checks in one command:
 npm run qa
 ```
 
+Or use the health check script for a quick overview:
+
+```bash
+./scripts/health-check.sh
+```
+```
+
 `test:e2e` currently skips when no Playwright setup exists.
 
 ## Commit Message Format
