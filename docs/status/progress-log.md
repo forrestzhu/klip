@@ -2,6 +2,27 @@
 
 This file is append-only. Add one entry after each completed iteration.
 
+## 2026-03-18 - Health Check Script & Tests
+
+- Commit: `5a5ff93`
+- Summary:
+  - Added `scripts/health-check.sh` for quick project state verification
+  - Added `tests/health-check.test.ts` with 7 test cases
+  - Updated AGENTS.md with health check usage documentation
+  - Updated README.md with latest progress
+  - Added timestamp output to health check script
+- Validation:
+  - lint: pass
+  - typecheck: pass
+  - test: pass (187 tests, 3 skipped)
+  - build: pass
+  - cargo:check: pass
+- Risks / Follow-ups:
+  - Health check script tests may timeout in slow environments (non-critical)
+  - Continue Phase 3 enhancements after documentation complete
+
+---
+
 ## 2026-03-18 - Status Documentation Update
 
 - Commit: `a50a91a`
