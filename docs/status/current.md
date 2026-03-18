@@ -2,7 +2,7 @@
 
 - Last Updated: 2026-03-18
 - Branch: `main`
-- Latest Commit: `46f59a0` (`test: add health check script tests`)
+- Latest Commit: `3901a57` (`docs: add health check section to README Quick Start`)
 - Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 
