@@ -88,9 +88,27 @@ When working on Klip, follow this workflow:
 
 1. **Read PRD first**: `docs/plans/2026-03-03-klip-prd.md`
 2. **Check code standards**: `docs/plans/2026-03-03-code-standards-design.md`
-3. **Make small, focused changes**
-4. **Run tests**: `pnpm test`
-5. **Commit with conventional commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`
-6. **Push immediately** after each meaningful change
+3. **Run health check** (optional): `./scripts/health-check.sh` - verifies project state
+4. **Make small, focused changes**
+5. **Run tests**: `pnpm test`
+6. **Commit with conventional commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`
+7. **Push immediately** after each meaningful change
 
 **Current focus**: Documentation + Testing (waiting on macOS permissions for UI tests)
+
+## Project Health Check
+
+Use `./scripts/health-check.sh` for quick project state verification:
+
+```bash
+./scripts/health-check.sh
+```
+
+Checks:
+- Node & Rust versions
+- Dependencies status
+- Working tree state (clean/dirty)
+- Lint & typecheck status
+- Test suite status
+
+Useful for pre-development checks and CI/CD pipelines.
