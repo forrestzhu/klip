@@ -5,6 +5,12 @@
 
 set -e
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 echo "🔍 Klip Project Health Check"
 echo "=============================="
 echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
@@ -41,15 +47,27 @@ fi
 
 # Run quick lint check
 echo "5. Running lint check..."
-npm run lint > /dev/null 2>&1 && echo "   ✅ Lint pass" || echo "   ❌ Lint fail"
+if npm run lint > /dev/null 2>&1; then
+    echo -e "   ${GREEN}✅ Lint pass${NC}"
+else
+    echo -e "   ${RED}❌ Lint fail${NC}"
+fi
 
 # Run quick typecheck
 echo "6. Running typecheck..."
-npm run typecheck > /dev/null 2>&1 && echo "   ✅ Typecheck pass" || echo "   ❌ Typecheck fail"
+if npm run typecheck > /dev/null 2>&1; then
+    echo -e "   ${GREEN}✅ Typecheck pass${NC}"
+else
+    echo -e "   ${RED}❌ Typecheck fail${NC}"
+fi
 
 # Check test status (quick)
 echo "7. Checking tests..."
-npm run test > /dev/null 2>&1 && echo "   ✅ Tests pass" || echo "   ⚠️  Tests need attention"
+if npm run test > /dev/null 2>&1; then
+    echo -e "   ${GREEN}✅ Tests pass${NC}"
+else
+    echo -e "   ${YELLOW}⚠️  Tests need attention${NC}"
+fi
 
 echo ""
 echo "=============================="
