@@ -1,11 +1,13 @@
 #!/bin/bash
 # Klip Project Health Check
 # Quick verification of project state before development
+# Usage: ./scripts/health-check.sh
 
 set -e
 
 echo "🔍 Klip Project Health Check"
 echo "=============================="
+echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
 # Check Node version
