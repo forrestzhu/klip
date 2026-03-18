@@ -36,6 +36,7 @@ if [ -z "$GIT_STATUS" ]; then
 else
     echo "   ⚠️  Working tree dirty:"
     echo "$GIT_STATUS" | head -5
+    echo "   💡 Tip: Commit or stash changes before building"
 fi
 
 # Run quick lint check
