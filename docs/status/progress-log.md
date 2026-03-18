@@ -4,13 +4,16 @@ This file is append-only. Add one entry after each completed iteration.
 
 ## 2026-03-18 - Health Check Script & Tests
 
-- Commit: `5a5ff93`
+- Commit: `5e6ed5c`
 - Summary:
   - Added `scripts/health-check.sh` for quick project state verification
   - Added `tests/health-check.test.ts` with 7 test cases
   - Updated AGENTS.md with health check usage documentation
   - Updated README.md with latest progress
   - Added timestamp output to health check script
+  - Added colored output (green=pass, red=fail)
+  - Added helpful tip when working tree is dirty
+  - Added health check section to README Quick Start
 - Validation:
   - lint: pass
   - typecheck: pass
