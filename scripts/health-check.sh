@@ -72,3 +72,5 @@ fi
 echo ""
 echo "=============================="
 echo "Health check complete!"
+echo ""
+echo "💡 Tip: Run './scripts/health-check.sh' before starting development"
