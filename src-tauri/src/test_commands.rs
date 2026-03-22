@@ -32,13 +32,6 @@ pub struct SimulatedFocusState {
     previous_app: Mutex<String>,
 }
 
-/// State for tracking window visibility
-#[derive(Default)]
-pub struct SimulatedWindowState {
-    is_visible: Mutex<bool>,
-    is_focused: Mutex<bool>,
-}
-
 /// Simulate clipboard content change
 ///
 /// This command is for E2E testing. It simulates a clipboard change event

@@ -34,7 +34,6 @@ pub fn run() {
         .manage(panel_presenter::PanelPresenterState::default())
         .manage(clipboard_listener::ClipboardListenerState::default())
         .manage(test_commands::SimulatedFocusState::default())
-        .manage(test_commands::SimulatedWindowState::default())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
