@@ -1,8 +1,8 @@
 # Project Status Snapshot
 
-- Last Updated: 2026-03-18
+- Last Updated: 2026-04-01
 - Branch: `main`
-- Latest Commit: `014a5f5` (`feat: add exit code support to health check script`)
+- Latest Commit: `cf9446d` (`fix: resolve TypeScript errors in clipboardMonitor and historyStats`)
 - Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 

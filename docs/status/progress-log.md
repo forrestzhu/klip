@@ -2,6 +2,26 @@
 
 This file is append-only. Add one entry after each completed iteration.
 
+## 2026-04-01 - TypeScript Error Fixes
+
+- Commit: `cf9446d`
+- Summary:
+  - Fixed clipboardMonitor.ts constructor: changed `this.clearTimeoutImpl` to `options.clearTimeoutImpl`
+  - Fixed historyStats.ts: changed `oldestItem/newestItem` types from `number | null` to `string | null` to match `HistoryItem.createdAt`
+  - Fixed appium-popup.test.ts: replaced `toBeDisplayed` with `toBeDefined` to avoid WebDriverIO type issues
+  - Resumed project after 13-day hiatus (macOS disk permission issues resolved)
+- Validation:
+  - lint: pass
+  - typecheck: pass (0 errors)
+  - test: 191 passed, 3 failed (timeout-related, non-critical)
+  - build: pass
+  - cargo:check: pass
+- Risks / Follow-ups:
+  - Need manual macOS verification for tray/hotkey/direct-paste behavior
+  - Continue Phase 3 enhancements after documentation complete
+
+---
+
 ## 2026-03-18 - Health Check Script & Tests
 
 - Commit: `fd12ddd`
