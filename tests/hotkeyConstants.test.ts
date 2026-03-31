@@ -2,11 +2,11 @@
  * Tests for Hotkey Constants module
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_PANEL_HOTKEY,
-	PANEL_HOTKEY_STORAGE_KEY,
 	DEFAULT_SNIPPET_ALIAS_HOTKEY,
+	PANEL_HOTKEY_STORAGE_KEY,
 	SNIPPET_ALIAS_HOTKEY_STORAGE_KEY,
 	SNIPPET_ALIAS_HOTKEY_TRIGGER_EVENT,
 } from "../src/features/settings/hotkey.constants";
@@ -82,9 +82,7 @@ describe("hotkeyConstants", () => {
 		});
 
 		it("should be a valid custom event name", () => {
-			expect(SNIPPET_ALIAS_HOTKEY_TRIGGER_EVENT).toMatch(
-				/^klip:[a-z_/-]+$/,
-			);
+			expect(SNIPPET_ALIAS_HOTKEY_TRIGGER_EVENT).toMatch(/^klip:[a-z_/-]+$/);
 		});
 	});
 });

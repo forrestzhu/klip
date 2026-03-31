@@ -2,7 +2,7 @@
  * Tests for Startup Launch Runtime module
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Tauri invoke
 vi.mock("@tauri-apps/api/core", () => ({

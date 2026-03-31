@@ -2,7 +2,7 @@
  * Tests for Direct Paste Runtime module
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Tauri invoke
 vi.mock("@tauri-apps/api/core", () => ({
@@ -10,7 +10,10 @@ vi.mock("@tauri-apps/api/core", () => ({
 }));
 
 import { invoke } from "@tauri-apps/api/core";
-import { directPasteText, type DirectPasteMode } from "../src/features/paste/directPasteRuntime";
+import {
+	type DirectPasteMode,
+	directPasteText,
+} from "../src/features/paste/directPasteRuntime";
 
 describe("directPasteRuntime", () => {
 	beforeEach(() => {
@@ -23,17 +26,25 @@ describe("directPasteRuntime", () => {
 
 	describe("directPasteText", () => {
 		it("should paste text directly and return direct mode", async () => {
-			const mockResult = { mode: "direct" as DirectPasteMode, message: "Pasted successfully" };
+			const mockResult = {
+				mode: "direct" as DirectPasteMode,
+				message: "Pasted successfully",
+			};
 			vi.mocked(invoke).mockResolvedValue(mockResult);
 
 			const result = await directPasteText("Hello, World!");
 
 			expect(result).toEqual(mockResult);
-			expect(invoke).toHaveBeenCalledWith("direct_paste_text", { text: "Hello, World!" });
+			expect(invoke).toHaveBeenCalledWith("direct_paste_text", {
+				text: "Hello, World!",
+			});
 		});
 
 		it("should use clipboard fallback when direct paste is unavailable", async () => {
-			const mockResult = { mode: "fallback" as DirectPasteMode, message: "Used clipboard fallback" };
+			const mockResult = {
+				mode: "fallback" as DirectPasteMode,
+				message: "Used clipboard fallback",
+			};
 			vi.mocked(invoke).mockResolvedValue(mockResult);
 
 			const result = await directPasteText("Test text");
@@ -43,15 +54,23 @@ describe("directPasteRuntime", () => {
 		});
 
 		it("should pass the text parameter to the Tauri command", async () => {
-			vi.mocked(invoke).mockResolvedValue({ mode: "direct" as DirectPasteMode, message: "OK" });
+			vi.mocked(invoke).mockResolvedValue({
+				mode: "direct" as DirectPasteMode,
+				message: "OK",
+			});
 
 			await directPasteText("Sample text");
 
-			expect(invoke).toHaveBeenCalledWith("direct_paste_text", { text: "Sample text" });
+			expect(invoke).toHaveBeenCalledWith("direct_paste_text", {
+				text: "Sample text",
+			});
 		});
 
 		it("should handle empty string", async () => {
-			vi.mocked(invoke).mockResolvedValue({ mode: "direct" as DirectPasteMode, message: "OK" });
+			vi.mocked(invoke).mockResolvedValue({
+				mode: "direct" as DirectPasteMode,
+				message: "OK",
+			});
 
 			await directPasteText("");
 
@@ -60,11 +79,16 @@ describe("directPasteRuntime", () => {
 
 		it("should handle multiline text", async () => {
 			const multilineText = "Line 1\nLine 2\nLine 3";
-			vi.mocked(invoke).mockResolvedValue({ mode: "direct" as DirectPasteMode, message: "OK" });
+			vi.mocked(invoke).mockResolvedValue({
+				mode: "direct" as DirectPasteMode,
+				message: "OK",
+			});
 
 			await directPasteText(multilineText);
 
-			expect(invoke).toHaveBeenCalledWith("direct_paste_text", { text: multilineText });
+			expect(invoke).toHaveBeenCalledWith("direct_paste_text", {
+				text: multilineText,
+			});
 		});
 
 		it("should throw error when Tauri command fails", async () => {
@@ -75,9 +99,9 @@ describe("directPasteRuntime", () => {
 		});
 
 		it("should return the complete result object", async () => {
-			const mockResult = { 
-				mode: "direct" as DirectPasteMode, 
-				message: "Success" 
+			const mockResult = {
+				mode: "direct" as DirectPasteMode,
+				message: "Success",
 			};
 			vi.mocked(invoke).mockResolvedValue(mockResult);
 

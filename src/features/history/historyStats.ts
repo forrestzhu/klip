@@ -19,10 +19,10 @@ interface HistoryStats {
 	unique: number;
 	/** Count of items with source application information */
 	withSourceApp: number;
-	/** Timestamp of the oldest item (null if empty) */
-	oldestItem: number | null;
-	/** Timestamp of the newest item (null if empty) */
-	newestItem: number | null;
+	/** ISO timestamp of the oldest item (null if empty) */
+	oldestItem: string | null;
+	/** ISO timestamp of the newest item (null if empty) */
+	newestItem: string | null;
 }
 
 /**

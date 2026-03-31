@@ -115,7 +115,7 @@ export class ClipboardMonitor {
 		this.setTimeoutImpl =
 			options.setTimeoutImpl ?? globalThis.setTimeout.bind(globalThis);
 		this.clearTimeoutImpl =
-			this.clearTimeoutImpl ?? globalThis.clearTimeout.bind(globalThis);
+			options.clearTimeoutImpl ?? globalThis.clearTimeout.bind(globalThis);
 		this.readyPromise = new Promise((resolve) => {
 			this.readyResolver = resolve;
 		});
