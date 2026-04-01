@@ -1583,3 +1583,32 @@ This file is append-only. Add one entry after each completed iteration.
 
 **Next**: Continue Phase 2 verification tasks during quiet hours (00:30-07:30)
 
+
+---
+
+## 2026-04-02 05:48 - Heartbeat Check (System Recovery)
+
+**Scope**: Hot news brief recovery + status monitoring
+**Commit**: pending (monitoring)
+**Trigger**: Brief generation gap detected (35 minutes since 05:12)
+
+**Issue**:
+- Cron job failing with EPERM uv_cwd error
+- Last successful brief: 05:12
+- Gap: 35 minutes
+
+**Action**:
+- Manually triggered `npm run all`
+- Brief 05:48 successfully generated (29 platforms, 286 topics)
+- Root cause: Cron environment issue (to investigate)
+
+**Validation**:
+- [x] Brief generation - ✅ Manual run successful
+- [ ] Cron job - ⚠️ EPERM errors in /tmp/hot-news-brief.log
+- [x] Klip working tree - ✅ Clean (42 min since f06ba1b)
+
+**Next**: 
+- Monitor cron job behavior
+- Investigate EPERM uv_cwd root cause
+- Continue Klip development if needed
+
