@@ -15,6 +15,11 @@
 
 ## Completed Highlights
 
+- **2026-04-02 05:03**: Created macOS UI verification action plan (`docs/research/mac-ui-verification-action-plan.md`)
+  - Defines 4-phase rollout: Setup → Core Tests → CI Integration → Advanced
+  - Recommends XCUITest for native layer, Playwright for web layer
+  - Includes 5 high-priority test cases with Swift code samples
+  - Identifies challenges: permissions, menu bar detection, flakiness
 - History domain modules (capture filtering, storage, repository, capacity/FIFO).
 - History UI runtime wiring (search, keyboard navigation, copy-selected behavior).
 - Tauri-side history model/storage/repository baseline modules.
