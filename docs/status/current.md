@@ -1,11 +1,12 @@
 # Project Status Snapshot
 
-- Last Updated: 2026-04-01 10:23
+- Last Updated: 2026-04-02 04:26
 - Branch: `main`
 - Latest Commit: `854b504` (`docs: update status snapshot to latest commit (cf9446d)`)
 - Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
 - Latest Build: ✅ `Klip_0.1.0_aarch64.dmg` (3.1MB)
+- Note: 18-hour gap in commits (2026-04-01 10:23 → 2026-04-02 04:26) - heartbeat check triggered documentation refresh
 
 ## Current Phase
 
