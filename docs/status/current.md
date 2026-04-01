@@ -1,10 +1,11 @@
 # Project Status Snapshot
 
-- Last Updated: 2026-04-01
+- Last Updated: 2026-04-01 10:23
 - Branch: `main`
-- Latest Commit: `cf9446d` (`fix: resolve TypeScript errors in clipboardMonitor and historyStats`)
+- Latest Commit: `854b504` (`docs: update status snapshot to latest commit (cf9446d)`)
 - Working Tree: clean
 - PRD Source: `docs/plans/2026-03-03-klip-prd.md`
+- Latest Build: ✅ `Klip_0.1.0_aarch64.dmg` (3.1MB)
 
 ## Current Phase
 

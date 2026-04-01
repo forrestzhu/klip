@@ -2,6 +2,27 @@
 
 This file is append-only. Add one entry after each completed iteration.
 
+## 2026-04-01 10:23 - Release Build & Mac UI Testing Prep
+
+- Commit: `854b504` (building on `cf9446d`)
+- Summary:
+  - Successfully built release version: `Klip_0.1.0_aarch64.dmg` (3.1MB)
+  - Build artifacts:
+    - `/Users/jayzero/Documents/workspace/klip/src-tauri/target/release/bundle/macos/Klip.app`
+    - `/Users/jayzero/Documents/workspace/klip/src-tauri/target/release/bundle/dmg/Klip_0.1.0_aarch64.dmg`
+  - Appium installed and ready for Mac UI testing
+  - Ready to proceed with Appium Mac UI verification
+- Validation:
+  - build:desktop:bundle:macos: pass (17s Rust compile + bundle)
+  - DMG created successfully
+- Next Steps:
+  1. Start Appium server (`appium --driver mac2`)
+  2. Configure macOS permissions (Accessibility, Automation)
+  3. Run Appium popup tests
+  4. Record and document results
+
+---
+
 ## 2026-04-01 - TypeScript Error Fixes
 
 - Commit: `cf9446d`
